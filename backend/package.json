@@ -11,6 +11,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.17.0+sha512.fce8a3dd29a4ed2ec566fb53efbb04d8c44a0f05bc6f24a73046910fb9c3ce7afa35a0980500668fa3573345bd644644fa98338fa168235c80f4aa17aa17fbef",
   "dependencies": {
+    "argon2": "^0.44.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -19,6 +20,7 @@
     "knex": "^3.1.0",
     "multer": "^2.0.2",
     "mysql2": "^3.15.3",
+    "node-fetch": "^3.3.2",
     "objection": "^3.1.5"
   },
   "devDependencies": {

@@ -49,12 +49,12 @@ AUTO_INCREMENT = 1;
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
--- Table `sneakerhead`.`ref_ph_cities`
+-- Table `sneakerhead`.`ref_ph_cities_municipalities`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `sneakerhead`.`ref_ph_cities` ;
+DROP TABLE IF EXISTS `sneakerhead`.`ref_ph_cities_municipalities` ;
 
 SHOW WARNINGS;
-CREATE TABLE IF NOT EXISTS `sneakerhead`.`ref_ph_cities` (
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`ref_ph_cities_municipalities` (
   `city_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `city_name` VARCHAR(100) NOT NULL,
   `province_id` INT UNSIGNED NOT NULL,
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `sneakerhead`.`addresses` (
   INDEX `addFK_city_idx` (`city_id` ASC) VISIBLE,
   CONSTRAINT `addFK_city`
     FOREIGN KEY (`city_id`)
-    REFERENCES `sneakerhead`.`ref_ph_cities` (`city_id`)
+    REFERENCES `sneakerhead`.`ref_ph_cities_municipalities` (`city_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
@@ -173,8 +173,8 @@ CREATE TABLE IF NOT EXISTS `sneakerhead`.`users` (
   `pw_hash` VARCHAR(255) NOT NULL,
   `lname` VARCHAR(100) NOT NULL,
   `fname` VARCHAR(100) NOT NULL,
-  `mname` VARCHAR(50) NOT NULL,
-  `address_id` INT UNSIGNED NOT NULL,
+  `mname` VARCHAR(50) NULL,
+  `address_id` INT UNSIGNED NULL,
   `role_id` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
