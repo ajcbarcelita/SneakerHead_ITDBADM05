@@ -1,30 +1,24 @@
-Backend (Node + Express) Dependencies
-dotenv (.env file)
-Express
-objection
-knex
-mysql2
+For this multibranch e-commerce backend, we use Node.js with Express as the web framework. 
+The core dependencies include dotenv, express, objection, knex, and mysql2. 
+The dotenv package is essential for managing environment variables, allowing us to store sensitive information such as database credentials and 
+API keys in a separate .env file. Express provides the backbone of our server, handling routing, middleware, and HTTP requests.
 
-cors
-multer (file uploads)
-jsonwebtoken
-nodemon
-joi (schmea validation)
-day.js (to help wiht handling DATETIME)
-morgan (HTTP request logger)
-winston (general purpose logger)
+To manage database interactions efficiently, we use a combination of Objection.js and Knex.js. 
+Objection.js acts as an Object-Relational Mapper (ORM), providing structured models and relationships that map directly to database tables, 
+such as Users, Orders, and Products. This simplifies CRUD operations and relationship handling in a clean, object-oriented way. 
+Knex.js serves as the underlying query builder that powers Objection. 
+It allows writing flexible and optimized SQL queries when needed, supports database migrations and seeds, 
+and provides connection pooling through the MySQL driver. We use mysql2 as the database driver to communicate with MySQL, 
+as it is required for Knex and Objection to execute queries and manage database connections.
 
-we can use a hybrid ORM + query builder, bc ORMs like Sequelize
-will struggle dealing with complex queries
+Supporting dependencies include cors, multer, jsonwebtoken, and joi. CORS is used to enable cross-origin requests, which is useful when the 
+frontend is hosted on a separate domain or during development. Multer handles file uploads, such as product images, though it is optional 
+depending on where files are stored. jsonwebtoken provides JWT-based authentication for secure user login and session management, 
+which is critical for a multi-branch system. Joi is used for input validation, enforcing schema-based rules to ensure that incoming data is valid and safe before interacting with the database.
 
-we will be using Objective.js + Knex
-Objection.js → gives us structure with Models and relations, so tables map to JavaScript classes (Users, Orders, Products). It makes CRUD and relationship handling much cleaner than writing SQL everywhere.
+For development purposes, we include nodemon, which automatically reloads the server when code changes, improving the development workflow. 
+Optional libraries such as day.js can assist with date and time operations in JavaScript, and winston provides a robust logging system suitable for production.
 
-Knex.js → is the underlying query builder. It powers Objection, but also lets us write flexible, optimized SQL when queries get complicated. It also provides migrations and seeds to version and populate the database schema.
-👉 Why both?
-
-Knex is the engine (raw SQL power, migrations, complex queries).
-
-Objection.js is the car (models, relationships, structured code).
-
-Together, they give us the convenience of an ORM plus the control of raw SQL — the best of both worlds.
+The combination of Objection.js and Knex gives the best of both worlds: the convenience and structure of an ORM with the flexibility and control of raw SQL. 
+Unlike other ORMs such as Sequelize, which may struggle with complex queries, stored procedures, or database views, 
+this hybrid approach allows us to leverage the full power of the database while keeping our backend code clean, maintainable, and scalable.
