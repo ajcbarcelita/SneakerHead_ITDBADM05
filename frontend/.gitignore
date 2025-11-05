@@ -27,4 +27,7 @@ coverage
 *.sln
 *.sw?
 
+# Ignore package lock files
+package-lock.json
+
 *.tsbuildinfo
