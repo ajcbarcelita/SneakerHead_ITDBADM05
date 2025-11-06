@@ -1,15 +1,12 @@
 /*
     List of tables to make inserts for:
     - branch_admin_assignments
-    - order_items (di pa need for now)
-    - orders (di pa need for now)
     - promo_codes
     - shoe_categories
     - shoe_images (di pa need for now)
     - shoes
     - shoe_size_inventory
     - shopping_cart (for each user, make a shopping cart for all branches)
-    - shopping_cart_items
 */
 USE sneakerhead;
 
