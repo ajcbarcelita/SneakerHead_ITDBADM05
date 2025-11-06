@@ -51,7 +51,6 @@ INSERT INTO `sneakerhead`.`ref_shoe_brands` (`brand_name`) VALUES
 ('Adidas'),
 ('New Balance'),
 ('ASICS'),
-('HOKA'),
 ('Puma');
 SHOW WARNINGS;
 

@@ -4,7 +4,7 @@ import fs from "fs";
 const BASE_URL = "https://psgc.gitlab.io/api";
 const provincesDB = [
   [1, "Ilocos Norte"],
-  [2, "Ilocos Sur"],
+  [2, "Ilocos Sur"],d
   [3, "La Union"],
   [4, "Pangasinan"],
   [5, "Batanes"],
