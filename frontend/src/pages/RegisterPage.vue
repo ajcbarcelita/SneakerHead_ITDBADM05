@@ -10,7 +10,7 @@
           <img
             src="@/assets/sneakerhead_logo_no_bg.png"
             alt="logo"
-            class="h-36 w-36 rounded-full object-cover"
+            class="h-42 w-42 rounded-full object-cover"
           />
           <h1 class="font-sans mt-4 text-3xl font-semibold text-oxford-blue">
             Welcome to the club!
@@ -28,7 +28,7 @@
 
 
         <Stepper v-model:value="activeStep" class="mt-6">
-          <StepList class="flex w-full justify-between relative">
+          <StepList class="flex w-full justify-between items-center gap-4 overflow-hidden">
             <Step :value=1>Personal Details</Step>
             <Step :value=2>Address Details</Step>
           </StepList>
@@ -167,16 +167,11 @@
       </div>
     </div>
 
-    <!-- RIGHT -->
     <div class="w-full md:w-1/2">
-      <img
-        :src="image"
-        alt="branding"
-        class="block md:hidden w-full h-64 object-cover"
-      />
+      <img src="@/assets/sneakerhead_branding_pic1.jpg" alt="branding" class="block md:hidden w-full h-64 object-cover" />
       <div
         class="hidden md:block w-full h-full bg-center bg-cover"
-        :style="{ backgroundImage: `url(${image})` }"
+        :style="{ backgroundImage: `linear-gradient(rgba(255,255,255,0.1), rgba(0,0,0,0.5)), url(${image})` }"
         aria-hidden="true"
       />
     </div>
@@ -244,5 +239,45 @@ const onSubmit = () => {
 
 .p-password .p-inputtext {
   padding-right: 3rem;
+}
+
+.p-stepper .p-steplist,
+.p-stepper .p-step-list,
+.p-stepper .p-steps-list {
+  gap: 0.5rem !important;
+  align-items: center;
+  overflow: visible;
+}
+
+/* smaller step circle */
+.p-stepper .p-step-number,
+.p-stepper .p-steps-number,
+.p-steps .p-steps-number {
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  font-size: 0.85rem !important;
+  border-radius: 9999px !important;
+}
+
+/* smaller label text */
+.p-stepper .p-step-label,
+.p-stepper .p-step .p-step-label,
+.p-steps .p-menuitem-text {
+  font-size: 0.875rem !important;
+  margin-top: 0 !important;
+}
+
+/* reduce vertical spacing around the stepper */
+.p-stepper {
+  padding: 0.25rem 0 !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* tighten hover/active shadow so smaller circles still look good */
+.p-stepper .p-step.p-highlight .p-step-number,
+.p-steps .p-steps-item.p-highlight .p-steps-number {
+  transform: scale(1.08) !important;
+  box-shadow: 0 6px 16px rgba(16,37,64,0.10) !important;
 }
 </style>

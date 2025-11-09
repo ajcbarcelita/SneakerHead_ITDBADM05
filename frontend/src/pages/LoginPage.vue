@@ -5,7 +5,7 @@
       <div class="w-full max-w-lg space-y-8 shadow-lg p-8 rounded-2xl bg-white">
 
         <div class="flex flex-col items-center">
-          <img src="@/assets/sneakerhead_logo_no_bg.png" alt="logo" class="h-48 w-48 rounded-full object-cover" />
+          <img src="@/assets/sneakerhead_logo_no_bg.png" alt="logo" class="h-42 w-42 rounded-full object-cover" />
           <h1 class="font-sans mt-4 text-2xl font-semibold text-oxford-blue">Glad you're back.</h1>
           <p class="text-center font-sans mt-1 text-sm text-gray">
             Don't have an account?
