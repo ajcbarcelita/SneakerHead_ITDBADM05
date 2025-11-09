@@ -11,6 +11,8 @@ import RegisterPage from '@/pages/RegisterPage.vue'
 // which roles are allowed or not, and config
 // router.beforeEach can be used to enforce these rules
 
+// Ff are meta fields depending on who should be able to access
+// guestOnly, customerOnly, branchManagerOnly, adminOnly
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -18,16 +20,17 @@ const router = createRouter({
       path: '/login',
       name: 'Login',
       component: LoginPage,
-      meta: {}
+      meta: {guestOnly: true}
     },
     {
       path: '/register',
       name: 'Register',
       component: RegisterPage,
-      meta: {}
+      meta: {guestOnly: true}
     }
   ],
 })
 
+// Add navigation guards here if needed using router.beforeEach
 
 export default router

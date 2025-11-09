@@ -6,7 +6,7 @@
       :style="{ backgroundColor: 'var(--color-white-smoke)' }"
     >
       <div class="w-full max-w-lg space-y-8 shadow-lg p-8 rounded-2xl bg-white">
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center text-center">
           <img
             src="@/assets/sneakerhead_logo_no_bg.png"
             alt="logo"
@@ -104,7 +104,7 @@
             <!-- STEP 2: Address Details -->
             <StepPanel :value=2>
               <div class="flex flex-col gap-4 mt-6">
-                <FloatLabel class="w-full">
+                <FloatLabel class="w-full" variant="on">
                   <InputText
                     id="addressLine1"
                     v-model="formData.addressLine1"
@@ -113,7 +113,7 @@
                   <label for="addressLine1">Address Line 1</label>
                 </FloatLabel>
 
-                <FloatLabel class="w-full">
+                <FloatLabel class="w-full" variant="on">
                   <InputText
                     id="addressLine2"
                     v-model="formData.addressLine2"
