@@ -1,34 +1,40 @@
 <template>
   <div class="flex min-h-screen flex-col md:flex-row">
     <!-- LEFT -->
-    <div class="w-full md:w-1/2 flex items-center justify-center px-6 md:px-12" :style="{ backgroundColor: 'var(--color-white-smoke)' }">
-      <div class="w-full max-w-md space-y-8">
+    <div class="w-full md:w-1/2 flex items-center justify-center px-6 md:px-12 py-12" :style="{ backgroundColor: 'var(--color-white-smoke)' }">
+      <div class="w-full max-w-lg space-y-8 shadow-lg p-8 rounded-2xl bg-white">
+
         <div class="flex flex-col items-center">
           <img src="@/assets/sneakerhead_logo_no_bg.png" alt="logo" class="h-48 w-48 rounded-full object-cover" />
-          <h1 class="font-sans mt-4 text-3xl font-semibold text-oxford-blue">Welcome back!</h1>
-          <p class="font-sans mt-1 text-sm text-gray">Sign in to access your account.</p>
+          <h1 class="font-sans mt-4 text-2xl font-semibold text-oxford-blue">Glad you're back.</h1>
+          <p class="text-center font-sans mt-1 text-sm text-gray">
+            Don't have an account?
+            <router-link to="/register" class="text-oxford-blue font-medium hover:underline">
+              Register here.
+            </router-link>
+          </p>
         </div>
 
-        <form class="flex flex-col gap-4" @submit.prevent="onSubmit">
+        <form class="flex flex-col gap-4" @submit.prevent="onSubmit"> <!-- Change -->
           <!-- Email -->
-          <FloatLabel class="w-full">
+          <FloatLabel variant="on" class="w-full" autocomplete="off">
             <InputText
               id="email"
               v-model="email"
-              :class="'w-full px-4 py-3 rounded-md border border-slate-200'"
+              :class="'w-full px-4 py-3 rounded-md border border-slate-300'"
             />
             <label for="email" class="text-charcoal text-sm">Email</label>
           </FloatLabel>
 
           <!-- Password (toggleMask + large via inputClass) -->
-          <FloatLabel class="w-full">
+          <FloatLabel variant="on"class="w-full" autocomplete="off">
             <Password
               id="password"
               v-model="password"
               class="w-full"
               toggleMask
               :feedback="false"
-              inputClass="w-full px-4 py-3 text-lg rounded-md border border-slate-200"
+              inputClass="w-full px-4 py-3 text-lg rounded-md border border-slate-300"
             />
             <label for="password" class="text-charcoal text-sm">Password</label>
           </FloatLabel>
@@ -40,7 +46,7 @@
             </div>
           </div>
 
-          <Button label="Sign In" class="w-full bg-oxford-blue text-white py-3 rounded-md" />
+          <Button label="Log In" class="font-sans w-full bg-oxford-blue text-white py-3 rounded-md" />
         </form>
       </div>
     </div>
@@ -50,7 +56,7 @@
       <img src="@/assets/sneakerhead_branding_pic1.jpg" alt="branding" class="block md:hidden w-full h-64 object-cover" />
       <div
         class="hidden md:block w-full h-full bg-center bg-cover"
-        :style="{ backgroundImage: `linear-gradient(rgba(21,41,71,0.55), rgba(21,41,71,0.55)), url(${image})` }"
+        :style="{ backgroundImage: `linear-gradient(rgba(255,255,255,0.1), rgba(0,0,0,0.5)), url(${image})` }"
         aria-hidden="true"
       />
     </div>

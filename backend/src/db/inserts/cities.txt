@@ -1,7 +1,3 @@
-USE sneakerhead;
-
-INSERT INTO ref_ph_cities_municipalities (city_name, province_id)
-VALUES
 ('Adams', 1),
 ('Bacarra', 1),
 ('Badoc', 1),
@@ -1634,4 +1630,3 @@ VALUES
 ('Navotas', 82),
 ('Valenzuela', 82),
 ('Pateros', 82);
-

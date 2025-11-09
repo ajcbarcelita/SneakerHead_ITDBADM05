@@ -1,12 +1,13 @@
-require('dotenv').config();
+import app from './app.js';
+import dotenv from 'dotenv/config';
 
-const app = require('./app');
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  if (err) {
-    console.error('Failed to start server:', err);
-  } else {
-    console.log(`Server is running on port ${PORT}`);
-  }
+const server = app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+server.on('error', (err) => {
+  console.error('Failed to start Express server:', err);
+  process.exit(1);
 });

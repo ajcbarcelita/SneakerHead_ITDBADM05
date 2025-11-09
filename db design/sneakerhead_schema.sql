@@ -168,7 +168,7 @@ DROP TABLE IF EXISTS `sneakerhead`.`users` ;
 
 SHOW WARNINGS;
 CREATE TABLE IF NOT EXISTS `sneakerhead`.`users` (
-  `user_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `email` VARCHAR(255) NOT NULL,
   `pw_hash` VARCHAR(255) NOT NULL,
   `lname` VARCHAR(100) NOT NULL,

@@ -8,27 +8,18 @@
     - shoe_size_inventory
     - shopping_cart (for each user, make a shopping cart for all branches)
 */
-USE sneakerhead;
 
-
--- address inserts for customers
-INSERT INTO addresses (addressline1, addressline2, city_id)VALUES 
-('2401 Taft Ave', 'Malate', 1616);
-SHOW WARNINGS;
-
-
--- address inserts for branches
-INSERT INTO addresses (addressline1, addressline2, city_id) VALUES 
+-- address inserts (first for customers), branches will follow
+INSERT INTO addresses (addressline1, addressline2, city_id) VALUES
+('2401 Taft Ave.', 'Malate', 1616),
 ('123 Aguinaldo Highway', 'Bayan Luma', 391),
 ('456 Ayala Avenue', 'Legaspi Village', 1617),
 ('789 Bradco Avenue', 'Aseana Business Park', 1626);
 
-SHOW WARNINGS;
 
 
 -- branches inserts
-INSERT INTO branches (branch_name, address_id)
-VALUES
+INSERT INTO branches (branch_name, address_id) VALUES
 ('SneakerHead Imus', 2),
 ('SneakerHead Makati', 3),
 ('SneakerHead Aseana', 4);
@@ -39,7 +30,6 @@ INSERT INTO `sneakerhead`.`ref_roles` (`role_name`) VALUES
 ('Admin'),
 ('Branch Manager'),
 ('Customer');
-SHOW WARNINGS;
 
 
 -- ref_shoe_brands inserts
@@ -49,7 +39,6 @@ INSERT INTO `sneakerhead`.`ref_shoe_brands` (`brand_name`) VALUES
 ('New Balance'),
 ('ASICS'),
 ('Puma');
-SHOW WARNINGS;
 
 
 -- ref_shoe_categories inserts
@@ -61,7 +50,6 @@ INSERT INTO `sneakerhead`.`ref_shoe_categories` (`category_name`) VALUES
 ('Limited Edition'),
 ('Men\'s'),
 ('Women\'s');
-SHOW WARNINGS;
 
 
 -- ref_us_sizes inserts
@@ -78,7 +66,7 @@ INSERT INTO `sneakerhead`.`ref_us_sizes` (`shoe_size`) VALUES
 (10.5),
 (11.0),
 (11.5),
-(12.0),
+(12.0);
 
 
 -- users inserts for admins and branch managers
@@ -92,5 +80,3 @@ VALUES
 ('kasane_teto@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$2Qz9521WNaiabskpksgq0A$82clm13kaMOZWYIljBRf5b+QFp8NOhT1YwWqaV+YoWI', 'Teto', 'Kasane', NULL, 1, 3),
 ('akita_neru@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$yCFPWHrGWNIe4WqYYnBYRw$zN7esMqcwcCGWelrcX0WwxGGJQbOpSGDcETxl7cVlbU', 'Neru', 'Akita', NULL, 1, 3),
 ('hatsune_miku@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$HAniNVgySRDOINOYvheGGQ$FZ1HzfEDKecxa0ggpmHdxoqenuFdj+Ddd+muUVR0A2A', 'Miku', 'Hatsune', NULL,1, 3);
-
-SHOW WARNINGS;

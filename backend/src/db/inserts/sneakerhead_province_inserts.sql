@@ -1,4 +1,3 @@
-USE sneakerhead;
 INSERT INTO `sneakerhead`.`ref_ph_provinces` (`province_name`) VALUES
 ('Ilocos Norte'),
 ('Ilocos Sur'),
