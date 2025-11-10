@@ -29,8 +29,8 @@
 
         <Stepper v-model:value="activeStep" class="mt-6">
           <StepList class="flex w-full justify-between items-center gap-3 overflow-hidden">
-            <Step :value=1>Personal Details</Step>
-            <Step :value=2>Address Details</Step>
+            <Step :value="1">Personal Details</Step>
+            <Step :value="2">Address Details</Step>
           </StepList>
 
           <StepPanels>
@@ -146,6 +146,7 @@
                         :options="provinces"
                         optionLabel="province_name"
                         optionValue="province_id"
+                        @change="onProvinceChange"
                         @update:modelValue="onProvinceChange"
                         class="w-full"
                       />
@@ -203,7 +204,12 @@
 
 <script setup>
   import { ref, reactive, watch } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useAuthStore } from '@/stores/authStore'
   import { useValidation } from '@/composables/useValidation'
+
+  const router = useRouter()
+  const authStore = useAuthStore()
 
   // PrimeVue Components
   import FloatLabel from 'primevue/floatlabel'
@@ -242,6 +248,26 @@
     city: ''
   })
 
+  const onProvinceChange = (eventOrValue) => {
+    // PrimeVue @change often emits an event object with .value, while v-model updates pass raw
+    const raw = eventOrValue?.value ?? eventOrValue
+
+    // convert to string key because ph_locations.json uses string keys like "1"
+    const key = raw == null ? '' : String(raw)
+
+    const lookup = phJSONData.cities?.[key]
+
+    // fallback: if cities stored as array, filter by province_id
+    if (!lookup && Array.isArray(phJSONData.cities)) {
+      const filtered = phJSONData.cities.filter(c => String(c.province_id) === key)
+      cities.value = filtered
+    } else {
+      cities.value = lookup ?? []
+    }
+
+    formData.city = '' // reset selection
+  }
+
   const { errors, validateEmail, validatePassword, validateConfirmPassword, validateRequired, clearErrors } = useValidation()
 
   // Watchers for reactive validation
@@ -274,11 +300,13 @@
   })
 
   watch(() => formData.province, (value) => {
-    validateRequired('province', value)
+    // coerce numeric id to string for validation helper
+    validateRequired('province', value == null ? '' : String(value))
   })
 
   watch(() => formData.city, (value) => {
-    validateRequired('city', value)
+    // coerce numeric id to string for validation helper
+    validateRequired('city', value == null ? '' : String(value))
   })
 
   const goToStep2 = () => {
@@ -296,33 +324,29 @@
     }
   }
 
-  const goToRegister = () => {
+  async function goToRegister() {
     clearErrors()
 
-    // Part 1: Validate Personal Details to be sure
-    validateRequired('firstName', formData.firstName)
-    validateRequired('lastName', formData.lastName)
-    validateEmail(formData.email)
-    validatePassword(formData.password)
-    validateConfirmPassword(formData.password, formData.confirmPassword)
-
-    // Part 2: Validate Address Details
-    validateRequired('addressLine1', formData.addressLine1)
-    validateRequired('province', formData.province)
-    validateRequired('city', formData.city)
-
-    if (Object.keys(errors.value).length === 0) {
-      // Call the store here to register in the user, then redirect to login page
-      // Integrate toast usage here for error and success WHEN pinia store and API is done
-      console.log('Form submitted:', formData)
-    } else  {
-      console.log('Validation errors:', errors.value)
+    const payload = {
+      email: formData.email,
+      password: formData.password,
+      confirmPassword: formData.confirmPassword,
+      firstName: formData.firstName,
+      middleName: formData.middleName,
+      lastName: formData.lastName,
+      addressLine1: formData.addressLine1,
+      addressLine2: formData.addressLine2,
+      province: formData.province,
+      city: formData.city
     }
-  }
 
-  const onProvinceChange = (provinceId) => {
-    cities.value = phJSONData.cities[provinceId] || []
-    formData.city = ''
+    const result = await authStore.register(payload)
+    if (result.success) {
+      router.push('/login')
+    } else {
+      // merge backend errors to page errors
+      Object.assign(errors.value, authStore.errors)
+    }
   }
 </script>
 
