@@ -15,7 +15,13 @@ import ViewLogs from '@/pages/SystemAdmin/ViewLogs.vue'
 // Branch Manager Pages
 import BranchManagement from '@/pages/Branch Manager/BranchDashboard.vue'
 import ManageStock from '@/pages/Branch Manager/ManageStock.vue'
+import ManageOrders from '@/pages/Branch Manager/ManageOrders.vue'
 
+/*
+import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
+import ManageShoes from '@/pages/SystemAdmin/ManageShoes.vue'
+import ViewLogs from '@/pages/SystemAdmin/ViewLogs.vue'
+*/
 import ProfilePage from '@/pages/ProfilePage.vue'
 
 // First add new route for page here, then next put nav guards
@@ -99,6 +105,12 @@ const router = createRouter({
       path: '/ManageStock',
       name: 'ManageStock',
       component: ManageStock,
+      meta: { branchManagerOnly: true }
+    },
+    {
+      path: '/ManageOrders',
+      name: 'ManageOrders',
+      component: ManageOrders,
       meta: { branchManagerOnly: true }
     }
   ],

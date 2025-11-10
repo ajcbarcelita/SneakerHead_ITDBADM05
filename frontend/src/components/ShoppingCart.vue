@@ -1,4 +1,3 @@
-
 <template>
     <div class="card font-Montserrat">
         <DataTable :value="cartItems" tableStyle="min-width: 50rem" class="shadow-md">

@@ -67,7 +67,7 @@ const drawerVisible = ref(false);
 const menuItems = [
     { label: "Dashboard Overview", icon: "pi pi-home", to: "/BMDashboard" },
     { label: "Manage Stock", icon: "pi pi-box", to: "/ManageStock" },
-    { label: "View Orders", icon: "pi pi-shopping-cart", to: "/BranchOrders" },
+    { label: "View Orders", icon: "pi pi-shopping-cart", to: "/ManageOrders" },
 ];
 </script>
 

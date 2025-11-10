@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-white font-Montserrat">
+  <div class="min-h-screen flex flex-col bg-antiflash-white font-Montserrat">
     <!-- NAVBAR -->
     <header>
       <NavBarSA />
