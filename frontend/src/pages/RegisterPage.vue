@@ -28,91 +28,106 @@
 
 
         <Stepper v-model:value="activeStep" class="mt-6">
-          <StepList class="flex w-full justify-between items-center gap-4 overflow-hidden">
+          <StepList class="flex w-full justify-between items-center gap-3 overflow-hidden">
             <Step :value=1>Personal Details</Step>
             <Step :value=2>Address Details</Step>
           </StepList>
 
           <StepPanels>
             <!-- STEP 1: Personal Details -->
-            <StepPanel :value=1>
-              <div class="flex flex-col gap-4 mt-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <FloatLabel class="w-full" variant="on">
-                    <InputText
-                      id="firstName"
-                      v-model="formData.firstName"
-                      class="w-full"
-                    />
-                    <label for="firstName">First Name</label>
-                  </FloatLabel>
+            <StepPanel :value="1">
+              <div class="flex flex-col gap-3 mt-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-1.5">
+                  <!-- First Name -->
+                  <div class="flex flex-col gap-0.5">
+                    <FloatLabel class="w-full" variant="on">
+                      <InputText id="firstName" v-model="formData.firstName" class="w-full" />
+                      <label for="firstName">First Name <span class="text-red-400">*</span></label>
+                    </FloatLabel>
+                    <p v-if="errors.firstName" class="text-red-400 text-xs mt-0.5">{{ errors.firstName }}</p>
+                  </div>
 
-                  <FloatLabel class="w-full" variant="on">
-                    <InputText
-                      id="middleName"
-                      v-model="formData.middleName"
-                      class="w-full"
-                    />
-                    <label for="middleName">Middle Name</label>
-                  </FloatLabel>
+                  <!-- Middle Name -->
+                  <div class="flex flex-col gap-0.5">
+                    <FloatLabel class="w-full" variant="on">
+                      <InputText id="middleName" v-model="formData.middleName" class="w-full" />
+                      <label for="middleName">Middle Name</label>
+                    </FloatLabel>
+                  </div>
 
-                  <FloatLabel class="w-full" variant="on">
-                    <InputText
-                      id="lastName"
-                      v-model="formData.lastName"
-                      class="w-full"
-                    />
-                    <label for="lastName">Last Name</label>
-                  </FloatLabel>
+                  <!-- Last Name -->
+                  <div class="flex flex-col gap-0.5">
+                    <FloatLabel class="w-full" variant="on">
+                      <InputText id="lastName" v-model="formData.lastName" class="w-full" />
+                      <label for="lastName">Last Name <span class="text-red-400">*</span></label>
+                    </FloatLabel>
+                    <p v-if="errors.lastName" class="text-red-400 text-xs mt-0.5">{{ errors.lastName }}</p>
+                  </div>
                 </div>
 
-                <FloatLabel class="w-full" variant="on">
-                  <InputText id="email" v-model="formData.email" class="w-full" />
-                  <label for="email">Email</label>
-                </FloatLabel>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Email -->
+                <div class="flex flex-col gap-0.5">
                   <FloatLabel class="w-full" variant="on">
-                    <Password
-                      id="password"
-                      v-model="formData.password"
-                      toggleMask
-                      inputClass="w-full px-3 py-2"
-                    />
-                    <label for="password">Password</label>
+                    <InputText id="email" v-model="formData.email" class="w-full" />
+                    <label for="email">Email <span class="text-red-400">*</span></label>
                   </FloatLabel>
+                  <p v-if="errors.email" class="text-red-400 text-xs mt-0.5">{{ errors.email }}</p>
+                </div>
 
-                  <FloatLabel class="w-full" variant="on">
-                    <Password
-                      id="confirmPassword"
-                      v-model="formData.confirmPassword"
-                      toggleMask
-                      inputClass="w-full px-3 py-2"
-                    />
-                    <label for="confirmPassword">Confirm password</label>
-                  </FloatLabel>
+                <!-- Passwords -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                  <div class="flex flex-col gap-0.5">
+                    <FloatLabel class="w-full" variant="on">
+                      <Password
+                        id="password"
+                        v-model="formData.password"
+                        toggleMask
+                        inputClass="w-full px-3 py-2"
+                      />
+                      <label for="password">Password <span class="text-red-400">*</span></label>
+                    </FloatLabel>
+                    <p v-if="errors.password" class="text-red-400 text-xs mt-0.5">{{ errors.password }}</p>
+                  </div>
+
+                  <div class="flex flex-col gap-0.5">
+                    <FloatLabel class="w-full" variant="on">
+                      <Password
+                        id="confirmPassword"
+                        v-model="formData.confirmPassword"
+                        toggleMask
+                        inputClass="w-full px-3 py-2"
+                      />
+                      <label for="confirmPassword">Confirm Password <span class="text-red-400">*</span></label>
+                    </FloatLabel>
+                    <p v-if="errors.confirmPassword" class="text-red-400 text-xs mt-0.5">{{ errors.confirmPassword }}</p>
+                  </div>
                 </div>
 
                 <Button
                   label="Next"
                   class="w-full bg-oxford-blue text-white"
-                  @click="activeStep = 2"
+                  @click="goToStep2"
                 />
               </div>
             </StepPanel>
 
             <!-- STEP 2: Address Details -->
-            <StepPanel :value=2>
-              <div class="flex flex-col gap-4 mt-6">
-                <FloatLabel class="w-full" variant="on">
-                  <InputText
-                    id="addressLine1"
-                    v-model="formData.addressLine1"
-                    class="w-full"
-                  />
-                  <label for="addressLine1">Address Line 1</label>
-                </FloatLabel>
+            <StepPanel :value="2">
+              <div class="flex flex-col gap-3 mt-6">
+                <!-- Address Line 1 -->
+                <div class="flex flex-col gap-0.5">
+                  <FloatLabel class="w-full" variant="on">
+                    <InputText
+                      id="addressLine1"
+                      v-model="formData.addressLine1"
+                      class="w-full"
+                    />
+                    <label for="addressLine1">Address Line 1 <span class="text-red-400">*</span></label>
+                  </FloatLabel>
+                  <p v-if="errors.addressLine1" class="text-red-400 text-xs mt-0.5">{{ errors.addressLine1 }}</p>
+                </div>
 
+                <!-- Address Line 2 -->
                 <FloatLabel class="w-full" variant="on">
                   <InputText
                     id="addressLine2"
@@ -122,30 +137,37 @@
                   <label for="addressLine2">Address Line 2</label>
                 </FloatLabel>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <FloatLabel variant="on">
-                    <Select
-                      v-model="formData.province"
-                      :options="provinces"
-                      optionLabel="province_name"
-                      optionValue="province_id"
-                      @update:modelValue="onProvinceChange"
-                      class="w-full"
-                    />
-                    <label for="province">Province</label>
-                  </FloatLabel>
+                <!-- Province & City -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                  <div class="flex flex-col gap-0.5">
+                    <FloatLabel variant="on">
+                      <Select
+                        v-model="formData.province"
+                        :options="provinces"
+                        optionLabel="province_name"
+                        optionValue="province_id"
+                        @update:modelValue="onProvinceChange"
+                        class="w-full"
+                      />
+                      <label for="province">Province <span class="text-red-400">*</span></label>
+                    </FloatLabel>
+                    <p v-if="errors.province" class="text-red-400 text-xs mt-0.5">{{ errors.province }}</p>
+                  </div>
 
-                  <FloatLabel variant="on">
-                    <Select
-                      v-model="formData.city"
-                      :options="cities"
-                      optionLabel="name"
-                      optionValue="id"
-                      :disabled="!formData.province"
-                      class="w-full"
-                    />
-                    <label for="city">City / Municipality</label>
-                  </FloatLabel>
+                  <div class="flex flex-col gap-0.5">
+                    <FloatLabel variant="on">
+                      <Select
+                        v-model="formData.city"
+                        :options="cities"
+                        optionLabel="name"
+                        optionValue="id"
+                        :disabled="!formData.province"
+                        class="w-full"
+                      />
+                      <label for="city">City / Municipality <span class="text-red-400">*</span></label>
+                    </FloatLabel>
+                    <p v-if="errors.city" class="text-red-400 text-xs mt-0.5">{{ errors.city }}</p>
+                  </div>
                 </div>
 
                 <div class="flex gap-4">
@@ -158,6 +180,7 @@
                     type="submit"
                     label="Register"
                     class="flex-1 bg-oxford-blue text-white"
+                    @click="goToRegister"
                   />
                 </div>
               </div>
@@ -179,7 +202,8 @@
 </template>
 
 <script setup>
-  import { ref, reactive } from 'vue'
+  import { ref, reactive, watch } from 'vue'
+  import { useValidation } from '@/composables/useValidation'
 
   // PrimeVue Components
   import FloatLabel from 'primevue/floatlabel'
@@ -218,13 +242,87 @@
     city: ''
   })
 
+  const { errors, validateEmail, validatePassword, validateConfirmPassword, validateRequired, clearErrors } = useValidation()
+
+  // Watchers for reactive validation
+  watch(() => formData.firstName, (value) => {
+    validateRequired('firstName', value)
+  })
+
+  watch(() => formData.lastName, (value) => {
+    validateRequired('lastName', value)
+  })
+
+  watch(() => formData.email, (value) => {
+    validateEmail(value)
+  })
+
+  watch(() => formData.password, (value) => {
+    validatePassword(value)
+    // Re-validate confirm password if it has a value
+    if (formData.confirmPassword) {
+      validateConfirmPassword(value, formData.confirmPassword)
+    }
+  })
+
+  watch(() => formData.confirmPassword, (value) => {
+    validateConfirmPassword(formData.password, value)
+  })
+
+  watch(() => formData.addressLine1, (value) => {
+    validateRequired('addressLine1', value)
+  })
+
+  watch(() => formData.province, (value) => {
+    validateRequired('province', value)
+  })
+
+  watch(() => formData.city, (value) => {
+    validateRequired('city', value)
+  })
+
+  const goToStep2 = () => {
+    clearErrors()
+    validateRequired('firstName', formData.firstName)
+    validateRequired('lastName', formData.lastName)
+    validateEmail(formData.email)
+    validatePassword(formData.password)
+    validateConfirmPassword(formData.password, formData.confirmPassword)
+
+    if (Object.keys(errors.value).length === 0) {
+      activeStep.value = 2
+    } else  {
+      console.log('Validation errors:', errors.value)
+    }
+  }
+
+  const goToRegister = () => {
+    clearErrors()
+
+    // Part 1: Validate Personal Details to be sure
+    validateRequired('firstName', formData.firstName)
+    validateRequired('lastName', formData.lastName)
+    validateEmail(formData.email)
+    validatePassword(formData.password)
+    validateConfirmPassword(formData.password, formData.confirmPassword)
+
+    // Part 2: Validate Address Details
+    validateRequired('addressLine1', formData.addressLine1)
+    validateRequired('province', formData.province)
+    validateRequired('city', formData.city)
+
+    if (Object.keys(errors.value).length === 0) {
+      // Call the store here to register in the user, then redirect to login page
+      // Integrate toast usage here for error and success WHEN pinia store and API is done
+      console.log('Form submitted:', formData)
+    } else  {
+      console.log('Validation errors:', errors.value)
+    }
+  }
+
   const onProvinceChange = (provinceId) => {
     cities.value = phJSONData.cities[provinceId] || []
     formData.city = ''
-  }
-
-  const onSubmit = () => {
-    console.log('Form submitted:', formData)
   }
 </script>
 
