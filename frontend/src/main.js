@@ -1,7 +1,9 @@
 import { createApp } from 'vue'
-import PrimeVue from 'primevue/config'
 import { createPinia } from 'pinia'
+import Toast from 'primevue/toast'
+import ToastService from 'primevue/toastservice'
 
+import PrimeVue from 'primevue/config'
 import router from './router'
 import './styles/tailwind.css'
 
@@ -21,8 +23,8 @@ app.use(PrimeVue, {
     }
   }
 });
-
-
+app.use(ToastService);
+app.component('Toast', Toast)
 app.use(createPinia())
 app.use(router)
 

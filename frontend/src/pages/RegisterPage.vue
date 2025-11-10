@@ -206,10 +206,12 @@
   import { ref, reactive, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAuthStore } from '@/stores/authStore'
+  import { useToast } from 'primevue/usetoast'
   import { useValidation } from '@/composables/useValidation'
 
   const router = useRouter()
   const authStore = useAuthStore()
+  const toast = useToast()
 
   // PrimeVue Components
   import FloatLabel from 'primevue/floatlabel'
@@ -342,10 +344,25 @@
 
     const result = await authStore.register(payload)
     if (result.success) {
-      router.push('/login')
+      toast.add({ severity: 'success', summary: 'Registration Successful', detail: 'You can now log in with your account.', life: 15000 })
+      setTimeout(() => router.push('/login'), 5000)
     } else {
       // merge backend errors to page errors
       Object.assign(errors.value, authStore.errors)
+
+      const errDetail =
+        authStore.errors?.message ||
+        (authStore.errors && typeof authStore.errors === 'object'
+          ? Object.values(authStore.errors).flat().join('; ')
+          : String(authStore.errors)) ||
+        'Registration failed. Please check the form and try again.'
+
+      toast.add({
+        severity: 'error',
+        summary: 'Registration failed',
+        detail: errDetail,
+        life: 8000
+      })
     }
   }
 </script>
