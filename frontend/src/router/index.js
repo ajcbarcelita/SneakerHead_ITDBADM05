@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from '@/pages/LoginPage.vue'
 import RegisterPage from '@/pages/RegisterPage.vue'
 import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
-import ProfilePage from '@/pages/ProfilePage.vue'
 
 // First add new route for page here, then next put nav guards
 // depending on who is allowed to access the page
@@ -41,7 +40,25 @@ const router = createRouter({
       name: 'Profile',
       component: ProfilePage,
       meta: {requiresAuth: true}
-    }
+    },
+    {
+      path: '/SysAdminDashboard',
+      name: 'SADashboard',
+      component: SysAdminDashboard,
+      meta: {requiresAuth: true, adminOnly: true}
+    },
+    {
+      path: '/ManageBranch',
+      name: 'ManageBranch',
+      component: ManageBranch,
+      meta: {requiresAuth: true, adminOnly: true}
+    },
+    {
+      path: '/ManagePromoCodes',
+      name: 'ManagePromoCodes',
+      component: ManagePromoCodes,
+      meta: {requiresAuth: true, adminOnly: true}
+    },
   ],
 })
 

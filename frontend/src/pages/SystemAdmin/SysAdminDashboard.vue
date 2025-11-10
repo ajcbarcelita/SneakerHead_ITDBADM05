@@ -2,7 +2,7 @@
   <div class="min-h-screen flex flex-col bg-white font-Montserrat">
     <!-- NAVBAR -->
     <header>
-      <NavBarBM />
+      <NavBarSA />
     </header>
 
     <!-- MAIN DASHBOARD CONTENT -->
@@ -95,7 +95,7 @@
 </template>
 
 <script setup>
-import NavBarBM from '@/components/NavBarBM.vue'
+import NavBarSA from '@/components/NavBarSA.vue'
 import Footer from '@/components/Footer.vue'
 import Card from 'primevue/card'
 import Dropdown from 'primevue/dropdown'
