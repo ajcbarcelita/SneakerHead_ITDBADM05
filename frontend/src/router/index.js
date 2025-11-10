@@ -7,6 +7,11 @@ import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
 // System Admin Pages
 import SysAdminDashboard from '@/pages/SystemAdmin/SysAdminDashboard.vue'
 import ManageBranch from '@/pages/SystemAdmin/ManageBranch.vue'
+
+
+// Branch Manager Pages
+import BranchManagement from '@/pages/Branch Manager/BranchDashboard.vue'
+import ManageStock from '@/pages/Branch Manager/ManageStock.vue'
 /*
 import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
 import ManageShoes from '@/pages/SystemAdmin/ManageShoes.vue'
@@ -26,11 +31,12 @@ import ViewLogs from '@/pages/SystemAdmin/ViewLogs.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // Auth Routes
     {
       path: '/login',
       name: 'Login',
       component: LoginPage,
-      meta: {guestOnly: true}
+      meta: { guestOnly: true }
     },
     {
       path: '/register',
@@ -57,6 +63,19 @@ const router = createRouter({
       meta: {guestOnly: true}
     },
 
+    // Branch Manager Routes -- to be put requiresAuth 
+    {
+      path: '/BMDashboard',
+      name: 'BranchManagement',
+      component: BranchManagement,
+      meta: { branchManagerOnly: true }
+    },
+    {
+      path: '/ManageStock',
+      name: 'ManageStock',
+      component: ManageStock,
+      meta: { branchManagerOnly: true }
+    }
   ],
 })
 

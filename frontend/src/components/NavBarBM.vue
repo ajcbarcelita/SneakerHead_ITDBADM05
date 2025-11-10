@@ -6,7 +6,9 @@
                 <!-- LEFT SIDE: Menu Button -->
                 <div class="flex items-center space-x-4">
                     <Button icon="pi pi-bars" class="menu-btn mr-6" @click="drawerVisible = true" />
-                    <span class="uppercase font-bold text-2xl">Branch Manager Dashboard</span>
+                    <router-link to="/BMDashboard" class="flex items-center gap-3">
+                        <span class="uppercase font-bold text-2xl">Branch Manager Dashboard</span>
+                    </router-link>
                 </div>
 
                 <!-- CENTER LOGO -->

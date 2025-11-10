@@ -1,5 +1,5 @@
 <template>
-  <footer class="bg-white-smoke text-gray font-Montserrat">
+  <footer class="bg-white-smoke text-gray font-Montserrat border-t border-gray-300">
     <div class="container mx-auto px-3 py-3 flex flex-col md:flex-row items-center justify-between">
       
       <div class="flex items-center gap-3">
