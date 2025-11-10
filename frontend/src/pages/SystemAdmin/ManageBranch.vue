@@ -5,7 +5,7 @@
       <NavBarSA />
     </header>
 
-    <main class="flex-1 container mx-auto px-6 py-10 space-y-8 bg-gray-50">
+    <main class="flex-1 container mx-auto px-6 py-10 space-y-8 bg-antiflash-white">
       <!-- TABS -->
       <TabView>
         <!-- USERS TAB -->
@@ -21,7 +21,7 @@
                   placeholder="Search users by name or email..." 
                   class="w-80"
                 />
-                <Button icon="pi pi-search" class="p-button-primary" />
+                <Button icon="pi pi-search" class="search-btn" />
               </div>
 
               <!-- FILTERS ROW -->
@@ -62,7 +62,7 @@
               <Column field="branch" header="Branch" :sortable="true">
                 <template #body="slotProps">
                   <span v-if="slotProps.data.branch">{{ slotProps.data.branch }}</span>
-                  <span v-else class="text-gray-400">-</span>
+                  <span v-else class="text-gray">-</span>
                 </template>
               </Column>
               <Column field="role" header="Role" :sortable="true">
@@ -74,9 +74,9 @@
               <Column header="Actions">
                 <template #body="slotProps">
                   <div class="flex space-x-2">
-                    <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning" 
+                    <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-btn" 
                             @click="editUser(slotProps.data)" />
-                    <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" 
+                    <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-btn" 
                             @click="deleteUser(slotProps.data)" />
                   </div>
                 </template>
@@ -98,11 +98,11 @@
                   placeholder="Search branches by name or location..." 
                   class="w-80"
                 />
-                <Button icon="pi pi-search" class="p-button-primary" />
+                <Button icon="pi pi-search" class="search-btn" />
               </div>
 
               <!-- ADD BRANCH BUTTON -->
-              <Button label="Add Branch" icon="pi pi-plus" class="p-button-success" 
+              <Button label="Add Branch" icon="pi pi-plus" class="add-btn" 
                       @click="showAddBranchDialog = true" />
             </div>
           </div>
@@ -113,7 +113,6 @@
               <Column field="id" header="Branch ID" :sortable="true"></Column>
               <Column field="name" header="Branch Name" :sortable="true"></Column>
               <Column field="location" header="Location" :sortable="true"></Column>
-      
               <Column field="status" header="Status" :sortable="true">
                 <template #body="slotProps">
                   <Tag :value="slotProps.data.status" 
@@ -123,9 +122,9 @@
               <Column header="Actions">
                 <template #body="slotProps">
                   <div class="flex space-x-2">
-                    <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning" 
+                    <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-btn" 
                             @click="editBranch(slotProps.data)" />
-                    <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" 
+                    <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-btn" 
                             @click="deleteBranch(slotProps.data)" />
                   </div>
                 </template>
@@ -145,17 +144,17 @@
     <Dialog v-model:visible="showAddBranchDialog" header="Add New Branch" :modal="true" class="w-1/3">
       <div class="space-y-4">
         <div class="field">
-          <label class="font-semibold">Branch Name</label>
+          <label class="font-semibold text-charcoal">Branch Name</label>
           <InputText v-model="newBranch.name" class="w-full" placeholder="Enter branch name" />
         </div>
         <div class="field">
-          <label class="font-semibold">Location</label>
+          <label class="font-semibold text-charcoal">Location</label>
           <InputText v-model="newBranch.location" class="w-full" placeholder="Enter location" />
         </div>
       </div>
       <template #footer>
-        <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="showAddBranchDialog = false" />
-        <Button label="Save" icon="pi pi-check" class="p-button-success" @click="saveBranch" />
+        <Button label="Cancel" icon="pi pi-times" class="p-button-text cancel-btn" @click="showAddBranchDialog = false" />
+        <Button label="Save" icon="pi pi-check" class="save-btn" @click="saveBranch" />
       </template>
     </Dialog>
   </div>
@@ -284,3 +283,65 @@ onMounted(() => {
   branches.value = sampleBranches
 })
 </script>
+
+<style scoped>
+.search-btn.p-button {
+  background-color: var(--color-oxford-blue) !important;
+  border-color: var(--color-oxford-blue) !important;
+  color: var(--color-antiflash-white) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.search-btn.p-button:hover {
+  background-color: #0a1a2d !important;
+}
+
+.add-btn.p-button {
+  background-color: var(--color-giants-orange) !important;
+  border-color: var(--color-giants-orange) !important;
+  color: var(--color-antiflash-white) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.add-btn.p-button:hover {
+  background-color: #d45601 !important;
+}
+
+.save-btn.p-button {
+  background-color: var(--color-giants-orange) !important;
+  border-color: var(--color-giants-orange) !important;
+  color: var(--color-antiflash-white) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.save-btn.p-button:hover {
+  background-color: #d45601 !important;
+}
+
+.edit-btn.p-button {
+  color: var(--color-giants-orange) !important;
+}
+
+.edit-btn.p-button:hover {
+  background-color: rgba(234, 102, 45, 0.1) !important;
+}
+
+.delete-btn.p-button {
+  color: #dc2626 !important;
+}
+
+.delete-btn.p-button:hover {
+  background-color: rgba(220, 38, 38, 0.1) !important;
+}
+
+.cancel-btn.p-button {
+  color: var(--color-gray) !important;
+}
+
+.cancel-btn.p-button:hover {
+  background-color: rgba(119, 123, 126, 0.1) !important;
+}
+</style>
