@@ -25,6 +25,7 @@
             />
             <label for="email" class="text-charcoal text-sm">Email</label>
           </FloatLabel>
+          <p v-if="errors.email" class="text-red-500 text-s mt-0.5">{{ errors.email }}</p>
 
           <!-- Password (toggleMask + large via inputClass) -->
           <FloatLabel variant="on"class="w-full" autocomplete="off">
@@ -64,7 +65,8 @@
 </template>
 
 <script setup>
-    import { ref } from 'vue'
+    import { ref, watch } from 'vue'
+    import { useValidation } from '@/composables/useValidation'
 
     // PrimeVue components (local import — available in template automatically)
     import FloatLabel from 'primevue/floatlabel'
@@ -79,6 +81,28 @@
     const email = ref('')
     const password = ref('')
     const rememberMe = ref(false)
+    const { errors, validateEmail, clearErrors} = useValidation()
+
+    watch(email, (value) => {
+      validateEmail(value)
+    })
+
+    const onSubmit = () => {
+      clearErrors()
+      validateEmail(email.value)
+
+      if (Object.keys(errors.value).length === 0) {
+        // Call the store here to log in the user
+        // Integrate toast usage here for error and success WHEN pinia store and API is done
+        console.log('Form submitted:', {
+          email: email.value,
+          password: password.value,
+          rememberMe: rememberMe.value
+        })
+      } else {
+        console.log('Validation errors:', errors.value)
+      }
+    }
 
 </script>
 

@@ -179,105 +179,105 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+  import { ref, reactive } from 'vue'
 
-// PrimeVue Components
-import FloatLabel from 'primevue/floatlabel'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
-import Select from 'primevue/select'
+  // PrimeVue Components
+  import FloatLabel from 'primevue/floatlabel'
+  import InputText from 'primevue/inputtext'
+  import Password from 'primevue/password'
+  import Button from 'primevue/button'
+  import Select from 'primevue/select'
 
-// Animated Stepper Components
-import Stepper from 'primevue/stepper'
-import StepList from 'primevue/steplist'
-import Step from 'primevue/step'
-import StepPanels from 'primevue/steppanels'
-import StepPanel from 'primevue/steppanel'
+  // Animated Stepper Components
+  import Stepper from 'primevue/stepper'
+  import StepList from 'primevue/steplist'
+  import Step from 'primevue/step'
+  import StepPanels from 'primevue/steppanels'
+  import StepPanel from 'primevue/steppanel'
 
-// Assets
-import brandImage from '@/assets/sneakerhead_branding_pic1.jpg'
-import phJSONData from '@/data/ph_locations.json'
+  // Assets
+  import brandImage from '@/assets/sneakerhead_branding_pic1.jpg'
+  import phJSONData from '@/data/ph_locations.json'
 
-const image = brandImage
-const activeStep = ref(1)
+  const image = brandImage
+  const activeStep = ref(1)
 
-const provinces = ref(phJSONData.provinces)
-const cities = ref([])
+  const provinces = ref(phJSONData.provinces)
+  const cities = ref([])
 
-const formData = reactive({
-  email: '',
-  password: '',
-  confirmPassword: '',
-  firstName: '',
-  middleName: '',
-  lastName: '',
-  addressLine1: '',
-  addressLine2: '',
-  province: '',
-  city: ''
-})
+  const formData = reactive({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    addressLine1: '',
+    addressLine2: '',
+    province: '',
+    city: ''
+  })
 
-const onProvinceChange = (provinceId) => {
-  cities.value = phJSONData.cities[provinceId] || []
-  formData.city = ''
-}
+  const onProvinceChange = (provinceId) => {
+    cities.value = phJSONData.cities[provinceId] || []
+    formData.city = ''
+  }
 
-const onSubmit = () => {
-  console.log('Form submitted:', formData)
-}
+  const onSubmit = () => {
+    console.log('Form submitted:', formData)
+  }
 </script>
 
 <style src="@/styles/tailwind.css"></style>
 
 <style>
-.p-password,
-.p-password .p-inputtext {
-  width: 100% !important;
-  box-sizing: border-box;
-}
+  .p-password,
+  .p-password .p-inputtext {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
 
-.p-password .p-inputtext {
-  padding-right: 3rem;
-}
+  .p-password .p-inputtext {
+    padding-right: 3rem;
+  }
 
-.p-stepper .p-steplist,
-.p-stepper .p-step-list,
-.p-stepper .p-steps-list {
-  gap: 0.5rem !important;
-  align-items: center;
-  overflow: visible;
-}
+  .p-stepper .p-steplist,
+  .p-stepper .p-step-list,
+  .p-stepper .p-steps-list {
+    gap: 0.5rem !important;
+    align-items: center;
+    overflow: visible;
+  }
 
-/* smaller step circle */
-.p-stepper .p-step-number,
-.p-stepper .p-steps-number,
-.p-steps .p-steps-number {
-  width: 28px !important;
-  height: 28px !important;
-  line-height: 28px !important;
-  font-size: 0.85rem !important;
-  border-radius: 9999px !important;
-}
+  /* smaller step circle */
+  .p-stepper .p-step-number,
+  .p-stepper .p-steps-number,
+  .p-steps .p-steps-number {
+    width: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    font-size: 0.85rem !important;
+    border-radius: 9999px !important;
+  }
 
-/* smaller label text */
-.p-stepper .p-step-label,
-.p-stepper .p-step .p-step-label,
-.p-steps .p-menuitem-text {
-  font-size: 0.875rem !important;
-  margin-top: 0 !important;
-}
+  /* smaller label text */
+  .p-stepper .p-step-label,
+  .p-stepper .p-step .p-step-label,
+  .p-steps .p-menuitem-text {
+    font-size: 0.875rem !important;
+    margin-top: 0 !important;
+  }
 
-/* reduce vertical spacing around the stepper */
-.p-stepper {
-  padding: 0.25rem 0 !important;
-  margin-bottom: 0.75rem !important;
-}
+  /* reduce vertical spacing around the stepper */
+  .p-stepper {
+    padding: 0.25rem 0 !important;
+    margin-bottom: 0.75rem !important;
+  }
 
-/* tighten hover/active shadow so smaller circles still look good */
-.p-stepper .p-step.p-highlight .p-step-number,
-.p-steps .p-steps-item.p-highlight .p-steps-number {
-  transform: scale(1.08) !important;
-  box-shadow: 0 6px 16px rgba(16,37,64,0.10) !important;
-}
+  /* tighten hover/active shadow so smaller circles still look good */
+  .p-stepper .p-step.p-highlight .p-step-number,
+  .p-steps .p-steps-item.p-highlight .p-steps-number {
+    transform: scale(1.08) !important;
+    box-shadow: 0 6px 16px rgba(16,37,64,0.10) !important;
+  }
 </style>
