@@ -15,7 +15,7 @@
           </p>
         </div>
 
-        <form class="flex flex-col gap-4" @submit.prevent="onSubmit"> <!-- Change -->
+        <form class="flex flex-col gap-3" @submit.prevent="onSubmit"> <!-- Change -->
           <!-- Email -->
           <FloatLabel variant="on" class="w-full" autocomplete="off">
             <InputText
@@ -25,7 +25,7 @@
             />
             <label for="email" class="text-charcoal text-sm">Email</label>
           </FloatLabel>
-          <p v-if="errors.email" class="text-red-500 text-s mt-0.5">{{ errors.email }}</p>
+          <p v-if="errors.email" class="text-red-500 text-xs mt-0.5">{{ errors.email }}</p>
 
           <!-- Password (toggleMask + large via inputClass) -->
           <FloatLabel variant="on"class="w-full" autocomplete="off">
@@ -47,7 +47,7 @@
             </div>
           </div>
 
-          <Button label="Log In" class="font-sans w-full bg-oxford-blue text-white py-3 rounded-md" />
+          <Button type="submit" label="Log In" class="font-sans w-full bg-oxford-blue text-white py-3 rounded-md" />
         </form>
       </div>
     </div>
