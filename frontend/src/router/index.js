@@ -18,8 +18,6 @@ import ManageShoes from '@/pages/SystemAdmin/ManageShoes.vue'
 import ViewLogs from '@/pages/SystemAdmin/ViewLogs.vue'
 */
 import ProfilePage from '@/pages/ProfilePage.vue'
-import SysAdminDashboard from '@/pages/SystemAdmin/SysAdminDashboard.vue'
-import ManageBranch from '@/pages/SystemAdmin/ManageBranch.vue'
 import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
 
 // First add new route for page here, then next put nav guards
@@ -79,7 +77,7 @@ const router = createRouter({
       meta: {requiresAuth: true, adminOnly: true}
     },
 
-    // Branch Manager Routes -- to be put requiresAuth 
+    // Branch Manager Routes -- to be put requiresAuth
     {
       path: '/BMDashboard',
       name: 'BranchManagement',
