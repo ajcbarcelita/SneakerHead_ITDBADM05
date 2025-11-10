@@ -127,8 +127,6 @@
                             @click="editBranch(slotProps.data)" />
                     <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" 
                             @click="deleteBranch(slotProps.data)" />
-                    <Button icon="pi pi-eye" class="p-button-rounded p-button-text p-button-info" 
-                            @click="viewBranch(slotProps.data)" />
                   </div>
                 </template>
               </Column>
