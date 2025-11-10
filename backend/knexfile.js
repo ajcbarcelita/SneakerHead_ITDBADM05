@@ -1,12 +1,11 @@
-// Update with your config settings.
-
-require('dotenv').config();
+// knexfile.js
+import dotenv from 'dotenv';
+dotenv.config();
 
 /**
  * @type { Object.<string, import("knex").Knex.Config> }
  */
-module.exports = {
-
+const knexConfig = {
   development: {
     client: 'mysql2',
     connection: {
@@ -16,13 +15,13 @@ module.exports = {
       database: process.env.DB_NAME,
       port: process.env.DB_PORT,
       multipleStatements: false
-    }, 
+    },
     pool: { min: 2, max: 10 },
     seeds: {
       directory: './seeds'
     }
   },
-  
+
   production: {
     client: 'mysql2',
     connection: {
@@ -31,11 +30,12 @@ module.exports = {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       port: process.env.DB_PORT
-    }, 
+    },
     pool: { min: 2, max: 10 },
     seeds: {
       directory: './seeds'
     }
   }
-
 };
+
+export default knexConfig;
