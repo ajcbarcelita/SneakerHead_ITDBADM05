@@ -5,15 +5,15 @@
 //
 // Make sure `argon2` is installed: `pnpm add argon2`
 
-const argon2 = require('argon2');
-const readline = require('readline');
+const argon2 = require("argon2");
+const readline = require("readline");
 
 async function hashPassword(pw) {
   return await argon2.hash(pw, {
     type: argon2.argon2id,
     memoryCost: 2 ** 16, // 64 MB
     timeCost: 5,
-    parallelism: 1
+    parallelism: 1,
   });
 }
 
@@ -22,13 +22,13 @@ function promptMasked(question) {
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
-      terminal: true
+      terminal: true,
     });
 
     // Hide input by overriding _writeToOutput
     const silent = (s) => {
       if (rl && rl.output) {
-        rl.output.write('\x1B[2K\x1B[200D' + question + Array(rl.line.length + 1).join('*'));
+        rl.output.write("\x1B[2K\x1B[200D" + question + Array(rl.line.length + 1).join("*"));
       }
     };
 
@@ -36,7 +36,7 @@ function promptMasked(question) {
       rl.history = rl.history.slice(1);
       rl.close();
       // Move cursor to next line
-      process.stdout.write('\n');
+      process.stdout.write("\n");
       resolve(answer);
     });
 
@@ -61,11 +61,11 @@ async function main() {
       plain = arg;
     } else {
       // interactive prompt (masked)
-      plain = await promptMasked('Enter password: ');
+      plain = await promptMasked("Enter password: ");
     }
 
     if (!plain) {
-      console.error('No password provided.');
+      console.error("No password provided.");
       process.exit(1);
     }
 
@@ -73,7 +73,7 @@ async function main() {
     // Print only the hashed password so you can copy it into your SQL insert
     console.log(hashed);
   } catch (err) {
-    console.error('Error hashing password:', err);
+    console.error("Error hashing password:", err);
     process.exit(1);
   }
 }

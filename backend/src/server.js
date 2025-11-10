@@ -1,6 +1,6 @@
-import app from './app.js';
-import dotenv from 'dotenv';
-import { createSshTunnel, closeSshTunnel } from './db/sshTunnel.js';
+import app from "./app.js";
+import dotenv from "dotenv";
+import { createSshTunnel, closeSshTunnel } from "./db/sshTunnel.js";
 
 dotenv.config();
 
@@ -18,16 +18,15 @@ const PORT = process.env.PORT || 3000;
 
     // Clean up on exit signals
     const shutdown = async () => {
-      console.log('\nShutting down...');
+      console.log("\nShutting down...");
       await closeSshTunnel();
       server.close(() => process.exit(0));
     };
 
-    process.on('SIGINT', shutdown);   // Ctrl+C
-    process.on('SIGTERM', shutdown);  // `kill` command or Docker stop
-
+    process.on("SIGINT", shutdown); // Ctrl+C
+    process.on("SIGTERM", shutdown); // `kill` command or Docker stop
   } catch (err) {
-    console.error('Failed to start SSH tunnel:', err);
+    console.error("Failed to start SSH tunnel:", err);
     process.exit(1);
   }
 })();

@@ -4,8 +4,8 @@ import fs from "fs";
 const BASE_URL = "https://psgc.gitlab.io/api";
 const provincesDB = [
   [1, "Ilocos Norte"],
-  [2, "Ilocos Sur"],d
-  [3, "La Union"],
+  [2, "Ilocos Sur"],
+  d[(3, "La Union")],
   [4, "Pangasinan"],
   [5, "Batanes"],
   [6, "Cagayan"],
@@ -92,7 +92,7 @@ async function main() {
 
   const mapping = provincesDB.map(([province_id, dbName]) => {
     const match = provinces.find(
-      (p) => p.name.toLowerCase().trim() === dbName.toLowerCase().trim()
+      (p) => p.name.toLowerCase().trim() === dbName.toLowerCase().trim(),
     );
     return { province_id, dbName, apiCode: match?.code };
   });
@@ -127,4 +127,3 @@ ${inserts.join(",\n")};
 }
 
 main().catch(console.error);
-

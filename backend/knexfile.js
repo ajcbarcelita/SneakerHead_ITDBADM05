@@ -1,5 +1,5 @@
 // knexfile.js
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 /**
@@ -7,35 +7,35 @@ dotenv.config();
  */
 const knexConfig = {
   development: {
-    client: 'mysql2',
+    client: "mysql2",
     connection: {
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       port: process.env.DB_PORT,
-      multipleStatements: false
+      multipleStatements: true,
     },
     pool: { min: 2, max: 10 },
     seeds: {
-      directory: './seeds'
-    }
+      directory: "./seeds",
+    },
   },
 
   production: {
-    client: 'mysql2',
+    client: "mysql2",
     connection: {
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      port: process.env.DB_PORT
+      port: process.env.DB_PORT,
     },
     pool: { min: 2, max: 10 },
     seeds: {
-      directory: './seeds'
-    }
-  }
+      directory: "./seeds",
+    },
+  },
 };
 
 export default knexConfig;

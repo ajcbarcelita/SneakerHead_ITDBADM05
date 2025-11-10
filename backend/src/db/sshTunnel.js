@@ -1,7 +1,7 @@
 // sshTunnel.js
-import { Client } from 'ssh2';
-import net from 'net';
-import dotenv from 'dotenv';
+import { Client } from "ssh2";
+import net from "net";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -15,24 +15,23 @@ let reconnecting = false;
  */
 export async function createSshTunnel({
   maxRetries = 5,
-  retryDelay = 5000 // ms
+  retryDelay = 5000, // ms
 } = {}) {
-
   let attempt = 0;
 
   while (attempt < maxRetries) {
     attempt++;
     try {
       await _connectTunnel();
-      console.log('✅ SSH tunnel established successfully.');
+      console.log("✅ SSH tunnel established successfully.");
       return { sshClient, server };
     } catch (err) {
       console.error(`❌ Attempt ${attempt} failed:`, err.message || err);
       if (attempt < maxRetries) {
         console.log(`Retrying in ${retryDelay / 1000}s...`);
-        await new Promise(res => setTimeout(res, retryDelay));
+        await new Promise((res) => setTimeout(res, retryDelay));
       } else {
-        throw new Error('SSH tunnel failed after maximum retries.');
+        throw new Error("SSH tunnel failed after maximum retries.");
       }
     }
   }
@@ -54,20 +53,20 @@ function _connectTunnel() {
       readyTimeout: 20000,
     };
 
-    sshClient.on('ready', () => {
-      console.log('✅ SSH connection established.');
+    sshClient.on("ready", () => {
+      console.log("✅ SSH connection established.");
 
       const localPort = parseInt(process.env.SSH_LOCAL_PORT) || 3307;
-      const remoteHost = process.env.SSH_REMOTE_HOST || '127.0.0.1';
+      const remoteHost = process.env.SSH_REMOTE_HOST || "127.0.0.1";
       const remotePort = parseInt(process.env.SSH_REMOTE_PORT) || 3306;
 
       // Clean up existing server if any
       if (server) server.close();
 
       server = net.createServer((localSocket) => {
-        sshClient.forwardOut('127.0.0.1', localPort, remoteHost, remotePort, (err, stream) => {
+        sshClient.forwardOut("127.0.0.1", localPort, remoteHost, remotePort, (err, stream) => {
           if (err) {
-            console.error('❌ SSH port forwarding error:', err.message || err);
+            console.error("❌ SSH port forwarding error:", err.message || err);
             localSocket.end();
             return;
           }
@@ -75,23 +74,23 @@ function _connectTunnel() {
         });
       });
 
-      server.listen(localPort, '127.0.0.1', () => {
+      server.listen(localPort, "127.0.0.1", () => {
         console.log(`🚀 Tunnel ready → localhost:${localPort} → remote:${remotePort}`);
         resolve();
       });
     });
 
-    sshClient.on('close', () => {
-      console.warn('⚠️ SSH connection closed.');
+    sshClient.on("close", () => {
+      console.warn("⚠️ SSH connection closed.");
       if (!reconnecting) _reconnectTunnel();
     });
 
-    sshClient.on('end', () => {
-      console.warn('⚠️ SSH connection ended.');
+    sshClient.on("end", () => {
+      console.warn("⚠️ SSH connection ended.");
       if (!reconnecting) _reconnectTunnel();
     });
 
-    sshClient.on('error', (err) => {
+    sshClient.on("error", (err) => {
       reject(err);
     });
 
@@ -104,13 +103,13 @@ function _connectTunnel() {
  */
 function _reconnectTunnel() {
   reconnecting = true;
-  console.log('🔄 Attempting to reconnect SSH tunnel in 5s...');
+  console.log("🔄 Attempting to reconnect SSH tunnel in 5s...");
   setTimeout(async () => {
     try {
       await _connectTunnel();
-      console.log('✅ SSH tunnel reconnected.');
+      console.log("✅ SSH tunnel reconnected.");
     } catch (err) {
-      console.error('❌ Failed to reconnect SSH tunnel:', err.message || err);
+      console.error("❌ Failed to reconnect SSH tunnel:", err.message || err);
     } finally {
       reconnecting = false;
     }
@@ -122,10 +121,10 @@ function _reconnectTunnel() {
  */
 export async function closeSshTunnel() {
   if (server) {
-    server.close(() => console.log('🛑 Local TCP server closed.'));
+    server.close(() => console.log("🛑 Local TCP server closed."));
   }
   if (sshClient) {
     sshClient.end();
-    console.log('🛑 SSH client disconnected.');
+    console.log("🛑 SSH client disconnected.");
   }
 }

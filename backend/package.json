@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed": "node ./seeds/db_seed.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "format": "prettier --write"
   },
   "keywords": [],
   "author": "",
@@ -27,9 +28,11 @@
     "node-fetch": "^3.3.2",
     "objection": "^3.1.5",
     "path": "^0.12.7",
-    "ssh2": "^1.17.0"
+    "ssh2": "^1.17.0",
+    "validator": "^13.15.22"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2"
   }
 }
