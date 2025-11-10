@@ -4,9 +4,9 @@ import LoginPage from '@/pages/LoginPage.vue'
 import RegisterPage from '@/pages/RegisterPage.vue'
 import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
 import ProfilePage from '@/pages/ProfilePage.vue'
-import SysAdminDashboard from '@/pages/SysAdminDashboard.vue'
-import ManageBranch from '@/pages/ManageBranch.vue'
-import ManagePromoCodes from '@/pages/ManagePromoCodes.vue'
+import SysAdminDashboard from '@/pages/SystemAdmin/SysAdminDashboard.vue'
+import ManageBranch from '@/pages/SystemAdmin/ManageBranch.vue'
+import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
 
 // First add new route for page here, then next put nav guards
 // depending on who is allowed to access the page
