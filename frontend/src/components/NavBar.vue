@@ -5,8 +5,8 @@
                 <!-- Home & Products -->
                 <div class="flex items-center">
                     <div class="space-x-6 uppercase text-lg">
-                        <router-link to="/" class="hover:text-giants-orange font-bold">Home</router-link>
-                        <router-link to="/products" class="hover:text-giants-orange font-bold">Sneaker Catalog</router-link>
+                        <router-link to="/" class="nav-link">Home</router-link>
+                        <router-link to="/products" class="nav-link">Sneaker Catalog</router-link>
                     </div>
                 </div>
 
@@ -32,7 +32,7 @@
                     </router-link>
 
                     <!-- Sign-in / Register -->
-                    <router-link to="/login" class="hover:text-giants-orange font-bold">SIGN IN</router-link>
+                    <router-link to="/login" class="nav-link">SIGN IN</router-link>
 
                     <!-- Edit Profile -->
                     <router-link to="/profile" class="p-2 rounded-full hover:bg-white/10" aria-label="Profile">
@@ -43,5 +43,3 @@
         </div>
     </nav>
 </template>
-
-

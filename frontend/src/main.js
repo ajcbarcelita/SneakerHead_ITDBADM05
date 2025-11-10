@@ -4,13 +4,14 @@ import { createPinia } from 'pinia'
 
 import router from './router'
 import './styles/tailwind.css'
-import App from './App.vue'
+
+// Change to see specific page
+import Login from '@/pages/BranchManagement.vue'
 
 import 'primeicons/primeicons.css' 
-
 import Lara from '@primevue/themes/material';
 
-const app = createApp(App);
+const app = createApp(Login);
 
 app.use(PrimeVue, {
   theme: {

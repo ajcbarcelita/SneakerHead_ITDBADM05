@@ -7,7 +7,7 @@
 
     <main class="flex-1">
       <div class="container mx-auto p-6">
-        <h1 class="text-2xl font-bold text-oxford-blue">Niggas in Paris</h1>
+        <h1 class="text-2xl font-bold text-oxford-blue">Real</h1>
         <p class="mt-4 text-gray">Add your page content here.</p>
       </div>
     </main>

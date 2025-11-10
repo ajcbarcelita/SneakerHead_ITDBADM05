@@ -11,3 +11,34 @@
   --color-giants-orange: #EA662D;
   --color-gray: #777B7E;
 }
+
+/*
+Class Styles
+*/
+
+.nav-link {
+  @apply hover:text-giants-orange rounded p-2 hover:bg-white font-bold;
+}
+
+.menu-btn.p-button {
+  background-color: #F26101 !important; 
+  color: #F5F5F5 !important; 
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.menu-btn.p-button:hover {
+  background-color: #D45601 !important; 
+}
+
+.close-btn {
+  background-color: transparent !important;
+  color: #F26101 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.close-btn:hover {
+  background-color: #F26101 !important;
+  color: #F5F5F5 !important;
+}
