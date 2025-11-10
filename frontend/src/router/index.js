@@ -7,8 +7,8 @@ import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
 // System Admin Pages
 import SysAdminDashboard from '@/pages/SystemAdmin/SysAdminDashboard.vue'
 import ManageBranch from '@/pages/SystemAdmin/ManageBranch.vue'
-/*
 import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
+/*
 import ManageShoes from '@/pages/SystemAdmin/ManageShoes.vue'
 import ViewLogs from '@/pages/SystemAdmin/ViewLogs.vue'
 */
@@ -48,15 +48,20 @@ const router = createRouter({
       path: '/SysAdminDashboard',
       name: 'SADashboard',
       component: SysAdminDashboard,
-      meta: {guestOnly: false}
+      meta: {requiresAuth: true, adminOnly: true}
     },
     {
       path: '/ManageBranch',
       name: 'ManageBranch',
       component: ManageBranch,
-      meta: {guestOnly: true}
+      meta: {requiresAuth: true, adminOnly: true}
     },
-
+    {
+      path: '/ManagePromoCodes',
+      name: 'ManagePromoCodes',
+      component: ManagePromoCodes,
+      meta: {requiresAuth: true, adminOnly: true}
+    },
   ],
 })
 

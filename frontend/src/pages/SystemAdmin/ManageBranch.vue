@@ -13,7 +13,7 @@
           <div class="flex flex-col md:flex-row justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-charcoal uppercase">Manage Users</h1>
             
-            <div class="flex items-center space-x-4">
+            <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
               <!-- SEARCH BAR -->
               <div class="flex items-center space-x-2 w-auto">
                 <InputText 
@@ -24,16 +24,31 @@
                 <Button icon="pi pi-search" class="p-button-primary" />
               </div>
 
-              <!-- FILTER -->
-              <div class="flex items-center space-x-3">
-                <span class="font-semibold text-charcoal">Role:</span>
-                <Dropdown
-                  v-model="selectedUserRole"
-                  :options="userRoleOptions"
-                  optionLabel="label"
-                  placeholder="Select Role"
-                  class="w-48"
-                />
+              <!-- FILTERS ROW -->
+              <div class="flex items-center space-x-4">
+                <!-- FILTER BY BRANCH -->
+                <div class="flex items-center space-x-3">
+                  <span class="font-semibold text-charcoal">Branch:</span>
+                  <Dropdown
+                    v-model="selectedUserBranch"
+                    :options="userBranchOptions"
+                    optionLabel="label"
+                    placeholder="All Branches"
+                    class="w-48"
+                  />
+                </div>
+
+                <!-- FILTER BY ROLE -->
+                <div class="flex items-center space-x-3">
+                  <span class="font-semibold text-charcoal">Role:</span>
+                  <Dropdown
+                    v-model="selectedUserRole"
+                    :options="userRoleOptions"
+                    optionLabel="label"
+                    placeholder="All Roles"
+                    class="w-48"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -44,6 +59,12 @@
               <Column field="id" header="User ID" :sortable="true"></Column>
               <Column field="name" header="Name" :sortable="true"></Column>
               <Column field="email" header="Email" :sortable="true"></Column>
+              <Column field="branch" header="Branch" :sortable="true">
+                <template #body="slotProps">
+                  <span v-if="slotProps.data.branch">{{ slotProps.data.branch }}</span>
+                  <span v-else class="text-gray-400">-</span>
+                </template>
+              </Column>
               <Column field="role" header="Role" :sortable="true">
                 <template #body="slotProps">
                   <Tag :value="slotProps.data.role" 
@@ -92,10 +113,18 @@
               <Column field="id" header="Branch ID" :sortable="true"></Column>
               <Column field="name" header="Branch Name" :sortable="true"></Column>
               <Column field="location" header="Location" :sortable="true"></Column>
+              <Column field="manager" header="Manager" :sortable="true">
+                <template #body="slotProps">
+                  <span v-if="slotProps.data.manager !== 'Unassigned'">{{ slotProps.data.manager }}</span>
+                  <span v-else class="text-gray-400">{{ slotProps.data.manager }}</span>
+                </template>
+              </Column>
+              <Column field="status" header="Status" :sortable="true">
                 <template #body="slotProps">
                   <Tag :value="slotProps.data.status" 
                        :severity="slotProps.data.status === 'Active' ? 'success' : 'danger'" />
                 </template>
+              </Column>
               <Column header="Actions">
                 <template #body="slotProps">
                   <div class="flex space-x-2">
@@ -130,7 +159,7 @@
           <label class="font-semibold">Location</label>
           <InputText v-model="newBranch.location" class="w-full" placeholder="Enter location" />
         </div>
-        </div>
+      </div>
       <template #footer>
         <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="showAddBranchDialog = false" />
         <Button label="Save" icon="pi pi-check" class="p-button-success" @click="saveBranch" />
@@ -155,6 +184,7 @@ import Dialog from 'primevue/dialog'
 
 // USERS DATA
 const selectedUserRole = ref({ label: 'All Roles', value: 'all' })
+const selectedUserBranch = ref({ label: 'All Branches', value: 'all' })
 const userSearchQuery = ref('')
 const users = ref([])
 
@@ -175,29 +205,37 @@ const userRoleOptions = [
   { label: 'Branch Manager', value: 'manager' }
 ]
 
-// TEMP Sample managers for dropdown
-const availableManagers = [
-  { id: 1, name: 'Mike Johnson' },
-  { id: 2, name: 'David Brown' },
-  { id: 3, name: 'Sarah Wilson' }
+// Dropdown options for user branches
+const userBranchOptions = [
+  { label: 'All Branches', value: 'all' },
+  { label: 'Manila', value: 'manila' },
+  { label: 'Cebu', value: 'cebu' },
+  { label: 'Davao', value: 'davao' },
+  { label: 'Cavite', value: 'cavite' },
+  { label: 'Unassigned', value: 'unassigned' }
 ]
 
 // TEMP Sample user data
 const sampleUsers = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Customer' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Customer' },
-  { id: 3, name: 'Mike Johnson', email: 'mike@branch.com', role: 'Branch Manager' },
-  { id: 4, name: 'Sarah Wilson', email: 'sarah@example.com', role: 'Customer' },
-  { id: 5, name: 'David Brown', email: 'david@branch.com', role: 'Branch Manager' },
-  { id: 6, name: 'Emily Davis', email: 'emily@example.com', role: 'Customer' }
+  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Customer', branch: null },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Customer', branch: null },
+  { id: 3, name: 'Mike Johnson', email: 'mike@branch.com', role: 'Branch Manager', branch: 'Manila' },
+  { id: 4, name: 'Sarah Wilson', email: 'sarah@example.com', role: 'Customer', branch: null },
+  { id: 5, name: 'David Brown', email: 'david@branch.com', role: 'Branch Manager', branch: 'Cebu' },
+  { id: 6, name: 'Emily Davis', email: 'emily@example.com', role: 'Customer', branch: null },
+  { id: 7, name: 'Robert Garcia', email: 'robert@branch.com', role: 'Branch Manager', branch: 'Davao' },
+  { id: 8, name: 'Lisa Anderson', email: 'lisa@example.com', role: 'Customer', branch: null },
+  { id: 9, name: 'James Wilson', email: 'james@branch.com', role: 'Branch Manager', branch: 'Cavite' },
+  { id: 10, name: 'Maria Lopez', email: 'maria@example.com', role: 'Customer', branch: null }
 ]
 
 // TEMP Sample branch data
 const sampleBranches = [
   { id: 1, name: 'Sneakerhead Manila', location: 'Manila', manager: 'Mike Johnson', status: 'Active', totalSales: 45300 },
   { id: 2, name: 'Sneakerhead Cebu', location: 'Cebu', manager: 'David Brown', status: 'Active', totalSales: 38750 },
-  { id: 3, name: 'Sneakerhead Davao', location: 'Davao', manager: 'Sarah Wilson', status: 'Inactive', totalSales: 21500 },
-  { id: 4, name: 'Sneakerhead Cavite', location: 'Cavite', manager: 'Available', status: 'Active', totalSales: 29800 }
+  { id: 3, name: 'Sneakerhead Davao', location: 'Davao', manager: 'Robert Garcia', status: 'Active', totalSales: 21500 },
+  { id: 4, name: 'Sneakerhead Cavite', location: 'Cavite', manager: 'James Wilson', status: 'Active', totalSales: 29800 },
+  { id: 5, name: 'Sneakerhead Baguio', location: 'Baguio', manager: 'Unassigned', status: 'Inactive', totalSales: 0 }
 ]
 
 // Computed properties
@@ -209,7 +247,18 @@ const filteredUsers = computed(() => {
     filtered = filtered.filter(user => user.role === selectedUserRole.value.label)
   }
 
-  // Filter by search query fro users
+  // Filter by branch
+  if (selectedUserBranch.value.value !== 'all') {
+    if (selectedUserBranch.value.value === 'unassigned') {
+      // Show users with no branch (customers)
+      filtered = filtered.filter(user => user.branch === null)
+    } else {
+      // Show users with specific branch
+      filtered = filtered.filter(user => user.branch === selectedUserBranch.value.label)
+    }
+  }
+
+  // Filter by search query for users
   if (userSearchQuery.value) {
     const query = userSearchQuery.value.toLowerCase()
     filtered = filtered.filter(user => 
@@ -229,7 +278,8 @@ const filteredBranches = computed(() => {
     const query = branchSearchQuery.value.toLowerCase()
     filtered = filtered.filter(branch => 
       branch.name.toLowerCase().includes(query) || 
-      branch.location.toLowerCase().includes(query)
+      branch.location.toLowerCase().includes(query) ||
+      branch.manager.toLowerCase().includes(query)
     )
   }
 
