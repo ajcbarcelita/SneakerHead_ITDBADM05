@@ -113,12 +113,7 @@
               <Column field="id" header="Branch ID" :sortable="true"></Column>
               <Column field="name" header="Branch Name" :sortable="true"></Column>
               <Column field="location" header="Location" :sortable="true"></Column>
-              <Column field="manager" header="Manager" :sortable="true">
-                <template #body="slotProps">
-                  <span v-if="slotProps.data.manager !== 'Unassigned'">{{ slotProps.data.manager }}</span>
-                  <span v-else class="text-gray-400">{{ slotProps.data.manager }}</span>
-                </template>
-              </Column>
+      
               <Column field="status" header="Status" :sortable="true">
                 <template #body="slotProps">
                   <Tag :value="slotProps.data.status" 
@@ -195,7 +190,6 @@ const branches = ref([])
 const newBranch = ref({
   name: '',
   location: '',
-  manager: null
 })
 
 // Dropdown options for user roles
