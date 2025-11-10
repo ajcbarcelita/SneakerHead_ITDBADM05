@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import LoginPage from '@/pages/LoginPage.vue'
 import RegisterPage from '@/pages/RegisterPage.vue'
+import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
 
 // First add new route for page here, then next put nav guards
 // depending on who is allowed to access the page
@@ -27,6 +28,12 @@ const router = createRouter({
       name: 'Register',
       component: RegisterPage,
       meta: {guestOnly: true}
+    },
+    {
+      path: '/cart',
+      name: 'Cart',
+      component: ShoppingCartPage,
+      meta: {requiresAuth: true, customerOnly: true}
     }
   ],
 })
