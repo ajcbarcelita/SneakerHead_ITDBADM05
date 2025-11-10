@@ -4,7 +4,7 @@
       <NavBarBM />
     </header>
 
-    <main class="flex-1">
+    <main class="flex-1 bg-antiflash-white">
       <div class="container mx-auto p-6">
         <ViewOrders />
       </div>

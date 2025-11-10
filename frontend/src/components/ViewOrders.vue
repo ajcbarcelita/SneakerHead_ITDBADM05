@@ -1,6 +1,7 @@
 <template>
-  <main class="flex-1 container mx-auto px-6 py-10 space-y-8 bg-antiflash-white">
-    <h1 class="text-2xl font-bold text-charcoal uppercase mb-6">
+  <!-- MAIN -->
+  <main class="flex-1 container mx-auto space-y-8 bg-antiflash-white">
+    <h1 class="text-2xl font-bold text-charcoal uppercase mb-6 mt-3">
       Branch Orders Overview
     </h1>
 
@@ -53,6 +54,13 @@
           <Column field="order_id" header="Order ID" sortable>
             <template #body="{ data }">
               <span class="font-semibold text-oxford-blue">#{{ data.order_id }}</span>
+            </template>
+          </Column>
+
+          <!-- Full Name -->
+          <Column field="full_name" header="Full Name" sortable>
+            <template #body="{ data }">
+              <span class="font-semibold text-oxford-blue">{{ data.full_name }}</span>
             </template>
           </Column>
 
@@ -149,6 +157,7 @@ const dateRange = ref(null);
 const orders = ref([
   {
     order_id: 2001,
+    full_name: "Aaron Barcelita",
     branch_id: 1,
     total_price: 15999.0,
     items_count: 2,
@@ -175,6 +184,7 @@ const orders = ref([
   },
   {
     order_id: 2002,
+    full_name: "Maria Clara",
     branch_id: 1,
     total_price: 8999.0,
     items_count: 1,
@@ -195,23 +205,24 @@ const orders = ref([
 
 // Filter logic
 const filteredOrders = computed(() => {
-  let result = orders.value;
+  let result = orders.value
 
   // Filter by branch
-  result = result.filter((o) => o.branch_id === branchId);
+  result = result.filter((o) => o.branch_id === branchId)
 
   // Filter by search
   if (searchValue.value) {
-    const search = searchValue.value.toLowerCase();
-    result = result.filter(
-      (o) =>
-        o.order_id.toString().includes(search) ||
-        o.status.toLowerCase().includes(search)
-    );
+    const q = searchValue.value.toString().trim().replace(/^#/, '').toLowerCase()
+    result = result.filter((o) => {
+      // Order ID Matching
+      const idMatch = o.order_id.toString().includes(q)
+      // Name Matching
+      const nameMatch = !!o.full_name && o.full_name.toLowerCase().includes(q)
+      return idMatch || nameMatch
+    })
   }
-
-  return result;
-});
+  return result
+})
 
 // Methods
 const formatDate = (date) =>

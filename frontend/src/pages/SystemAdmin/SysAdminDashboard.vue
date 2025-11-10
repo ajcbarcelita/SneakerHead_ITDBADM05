@@ -82,7 +82,7 @@
       <Card class="shadow-md">
         <template #title>Sales Performance</template>
         <template #content>
-          <Chart type="line" :data="chartData" :options="chartOptions" class="h-[30rem]" />
+          <Chart type="line" :data="chartData" :options="chartOptions" class="h-120" />
         </template>
       </Card>
     </main>

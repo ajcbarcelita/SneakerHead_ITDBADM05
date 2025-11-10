@@ -6,7 +6,7 @@
     </header>
 
     <!-- MAIN DASHBOARD CONTENT -->
-    <main class="flex-1 container mx-auto px-6 py-10 space-y-8">
+    <main class="flex-1 container mx-auto px-6 py-6 space-y-8">
       <!-- FILTERS -->
       <div class="flex flex-col md:flex-row justify-between items-center">
         <h1 class="text-2xl font-bold text-charcoal uppercase">Dashboard Overview</h1>
@@ -75,7 +75,7 @@
       <Card class="shadow-md">
         <template #title>Sales Performance</template>
         <template #content>
-          <Chart type="line" :data="chartData" :options="chartOptions" class="h-[30rem]" />
+          <Chart type="line" :data="chartData" :options="chartOptions" class="h-120" />
         </template>
       </Card>
     </main>
