@@ -3,6 +3,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from '@/pages/LoginPage.vue'
 import RegisterPage from '@/pages/RegisterPage.vue'
 
+// System Admin Pages
+import SysAdminDashboard from '@/pages/SystemAdmin/SysAdminDashboard.vue'
+import ManageBranch from '@/pages/SystemAdmin/ManageBranch.vue'
+/*
+import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
+import ManageShoes from '@/pages/SystemAdmin/ManageShoes.vue'
+import ViewLogs from '@/pages/SystemAdmin/ViewLogs.vue'
+*/
+
 // First add new route for page here, then next put nav guards
 // depending on who is allowed to access the page
 // Last, use router in the Express app
@@ -27,7 +36,20 @@ const router = createRouter({
       name: 'Register',
       component: RegisterPage,
       meta: {guestOnly: true}
-    }
+    },
+    {
+      path: '/SysAdminDashboard',
+      name: 'SADashboard',
+      component: SysAdminDashboard,
+      meta: {guestOnly: false}
+    },
+    {
+      path: '/ManageBranch',
+      name: 'ManageBranch',
+      component: ManageBranch,
+      meta: {guestOnly: true}
+    },
+
   ],
 })
 
