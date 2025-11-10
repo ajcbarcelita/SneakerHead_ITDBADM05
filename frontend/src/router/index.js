@@ -7,18 +7,17 @@ import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
 // System Admin Pages
 import SysAdminDashboard from '@/pages/SystemAdmin/SysAdminDashboard.vue'
 import ManageBranch from '@/pages/SystemAdmin/ManageBranch.vue'
+import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
+import ManageShoes from '@/pages/SystemAdmin/ManageShoes.vue'
 
 
 // Branch Manager Pages
 import BranchManagement from '@/pages/Branch Manager/BranchDashboard.vue'
 import ManageStock from '@/pages/Branch Manager/ManageStock.vue'
 /*
-import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
-import ManageShoes from '@/pages/SystemAdmin/ManageShoes.vue'
 import ViewLogs from '@/pages/SystemAdmin/ViewLogs.vue'
 */
 import ProfilePage from '@/pages/ProfilePage.vue'
-import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
 
 // First add new route for page here, then next put nav guards
 // depending on who is allowed to access the page
@@ -58,25 +57,32 @@ const router = createRouter({
       component: ProfilePage,
       meta: {requiresAuth: true}
     },
+
+    // System Admin Routes -- to be put requiresAuth
     {
       path: '/SysAdminDashboard',
       name: 'SADashboard',
       component: SysAdminDashboard,
-      meta: {requiresAuth: true, adminOnly: true}
+      meta: {adminOnly: true}
     },
     {
       path: '/ManageBranch',
       name: 'ManageBranch',
       component: ManageBranch,
-      meta: {requiresAuth: true, adminOnly: true}
+      meta: {adminOnly: true}
     },
     {
       path: '/ManagePromoCodes',
       name: 'ManagePromoCodes',
       component: ManagePromoCodes,
-      meta: {requiresAuth: true, adminOnly: true}
+      meta: {adminOnly: true}
     },
-
+    {
+      path: '/ManageShoes',
+      name: 'ManageShoes',
+      component: ManageShoes,
+      meta: {adminOnly: true}
+    },
     // Branch Manager Routes -- to be put requiresAuth
     {
       path: '/BMDashboard',
