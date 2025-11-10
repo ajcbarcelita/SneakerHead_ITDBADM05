@@ -504,7 +504,7 @@ DROP TABLE IF EXISTS `sneakerhead`.`user_logs` ;
 
 SHOW WARNINGS;
 CREATE TABLE IF NOT EXISTS `sneakerhead`.`user_logs` (
-  `log_id` INT UNSIGNED NOT NULL,
+  `log_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` INT UNSIGNED NOT NULL,
   `role_id` INT UNSIGNED NOT NULL,
   `action` VARCHAR(50) NOT NULL,
@@ -532,3 +532,22 @@ SHOW WARNINGS;
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+USE `sneakerhead`;
+
+DELIMITER $$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`log_after_user_insert` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`log_after_user_insert` 
+AFTER INSERT ON `users` 
+FOR EACH ROW
+BEGIN
+	INSERT INTO user_logs(user_id, role_id, action, description) VALUES
+    (NEW.user_id, NEW.role_id, 'REGISTER_CUSTOMER', CONCAT('User ', NEW.fname, ' ', NEW.lname, ' registered.'));
+END$$
+
+SHOW WARNINGS$$
+
+DELIMITER ;
