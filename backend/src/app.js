@@ -8,6 +8,7 @@ import db from "./db/db.js";
 
 // Import all routes here later.
 import authRoutes from "./routes/authRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -31,6 +32,7 @@ app.use((req, _res, next) => {
 
 // Define and list routes here from imported route files later.
 app.use("/", authRoutes);
+app.use("/", cartRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
