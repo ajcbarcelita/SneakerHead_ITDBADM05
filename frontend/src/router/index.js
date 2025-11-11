@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from '@/pages/LoginPage.vue'
 import RegisterPage from '@/pages/RegisterPage.vue'
 import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
+import CheckoutPage from '@/pages/CheckoutPage.vue'
 
 // System Admin Pages
 import SysAdminDashboard from '@/pages/SystemAdmin/SysAdminDashboard.vue'
@@ -54,6 +55,12 @@ const router = createRouter({
       path: '/cart',
       name: 'Cart',
       component: ShoppingCartPage,
+      meta: {requiresAuth: true, customerOnly: true}
+    },
+    {
+      path: '/checkout',
+      name: 'Checkout',
+      component: CheckoutPage,
       meta: {requiresAuth: true, customerOnly: true}
     },
     {

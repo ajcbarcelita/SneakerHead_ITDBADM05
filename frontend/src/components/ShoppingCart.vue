@@ -123,9 +123,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
+
+const router = useRouter()
 
 // Sample cart items - replace with actual API call
 const cartItems = ref([
@@ -221,8 +224,8 @@ const clearCart = () => {
 }
 
 const proceedToCheckout = () => {
-    // TODO: Navigate to checkout page or open checkout modal
-    console.log('Proceeding to checkout with items:', cartItems.value)
+    // Navigate to checkout page
+    router.push('/checkout')
 }
 
 </script>
