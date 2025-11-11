@@ -13,13 +13,8 @@
 
         <div class="flex items-center space-x-3">
           <span class="font-semibold text-charcoal">Filter by:</span>
-          <Dropdown
-            v-model="selectedRange"
-            :options="timeRanges"
-            optionLabel="label"
-            placeholder="Select Range"
-            class="w-48"
-          />
+          <Dropdown v-model="selectedRange" :options="timeRanges" optionLabel="label" placeholder="Select Range"
+            class="w-48" />
         </div>
       </div>
 
@@ -176,13 +171,9 @@ function updateChart() {
   chartOptions.value = {
     maintainAspectRatio: false,
     aspectRatio: 0.6,
-    plugins: {
-      legend: { labels: { color: textColor } },
-    },
-    scales: {
-      x: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder } },
-      y: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder } },
-    },
+    plugins: { legend: { labels: { color: textColor } }, },
+    scales: { x: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder } }, 
+              y: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder } }, },
   }
 }
 </script>
