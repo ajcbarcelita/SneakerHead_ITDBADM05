@@ -45,7 +45,7 @@
         <Card class="shadow-md border-t-4 border-red-500">
           <template #title>Low Stock Items</template>
           <template #content>
-            <div class="text-4xl font-bold text-red-600">15</div>
+            <div class="text-4xl font-bold text-red-600">{{ metrics.lowStockItems }}</div>
             <p class="text-red-500 text-sm font-semibold">URGENT</p>
           </template>
         </Card>
@@ -64,16 +64,16 @@
         <Card class="shadow-md">
           <template #title>Branch with Highest Sales (This Month)</template>
           <template #content>
-            <p class="text-2xl font-semibold text-giants-orange">Sneakerhead - Manila</p>
-            <p class="text-gray-600 text-sm mt-2">₱45,300 total this month</p>
+            <p class="text-2xl font-semibold text-giants-orange">{{ metrics.monthLeader }}</p>
+            <p class="text-gray-600 text-sm mt-2">₱{{ metrics.monthLeaderSales }}</p>
           </template>
         </Card>
 
         <Card class="shadow-md">
           <template #title>Branch with Most Orders (Today)</template>
           <template #content>
-            <p class="text-2xl font-semibold text-giants-orange">Sneakerhead - Cebu</p>
-            <p class="text-gray-600 text-sm mt-2">35 total orders today</p>
+            <p class="text-2xl font-semibold text-giants-orange">{{ metrics.dailyLeader}}</p>
+            <p class="text-gray-600 text-sm mt-2">{{ metrics.dailyLeaderOrders }} orders today</p>
           </template>
         </Card>
       </div>
@@ -82,9 +82,9 @@
       <Card class="shadow-md">
         <template #title>Sales Performance</template>
         <template #content>
-          <Chart v-if="!loading" type="line" :data="chartData" :options="chartOptions" class="h-120" />
+          <Chart v-if="!loading && chartData" type="line" :data="chartData" :options="chartOptions" class="h-120" />
           <div v-else class="h-120 flex items-center justify-center">
-            <p>Loading chart data...</p>
+            <p>{{ loading ? 'Loading chart data...' : 'No data available' }}</p>
           </div>
         </template>
       </Card>
@@ -111,7 +111,12 @@ const selectedBranch = ref({ label: 'All Branches', value: 'All Branches' })
 const metrics = ref({
     totalSales: 0,
     newOrders: 0,
-    chartData: { labels: [], datasets: [] }
+    monthLeader: '',
+    monthLeaderSales: 0,
+    dailyLeader: '',
+    dailyLeaderOrders: 0,
+    lowStockItems: '',
+    chartData: []
 })
 const loading = ref(false)
 
@@ -140,7 +145,6 @@ const formattedTotalSales = computed(() => {
 
 // Fetch metrics from DB
 async function fetchMetrics() {
-    // Loading text animation
     loading.value = true
     try {
         const params = {
@@ -151,10 +155,13 @@ async function fetchMetrics() {
         const response = await fetch(`http://localhost:3000/metrics?${new URLSearchParams(params)}`)
         if (!response.ok) throw new Error('Failed to fetch metrics')
         
-        metrics.value = await response.json()
+        const data = await response.json()
+        metrics.value = data
         updateChart()
     } catch (error) {
         console.error('Failed to fetch metrics:', error)
+        // Reset metrics on error
+        metrics.value = { totalSales: 0, newOrders: 0, chartData: [] }
     } finally {
         loading.value = false
     }
@@ -167,22 +174,37 @@ function updateChart() {
     const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color')
     const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color')
 
-    // Use the chart data structure from backend
-    const { labels, datasets } = metrics.value.chartData
+    const backendData = metrics.value.chartData || []
+    
+    // Extract labels for x axis from backend data
+    const labels = backendData.map(item => item.period)
+    
+    // Create datasets for Sales and Orders
+    const salesData = backendData.map(item => item.sales)
+    const ordersData = backendData.map(item => item.orders)
 
-    const chartDatasets = datasets.map(dataset => ({
-        ...dataset,
-        fill: false,
-        tension: 0.4
-    }))
-
-    chartData.value = { 
-        labels, 
-        datasets: chartDatasets 
+    // Create chart lines for Sales and Orders
+    chartData.value = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Sales',
+                data: salesData,
+                fill: false,
+                borderColor: documentStyle.getPropertyValue('--p-green-500'),
+                tension: 0.4,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Orders',
+                data: ordersData,
+                fill: false,
+                borderColor: documentStyle.getPropertyValue('--p-blue-500'),
+                tension: 0.4,
+                yAxisID: 'y1'
+            }
+        ]
     }
-
-    const hasSalesAndOrders = datasets.some(d => d.label.includes('Sales')) && 
-                            datasets.some(d => d.label.includes('Orders'))
 
     chartOptions.value = {
         maintainAspectRatio: false,
@@ -192,10 +214,26 @@ function updateChart() {
                 labels: { color: textColor },
                 position: 'top'
             },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label === 'Sales') {
+                            return `Sales: ₱${context.parsed.y.toLocaleString()}`
+                        } else if (label === 'Orders') {
+                            return `Orders: ${context.parsed.y}`
+                        }
+                        return label + ': ' + context.parsed.y;
+                    }
+                }
+            }
         },
         scales: {
             x: {
-                ticks: { color: textColorSecondary },
+                ticks: { 
+                    color: textColorSecondary,
+                    maxTicksLimit: 10
+                },
                 grid: { color: surfaceBorder },
             },
             y: {
@@ -217,7 +255,7 @@ function updateChart() {
             },
             y1: {
                 type: 'linear',
-                display: hasSalesAndOrders,
+                display: true,
                 position: 'right',
                 ticks: { color: textColorSecondary },
                 grid: { drawOnChartArea: false },
@@ -231,16 +269,21 @@ function updateChart() {
     }
 }
 
-// Initial load and watchers
+// Initialize data on mount
 onMounted(() => {
     fetchMetrics()
 })
 
+// Watchers to refetch data on filter change
 watch([selectedRange, selectedBranch], fetchMetrics)
 </script>
 
 <style scoped>
 main {
   background-color: var(--color-white-smoke);
+}
+
+.h-120 {
+  height: 30rem;
 }
 </style>
