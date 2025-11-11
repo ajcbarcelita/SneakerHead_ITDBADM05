@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 import * as authService from '@/services/authService'
-import jwtDecode from 'jwt-decode'
+import{ jwtDecode}from 'jwt-decode'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
