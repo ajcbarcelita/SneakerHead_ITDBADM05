@@ -1,6 +1,7 @@
 import { Model } from "objection";
 import Shoe from "./Shoe.js";
 import Branch from "./Branch.js";
+import ShoeSize from "./ShoeSize.js"; 
 
 export default class ShoeSizeInventory extends Model {
   static tableName = "shoe_size_inventory";
@@ -32,6 +33,14 @@ export default class ShoeSizeInventory extends Model {
       join: {
         from: "shoe_size_inventory.branch_id",
         to: "branches.branch_id",
+      },
+    },
+    ShoeSize: {
+      relation: Model.BelongsToOneRelation,
+      modelClass: ShoeSize,
+      join: {
+        from: "shoe_size_inventory.shoe_us_size",
+        to: "ref_us_sizes.shoe_size",
       },
     },
   };

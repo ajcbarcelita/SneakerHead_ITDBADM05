@@ -1,7 +1,7 @@
 import { Model } from "objection";
 import ShoeBrand from "./ShoeBrand.js";
 import ShoeImage from "./ShoeImage.js";
-import ShoeCategory from "./ShoeCategory.js";
+import ShoeCategory from "./ShoeCategory.js"; // ref_shoe_categories table
 
 export default class Shoe extends Model {
   static tableName = "shoes";
@@ -30,6 +30,7 @@ export default class Shoe extends Model {
         to: "ref_shoe_brands.brand_id",
       },
     },
+
     images: {
       relation: Model.HasManyRelation,
       modelClass: ShoeImage,
@@ -38,16 +39,17 @@ export default class Shoe extends Model {
         to: "shoe_images.shoe_id",
       },
     },
+
     categories: {
       relation: Model.ManyToManyRelation,
       modelClass: ShoeCategory,
       join: {
         from: "shoes.shoe_id",
         through: {
-          from: "shoe_categories.shoe_id",
-          to: "shoe_categories.shoe_category_id",
+          from: "shoe_categories.shoe_id",          // junction table
+          to: "shoe_categories.shoe_category_id",   // column in junction table
         },
-        to: "ref_shoe_categories.category_id",
+        to: "ref_shoe_categories.category_id",       // target table
       },
     },
   };
