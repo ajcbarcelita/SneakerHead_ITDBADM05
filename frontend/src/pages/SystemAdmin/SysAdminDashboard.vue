@@ -45,7 +45,7 @@
         <Card class="shadow-md border-t-4 border-red-500">
           <template #title>Low Stock Items</template>
           <template #content>
-            <div class="text-4xl font-bold text-red-600">15</div>
+            <div class="text-4xl font-bold text-red-600">{{ metrics.lowStockItems }}</div>
             <p class="text-red-500 text-sm font-semibold">URGENT</p>
           </template>
         </Card>
@@ -64,16 +64,16 @@
         <Card class="shadow-md">
           <template #title>Branch with Highest Sales (This Month)</template>
           <template #content>
-            <p class="text-2xl font-semibold text-giants-orange">Sneakerhead - Manila</p>
-            <p class="text-gray-600 text-sm mt-2">₱45,300 total this month</p>
+            <p class="text-2xl font-semibold text-giants-orange">{{ metrics.monthLeader }}</p>
+            <p class="text-gray-600 text-sm mt-2">₱{{ metrics.monthLeaderSales }}</p>
           </template>
         </Card>
 
         <Card class="shadow-md">
           <template #title>Branch with Most Orders (Today)</template>
           <template #content>
-            <p class="text-2xl font-semibold text-giants-orange">Sneakerhead - Cebu</p>
-            <p class="text-gray-600 text-sm mt-2">35 total orders today</p>
+            <p class="text-2xl font-semibold text-giants-orange">{{ metrics.dailyLeader}}</p>
+            <p class="text-gray-600 text-sm mt-2">{{ metrics.dailyLeaderOrders }} orders today</p>
           </template>
         </Card>
       </div>
@@ -111,6 +111,11 @@ const selectedBranch = ref({ label: 'All Branches', value: 'All Branches' })
 const metrics = ref({
     totalSales: 0,
     newOrders: 0,
+    monthLeader: '',
+    monthLeaderSales: 0,
+    dailyLeader: '',
+    dailyLeaderOrders: 0,
+    lowStockItems: '',
     chartData: []
 })
 const loading = ref(false)

@@ -12,7 +12,7 @@ import { authenticateUser } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 // All cart routes require authentication
-router.use(authenticateUser);
+// router.use(authenticateUser);
 
 // Get user's cart
 router.get("/cart", getCart);

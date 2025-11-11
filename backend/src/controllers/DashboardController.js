@@ -114,7 +114,7 @@ export const metrics = async (req, res) => {
             switch (period) {
                 case 'daily':
                     const itemDate = new Date(item.sale_date);
-                    key = itemDate.toISOString().split('T')[0];
+                    key = itemDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
                     break;
                 case 'monthly':
                     key = `${item.year}-${String(item.month).padStart(2, '0')}`;
@@ -208,6 +208,36 @@ export const metrics = async (req, res) => {
                 break;
         }
 
+        // Get data for branch with highest sales this month
+        // First row means latest month and year + highest total_sales
+        let monthLeader = await knex('branch_monthly_sales_view')
+                .select('branch_name', 'total_sales')
+                .first();
+
+        // Convert to string and formatted number
+        // Add default values if no sales yet
+        let monthLeaderBranch = String(monthLeader?.branch_name ?? 'No sales yet this month');
+        let monthLeaderSales = monthLeader?.total_sales 
+            ? parseFloat(monthLeader.total_sales).toLocaleString('en-US')
+            : 'No sales yet this month';
+
+        // Get data for branch w/ highest orders today
+        // View is already ordered by order_count desc and date
+        let dailyLeader = await knex('branch_daily_sales_view')
+                .select('branch_name', 'order_count')
+                .first();
+        let dailyLeaderBranch = String(dailyLeader?.branch_name ?? 'No orders yet today');
+        let dailyLeaderOrders = dailyLeader?.order_count 
+            ? dailyLeader.order_count 
+            : 'No orders yet today';
+
+        // Low stock warning
+        // Only returns 1 row with low_stock count of all branches
+        let lowStockItems = await knex('count_low_stock')
+                .select('low_stock')
+                .first();
+        lowStockItems = String(lowStockItems?.low_stock ?? '0');
+
         // Helper functions for formatting labels
         function formatDailyLabel(date) {
             const today = new Date();
@@ -237,6 +267,11 @@ export const metrics = async (req, res) => {
         return res.status(200).json({ 
             totalSales: totalSales,
             newOrders: newOrders,
+            monthLeader: monthLeaderBranch,
+            monthLeaderSales: monthLeaderSales,
+            dailyLeader: dailyLeaderBranch,
+            dailyLeaderOrders: dailyLeaderOrders,
+            lowStockItems: lowStockItems,
             chartData: filledChartData,
             period: period,
             branch: branch
