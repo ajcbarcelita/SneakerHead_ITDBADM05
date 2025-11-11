@@ -144,7 +144,6 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Card from 'primevue/card'
-import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 
 const managerBranch = 'Cebu'

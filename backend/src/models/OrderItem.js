@@ -1,5 +1,4 @@
 import { Model } from "objection";
-import Order from "./Order.js";
 import Shoe from "./Shoe.js";
 import ShoeSizeInventory from "./ShoeSizeInventory.js";
 
@@ -34,7 +33,7 @@ export default class OrderItem extends Model {
   static relationMappings = {
     order: {
       relation: Model.BelongsToOneRelation,
-      modelClass: Order,
+      modelClass: () => import("./Order.js"),
       join: {
         from: "order_items.order_id",
         to: "orders.order_id",
