@@ -1,5 +1,6 @@
 import express from "express";
 import { loginUser, registerUser } from "../controllers/authController.js";
+import { metrics } from "../controllers/DashboardController.js";
 
 const router = express.Router();
 
@@ -8,5 +9,8 @@ router.post("/register", registerUser);
 
 // Route for user login
 router.post("/login", loginUser);
+
+// Route for fetching Sys Admin dashboard metrics
+router.get("/metrics", metrics);
 
 export default router;

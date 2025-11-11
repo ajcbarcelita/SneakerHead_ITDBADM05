@@ -35,7 +35,7 @@
         <Card class="shadow-md border-t-4 border-green-500">
           <template #title>Total Sales</template>
           <template #content>
-            <div class="text-4xl font-bold text-green-600">₱12,500</div>
+            <div class="text-4xl font-bold text-green-600">{{ formattedTotalSales }}</div>
             <p class="text-green-500 text-sm font-semibold">
               TOTAL {{ rangeLabel.toUpperCase() }}
             </p>
@@ -51,10 +51,10 @@
         </Card>
 
         <Card class="shadow-md border-t-4 border-blue-500">
-          <template #title>New Orders (Today)</template>
+          <template #title>New Orders</template>
           <template #content>
-            <div class="text-4xl font-bold text-blue-600">7</div>
-            <p class="text-blue-500 text-sm font-semibold">PENDING</p>
+            <div class="text-4xl font-bold text-blue-600">{{ metrics.newOrders }}</div>
+            <p class="text-blue-500 text-sm font-semibold">{{ rangeLabel.toUpperCase() }}</p>
           </template>
         </Card>
       </div>
@@ -82,7 +82,10 @@
       <Card class="shadow-md">
         <template #title>Sales Performance</template>
         <template #content>
-          <Chart type="line" :data="chartData" :options="chartOptions" class="h-120" />
+          <Chart v-if="!loading" type="line" :data="chartData" :options="chartOptions" class="h-120" />
+          <div v-else class="h-120 flex items-center justify-center">
+            <p>Loading chart data...</p>
+          </div>
         </template>
       </Card>
     </main>
@@ -102,118 +105,138 @@ import Dropdown from 'primevue/dropdown'
 import Chart from 'primevue/chart'
 import { ref, watch, onMounted, computed } from 'vue'
 
-// Initital values
+// Reactive data
 const selectedRange = ref({ label: 'Daily', value: 'daily' })
-const selectedBranch = ref({ label: 'All Branches', value: 'all' })
+const selectedBranch = ref({ label: 'All Branches', value: 'All Branches' })
+const metrics = ref({
+    totalSales: 0,
+    newOrders: 0,
+    chartData: { labels: [], datasets: [] }
+})
+const loading = ref(false)
 
 const timeRanges = [
-  { label: 'Daily', value: 'daily' },
-  { label: 'Monthly', value: 'monthly' },
-  { label: 'Yearly', value: 'yearly' },
+    { label: 'Daily', value: 'daily' },
+    { label: 'Monthly', value: 'monthly' },
+    { label: 'Yearly', value: 'yearly' },
 ]
 
+// Maybe change this to fetch from DB later?
 const branchOptions = [
-  { label: 'All Branches', value: 'all' },
-  { label: 'Manila', value: 'manila' },
-  { label: 'Cavite', value: 'cavite' },
+    { label: 'All Branches', value: 'All Branches' },
+    { label: 'Imus', value: 'SneakerHead Imus' },
+    { label: 'Makati', value: 'SneakerHead Makati' },
+    { label: 'Aseana', value: 'SneakerHead Aseana' }
 ]
 
 const chartData = ref()
 const chartOptions = ref()
 
-// 
+// Computed properties
 const rangeLabel = computed(() => selectedRange.value?.label || 'TOTAL DAILY')
-
-// Update Chart on Filter Changes
-onMounted(() => {
-  updateChart()
+const formattedTotalSales = computed(() => {
+    return `₱${metrics.value.totalSales.toLocaleString()}`
 })
 
-watch([selectedRange, selectedBranch], updateChart)
-
-// Primvue Chart.js Documentation Reference
-// https://primevue.org/chart
-function updateChart() {
-  // Chart Themes -- masisira to pag tinangal like every Primevue component
-  const documentStyle = getComputedStyle(document.documentElement)
-  const textColor = documentStyle.getPropertyValue('--p-text-color')
-  const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color')
-  const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color')
-
-  // Branch Colors
-  const borderColors = [
-    documentStyle.getPropertyValue('--p-cyan-500'),
-    documentStyle.getPropertyValue('--p-gray-500')
-  ]
-
-  // Generate sample data based on range
-  let labels, data1, data2
-
-  switch (selectedRange.value.value) {
-    case 'daily':
-      labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-      data1 = [12, 19, 3, 5, 2, 3, 9]
-      data2 = [8, 14, 7, 10, 6, 4, 5]
-      break
-    case 'monthly':
-      labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      data1 = [200, 400, 300, 600, 500, 700, 800, 900, 750, 850, 950, 1000]
-      data2 = [150, 300, 250, 400, 350, 600, 0, 700, 600, 700, 800, 900]
-      break
-    case 'yearly':
-      labels = ['2020', '2021', '2022', '2023', '2024', '2025']
-      data1 = [5000, 7000, 8000, 9500, 11000, 12000]
-      data2 = [4500, 6500, 7000, 8500, 10000, 11500]
-      break
-    default:
-      labels = []
-      data1 = []
-      data2 = []
-  }
-
-  // Only one line if specific branch selected
-  const datasets = [
-    {
-      label: selectedBranch.value.value === 'all' ? 'Manila Branch' : selectedBranch.value.label,
-      data: data1,
-      fill: false,
-      borderColor: borderColors[0],
-      tension: 0.4
+// Fetch metrics from DB
+async function fetchMetrics() {
+    // Loading text animation
+    loading.value = true
+    try {
+        const params = {
+            period: selectedRange.value.value,
+            branch: selectedBranch.value.value
+        }
+        
+        const response = await fetch(`http://localhost:3000/metrics?${new URLSearchParams(params)}`)
+        if (!response.ok) throw new Error('Failed to fetch metrics')
+        
+        metrics.value = await response.json()
+        updateChart()
+    } catch (error) {
+        console.error('Failed to fetch metrics:', error)
+    } finally {
+        loading.value = false
     }
-  ]
-
-  // If 'All Branches' is selected, add second dataset
-  if (selectedBranch.value.value === 'all') {
-    datasets.push({
-      label: 'Cavite Branch',
-      data: data2,
-      fill: false,
-      borderColor: borderColors[1],
-      tension: 0.4
-    })
-  }
-
-  chartData.value = { labels, datasets }
-
-  // Chart Settings
-  chartOptions.value = {
-    maintainAspectRatio: false,
-    aspectRatio: 0.6,
-    plugins: {
-      legend: { labels: { color: textColor } },
-    },
-    scales: {
-      x: {
-        ticks: { color: textColorSecondary },
-        grid: { color: surfaceBorder },
-      },
-      y: {
-        ticks: { color: textColorSecondary },
-        grid: { color: surfaceBorder },
-      },
-    },
-  }
 }
+
+// Update Chart with data from DB
+function updateChart() {
+    const documentStyle = getComputedStyle(document.documentElement)
+    const textColor = documentStyle.getPropertyValue('--p-text-color')
+    const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color')
+    const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color')
+
+    // Use the chart data structure from backend
+    const { labels, datasets } = metrics.value.chartData
+
+    const chartDatasets = datasets.map(dataset => ({
+        ...dataset,
+        fill: false,
+        tension: 0.4
+    }))
+
+    chartData.value = { 
+        labels, 
+        datasets: chartDatasets 
+    }
+
+    const hasSalesAndOrders = datasets.some(d => d.label.includes('Sales')) && 
+                            datasets.some(d => d.label.includes('Orders'))
+
+    chartOptions.value = {
+        maintainAspectRatio: false,
+        aspectRatio: 0.6,
+        plugins: {
+            legend: { 
+                labels: { color: textColor },
+                position: 'top'
+            },
+        },
+        scales: {
+            x: {
+                ticks: { color: textColorSecondary },
+                grid: { color: surfaceBorder },
+            },
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                ticks: { 
+                    color: textColorSecondary,
+                    callback: function(value) {
+                        return '₱' + value.toLocaleString()
+                    }
+                },
+                grid: { color: surfaceBorder },
+                title: {
+                    display: true,
+                    text: 'Sales (₱)',
+                    color: textColor
+                }
+            },
+            y1: {
+                type: 'linear',
+                display: hasSalesAndOrders,
+                position: 'right',
+                ticks: { color: textColorSecondary },
+                grid: { drawOnChartArea: false },
+                title: {
+                    display: true,
+                    text: 'Number of Orders',
+                    color: textColor
+                }
+            },
+        },
+    }
+}
+
+// Initial load and watchers
+onMounted(() => {
+    fetchMetrics()
+})
+
+watch([selectedRange, selectedBranch], fetchMetrics)
 </script>
 
 <style scoped>
