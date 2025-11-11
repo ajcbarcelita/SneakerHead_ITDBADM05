@@ -1,48 +1,48 @@
-import { Model } from 'objection'
-import Branch from './Branch.js'
-import Role from './Role.js'
+import { Model } from "objection";
+import Branch from "./Branch.js";
+import Role from "./Role.js";
 
 export default class BranchAdminAssignment extends Model {
-  static tableName = 'branch_admin_assignments'
-  static idColumn = 'branch_assignment'
+  static tableName = "branch_admin_assignments";
+  static idColumn = "branch_assignment";
 
   static jsonSchema = {
-    type: 'object',
-    required: ['branch_assignment', 'staff_id', 'branch_id', 'role_at_branch'],
+    type: "object",
+    required: ["branch_assignment", "staff_id", "branch_id", "role_at_branch"],
     properties: {
-      branch_assignment: { type: 'integer' },
-      staff_id: { type: 'integer' },
-      branch_id: { type: 'integer' },
-      role_at_branch: { type: 'integer' },
-      assigned_at: { type: 'string', format: 'date-time' },
-      unassigned_at: { type: ['string', 'null'], format: 'date-time' },
+      branch_assignment: { type: "integer" },
+      staff_id: { type: "integer" },
+      branch_id: { type: "integer" },
+      role_at_branch: { type: "integer" },
+      assigned_at: { type: "string", format: "date-time" },
+      unassigned_at: { type: ["string", "null"], format: "date-time" },
     },
-  }
+  };
 
   static relationMappings = {
     user: {
       relation: Model.BelongsToOneRelation,
-      modelClass: import('./User.js'),
+      modelClass: import("./User.js"),
       join: {
-        from: 'branch_admin_assignments.staff_id',
-        to: 'users.user_id',
+        from: "branch_admin_assignments.staff_id",
+        to: "users.user_id",
       },
     },
     branch: {
       relation: Model.BelongsToOneRelation,
       modelClass: Branch,
       join: {
-        from: 'branch_admin_assignments.branch_id',
-        to: 'branches.branch_id',
+        from: "branch_admin_assignments.branch_id",
+        to: "branches.branch_id",
       },
     },
     role: {
       relation: Model.BelongsToOneRelation,
       modelClass: Role,
       join: {
-        from: 'branch_admin_assignments.role_at_branch',
-        to: 'ref_roles.role_id',
+        from: "branch_admin_assignments.role_at_branch",
+        to: "ref_roles.role_id",
       },
     },
-  }
+  };
 }

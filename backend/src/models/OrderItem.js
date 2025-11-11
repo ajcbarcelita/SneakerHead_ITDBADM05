@@ -16,7 +16,7 @@ export default class OrderItem extends Model {
       "branch_id",
       "quantity",
       "price_at_purchase",
-      "subtotal"
+      "subtotal",
     ],
     properties: {
       order_item_id: { type: "integer" },
@@ -52,11 +52,7 @@ export default class OrderItem extends Model {
       relation: Model.BelongsToOneRelation,
       modelClass: ShoeSizeInventory,
       join: {
-        from: [
-          "order_items.shoe_id",
-          "order_items.shoe_size",
-          "order_items.branch_id",
-        ],
+        from: ["order_items.shoe_id", "order_items.shoe_size", "order_items.branch_id"],
         to: [
           "shoe_size_inventory.shoe_id",
           "shoe_size_inventory.shoe_us_size",

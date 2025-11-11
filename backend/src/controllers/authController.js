@@ -1,8 +1,11 @@
 import { ValidationError } from "objection";
+
+import  User from "../models/User.js";
 import { validateRegisterData } from "../services/validateRegister.js";
 import { registerUserService } from "../services/registerUserService.js";
 import { loginUserService } from "../services/loginUserService.js";
-import jwt from "jsonwebtoken";
+import { createAccessToken }from "../utils/jwt.js";
+
 
 export const registerUser = async (req, res) => {
   try {
@@ -42,18 +45,23 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe = false } = req.body;
     const result = await loginUserService({ email, password });
+    if (!result.success) return res.status(401).json({ message: result.message });
 
-    if (!result.success) {
-      return res.status(401).json({ message: result.message });
-    }
+    const user = result.user;
+    const payload = {
+      user_id: user.user_id,
+      email: user.email,
+      role_id: user.role_id,
+      role_name: user.role.role_name,
+    };
 
-    // JWT IMPLEMENTATION TO BE DONE IN THE FUTURE
-    // For now, we just return the user data
-    return res.status(200).json({ user: result.user });
+    const accessToken = createAccessToken(payload, rememberMe);
+
+    return res.status(200).json({ accessToken, user });
   } catch (err) {
-    console.error(err)
+    console.error(err);
     return res.status(500).json({ message: "Internal server error" });
   }
-}
+};

@@ -23,6 +23,6 @@ export default class Branch extends Model {
         from: "branches.address_id",
         to: "addresses.address_id",
       },
-    }
+    },
   };
 }

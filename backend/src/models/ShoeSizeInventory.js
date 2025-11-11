@@ -1,7 +1,7 @@
 import { Model } from "objection";
 import Shoe from "./Shoe.js";
 import Branch from "./Branch.js";
-import ShoeSize from "./ShoeSize.js"; 
+import ShoeSize from "./ShoeSize.js";
 
 export default class ShoeSizeInventory extends Model {
   static tableName = "shoe_size_inventory";

@@ -118,7 +118,8 @@ export const addToCart = async (req, res) => {
           // If cart exists but for different branch, need to handle
           throw {
             statusCode: 400,
-            message: "Cart already contains items from a different branch. Please clear your cart first.",
+            message:
+              "Cart already contains items from a different branch. Please clear your cart first.",
             current_branch_id: cart.branch_id,
           };
         }
@@ -152,7 +153,7 @@ export const addToCart = async (req, res) => {
             {
               quantity: newQuantity,
               price_at_addition: parseFloat(shoe.price), // Update to current price
-            }
+            },
           );
         } else {
           // Add new item to cart
@@ -196,7 +197,9 @@ export const addToCart = async (req, res) => {
           error: err.message,
           ...(err.available_stock !== undefined && { available_stock: err.available_stock }),
           ...(err.current_branch_id !== undefined && { current_branch_id: err.current_branch_id }),
-          ...(err.current_cart_quantity !== undefined && { current_cart_quantity: err.current_cart_quantity }),
+          ...(err.current_cart_quantity !== undefined && {
+            current_cart_quantity: err.current_cart_quantity,
+          }),
         });
       }
       throw err;
@@ -265,9 +268,7 @@ export const removeFromCart = async (req, res) => {
     const cartItemId = parseInt(req.params.itemId);
 
     // Find cart item and verify ownership
-    const cartItem = await ShoppingCartItem.query()
-      .findById(cartItemId)
-      .withGraphFetched("cart");
+    const cartItem = await ShoppingCartItem.query().findById(cartItemId).withGraphFetched("cart");
 
     if (!cartItem) {
       return res.status(404).json({ error: "Cart item not found" });
@@ -322,9 +323,7 @@ export const getCartCount = async (req, res) => {
   try {
     const userId = req.user.user_id;
 
-    const cart = await ShoppingCart.query()
-      .findOne({ user_id: userId })
-      .withGraphFetched("items");
+    const cart = await ShoppingCart.query().findOne({ user_id: userId }).withGraphFetched("items");
 
     if (!cart) {
       return res.json({ count: 0 });

@@ -95,9 +95,7 @@ export async function getOrCreateCart(userId, branchId, trx = null) {
  * Check if cart can accept items from a different branch
  */
 export async function canSwitchBranch(userId, newBranchId) {
-  const cart = await ShoppingCart.query()
-    .findOne({ user_id: userId })
-    .withGraphFetched("items");
+  const cart = await ShoppingCart.query().findOne({ user_id: userId }).withGraphFetched("items");
 
   if (!cart) {
     return { canSwitch: true };

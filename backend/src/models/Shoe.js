@@ -46,10 +46,10 @@ export default class Shoe extends Model {
       join: {
         from: "shoes.shoe_id",
         through: {
-          from: "shoe_categories.shoe_id",          // junction table
-          to: "shoe_categories.shoe_category_id",   // column in junction table
+          from: "shoe_categories.shoe_id", // junction table
+          to: "shoe_categories.shoe_category_id", // column in junction table
         },
-        to: "ref_shoe_categories.category_id",       // target table
+        to: "ref_shoe_categories.category_id", // target table
       },
     },
   };
