@@ -1,5 +1,4 @@
 import { Model } from 'objection'
-import User from './User.js'
 import Branch from './Branch.js'
 import Role from './Role.js'
 
@@ -23,7 +22,7 @@ export default class BranchAdminAssignment extends Model {
   static relationMappings = {
     user: {
       relation: Model.BelongsToOneRelation,
-      modelClass: User,
+      modelClass: import('./User.js'),
       join: {
         from: 'branch_admin_assignments.staff_id',
         to: 'users.user_id',

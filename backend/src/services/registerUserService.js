@@ -40,7 +40,7 @@ export async function registerUserService(data) {
   }
 
   const knex = User.knex();
-  let trx;
+  let trx; // start transaction
   try {
     trx = await transaction.start(knex);
 
@@ -74,7 +74,7 @@ export async function registerUserService(data) {
   } catch (err) {
     if (trx) {
       try {
-        await trx.rollback();
+        await trx.rollback(); // rollback on error
       } catch (e) {
         console.error("Transaction rollback failed:", e);
       }

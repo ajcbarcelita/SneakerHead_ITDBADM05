@@ -1,6 +1,7 @@
 import { Model } from "objection";
 import Role from "./Role.js";
 import Address from "./Address.js";
+import BranchAdminAssignment from "./BranchAdminAssignment.js";
 
 export default class User extends Model {
   static tableName = "users";
@@ -39,6 +40,14 @@ export default class User extends Model {
       join: {
         from: "users.address_id",
         to: "addresses.address_id",
+      },
+    },
+    branchAssignments: {
+      relation: Model.HasManyRelation,
+      modelClass: BranchAdminAssignment,
+      join: {
+        from: "users.user_id",
+        to: "branch_admin_assignments.staff_id",
       },
     },
   };

@@ -47,7 +47,7 @@
             </div>
           </div>
 
-          <Button type="submit" label="Log In" class="font-sans w-full bg-oxford-blue text-white py-3 rounded-md" />
+          <Button :disabled="loading" type="submit" label="Log In" class="font-sans w-full bg-oxford-blue text-white py-3 rounded-md" />
         </form>
       </div>
     </div>
@@ -66,7 +66,10 @@
 
 <script setup>
     import { ref, watch } from 'vue'
+    import { useRouter } from 'vue-router'
+    import { useToast } from 'primevue/usetoast'
     import { useValidation } from '@/composables/useValidation'
+    import { useAuthStore } from '@/stores/authStore'
 
     // PrimeVue components (local import — available in template automatically)
     import FloatLabel from 'primevue/floatlabel'
@@ -83,27 +86,64 @@
     const rememberMe = ref(false)
     const { errors, validateEmail, clearErrors} = useValidation()
 
+    const loading = ref(false)
+    const router = useRouter()
+    const toast = useToast()
+    const authStore = useAuthStore()
+
     watch(email, (value) => {
       validateEmail(value)
     })
 
-    const onSubmit = () => {
+    async function onSubmit() {
       clearErrors()
       validateEmail(email.value)
 
-      if (Object.keys(errors.value).length === 0) {
-        // Call the store here to log in the user
-        // Integrate toast usage here for error and success WHEN pinia store and API is done
-        console.log('Form submitted:', {
+      if (Object.keys(errors.value).length > 0) return
+
+      loading.value = true // disable button
+
+      try {
+        const result = await authStore.login({
           email: email.value,
-          password: password.value,
-          rememberMe: rememberMe.value
+          password: password.value
         })
-      } else {
-        console.log('Validation errors:', errors.value)
+
+        if (result.success) {
+          toast.add({
+            severity: 'success',
+            summary: 'Login Successful.',
+            detail: `Welcome back, ${result.data.user.fname}`,
+            life: 5000
+          })
+          // router.push('/'); // Redirect after successful login
+        } else {
+          // merge backend errors
+          Object.assign(errors.value, authStore.errors)
+          const errDetail = authStore.errors?._global || 'Invalid email or password.'
+
+          toast.add({
+            severity: 'error',
+            summary: 'Login Failed',
+            detail: errDetail,
+            life: 5000
+          })
+
+          password.value = '' // clear password after failed login
+        }
+      } catch (err) {
+        toast.add({
+          severity: 'error',
+          summary: 'Network Error',
+          detail: 'Could not reach server. Please try again later.',
+          life: 5000
+        })
+
+        password.value = '' // clear password on network failure too
+      } finally {
+        loading.value = false // re-enable button
       }
     }
-
 </script>
 
 <style src="@/styles/tailwind.css"></style>

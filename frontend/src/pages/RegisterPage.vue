@@ -182,6 +182,7 @@
                     label="Register"
                     class="flex-1 bg-oxford-blue text-white"
                     @click="goToRegister"
+                    :disabled="loadingRegister"
                   />
                 </div>
               </div>
@@ -233,6 +234,7 @@
 
   const image = brandImage
   const activeStep = ref(1)
+  const loadingRegister = ref(false)
 
   const provinces = ref(phJSONData.provinces)
   const cities = ref([])
@@ -328,7 +330,7 @@
 
   async function goToRegister() {
     clearErrors()
-
+    
     const payload = {
       email: formData.email,
       password: formData.password,
@@ -342,27 +344,38 @@
       city: formData.city
     }
 
-    const result = await authStore.register(payload)
-    if (result.success) {
-      toast.add({ severity: 'success', summary: 'Registration Successful', detail: 'You can now log in with your account.', life: 15000 })
-      setTimeout(() => router.push('/login'), 5000)
-    } else {
-      // merge backend errors to page errors
-      Object.assign(errors.value, authStore.errors)
+    loadingRegister.value = true // disable button
 
-      const errDetail =
-        authStore.errors?.message ||
-        (authStore.errors && typeof authStore.errors === 'object'
-          ? Object.values(authStore.errors).flat().join('; ')
-          : String(authStore.errors)) ||
-        'Registration failed. Please check the form and try again.'
+    try {
+      const result = await authStore.register(payload)
 
-      toast.add({
-        severity: 'error',
-        summary: 'Registration failed',
-        detail: errDetail,
-        life: 8000
-      })
+      if (result.success) {
+        toast.add({
+          severity: 'success',
+          summary: 'Registration Successful',
+          detail: 'You can now log in with your account.',
+          life: 15000
+        })
+        setTimeout(() => router.push('/login'), 5000)
+      } else {
+        Object.assign(errors.value, authStore.errors)
+
+        const errDetail =
+          authStore.errors?.message ||
+          (authStore.errors && typeof authStore.errors === 'object'
+            ? Object.values(authStore.errors).flat().join('; ')
+            : String(authStore.errors)) ||
+          'Registration failed. Please check the form and try again.'
+
+        toast.add({
+          severity: 'error',
+          summary: 'Registration failed',
+          detail: errDetail,
+          life: 8000
+        })
+      }
+    } finally {
+      loadingRegister.value = false // re-enable button
     }
   }
 </script>

@@ -1,6 +1,8 @@
 import { ValidationError } from "objection";
 import { validateRegisterData } from "../services/validateRegister.js";
 import { registerUserService } from "../services/registerUserService.js";
+import { loginUserService } from "../services/loginUserService.js";
+import jwt from "jsonwebtoken";
 
 export const registerUser = async (req, res) => {
   try {
@@ -39,5 +41,19 @@ export const registerUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-};
+  try {
+    const { email, password } = req.body;
+    const result = await loginUserService({ email, password });
+
+    if (!result.success) {
+      return res.status(401).json({ message: result.message });
+    }
+
+    // JWT IMPLEMENTATION TO BE DONE IN THE FUTURE
+    // For now, we just return the user data
+    return res.status(200).json({ user: result.user });
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}

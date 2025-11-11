@@ -7,12 +7,12 @@ import {
   clearCart,
   getCartCount,
 } from "../controllers/cartController.js";
-import { authenticateUser } from "../middlewares/authMiddleware.js";
+import { isAuthenticated } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 // All cart routes require authentication
-router.use(authenticateUser);
+router.use(isAuthenticated);
 
 // Get user's cart
 router.get("/cart", getCart);
