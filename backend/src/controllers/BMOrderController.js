@@ -7,7 +7,7 @@ export default async function getOrders(req, res) {
 
         // Fetch orders + relations
         const orders = await Order.query()
-            .withGraphFetched("[user, branch, promoCode, orderItems.[shoe.[brand]]]")  // ← Change 'items' to 'orderItems'
+            .withGraphFetched("[user, branch, promoCode, orderItems.[shoe.[brand]]]")  
             .modifyGraph("user", (builder) => {
                 builder.select("user_id", "first_name", "last_name");
             })
@@ -17,7 +17,7 @@ export default async function getOrders(req, res) {
             .modifyGraph("branch", (builder) => {
                 builder.select("branch_id", "branch_name");
             })
-            .modifyGraph("orderItems.shoe.brand", (builder) => {  // ← Change 'items.shoe.brand' to 'orderItems.shoe.brand'
+            .modifyGraph("orderItems.shoe.brand", (builder) => {  
                 builder.select("brand_id", "brand_name");
             })
             .where((builder) => {
@@ -30,10 +30,10 @@ export default async function getOrders(req, res) {
             full_name: `${order.user.first_name} ${order.user.last_name}`,
             branch_id: order.branch_id,
             total_price: order.total_price,
-            items_count: order.orderItems ? order.orderItems.length : 0,  // ← Change 'order.items' to 'order.orderItems'
-            promo_code: order.promoCode ? order.promoCode.promo_code : null,  // ← Change 'order.promo_code' to 'order.promoCode'
+            items_count: order.orderItems ? order.orderItems.length : 0,  
+            promo_code: order.promoCode ? order.promoCode.promo_code : null, 
             created_at: order.created_at,
-            items: order.orderItems?.map((item) => ({  // ← Already correct, but ensure consistency
+            items: order.orderItems?.map((item) => ({  
                 shoe_name: item.shoe?.shoe_name,
                 brand_name: item.shoe?.brand?.brand_name,
                 shoe_image: item.shoe?.shoe_image,
