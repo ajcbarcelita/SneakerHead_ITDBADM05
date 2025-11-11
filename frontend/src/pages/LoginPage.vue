@@ -106,17 +106,18 @@
       try {
         const result = await authStore.login({
           email: email.value,
-          password: password.value
+          password: password.value,
+          rememberMe: rememberMe.value
         })
 
         if (result.success) {
           toast.add({
             severity: 'success',
             summary: 'Login Successful.',
-            detail: `Welcome back, ${result.data.user.fname}`,
+            detail: `Welcome back, ${result.data.user.fname}!`,
             life: 5000
           })
-          // router.push('/'); // Redirect after successful login
+          router.push('/'); // Redirect after successful login
         } else {
           // merge backend errors
           Object.assign(errors.value, authStore.errors)

@@ -11,4 +11,14 @@ const api = axios.create({
     timeout: 10000
 });
 
+// Adding a req interceptor
+api.interceptors.request.use((config) => {
+    // Prefer localStorage first, fallback to sessionStorage
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+})
+
 export default api
