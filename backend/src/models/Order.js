@@ -2,6 +2,7 @@ import { Model } from "objection";
 import User from "./User.js";
 import Branch from "./Branch.js";
 import PromoCode from "./PromoCode.js";
+import OrderItem from "./OrderItem.js";
 
 export default class Order extends Model {
   static tableName = "orders";
@@ -37,12 +38,20 @@ export default class Order extends Model {
         to: "branches.branch_id",
       },
     },
-    promo_code: {
+    promoCode: {
       relation: Model.BelongsToOneRelation,
       modelClass: PromoCode,
       join: {
         from: "orders.promo_code",
         to: "promo_codes.promo_code",
+      },
+    },
+    orderItems: {
+      relation: Model.HasManyRelation,
+      modelClass: OrderItem,
+      join: {
+        from: "orders.order_id",
+        to: "order_items.order_id",
       },
     },
   };

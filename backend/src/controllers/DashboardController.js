@@ -4,11 +4,11 @@ import Order from '../models/Order.js';
 export const metrics = async (req, res) => {
     try {
         const knex = Order.knex();
-        
+
         // Fetch query params
-        const { 
-            period = 'daily', 
-            branch = 'all' 
+        const {
+            period = 'daily',
+            branch = 'all'
         } = req.query;
 
         let viewName;
@@ -49,7 +49,7 @@ export const metrics = async (req, res) => {
         }
 
         // Execute the query based on period
-        let chartData; 
+        let chartData;
         switch (period) {
             case 'monthly':
                 chartData = await query.select('*')
@@ -82,7 +82,7 @@ export const metrics = async (req, res) => {
                     labels.push(label);
                 }
                 break;
-            
+
             case 'monthly':
                 // Last 12 months including current month
                 for (let i = 11; i >= 0; i--) {
@@ -95,7 +95,7 @@ export const metrics = async (req, res) => {
                     labels.push(label);
                 }
                 break;
-            
+
             case 'yearly':
                 // Last 5 years including current year
                 for (let i = 4; i >= 0; i--) {
@@ -133,7 +133,7 @@ export const metrics = async (req, res) => {
         // Fill the chart data with zeros for missing periods
         const filledChartData = dateRanges.map(range => {
             let key, data;
-            
+
             switch (period) {
                 case 'daily':
                     key = range.date;
@@ -144,7 +144,7 @@ export const metrics = async (req, res) => {
                         orders: data.orders,
                         branch: data.branch
                     };
-                
+
                 case 'monthly':
                     key = range.periodKey;
                     data = dataMap.get(key) || { sales: 0, orders: 0 };
@@ -154,7 +154,7 @@ export const metrics = async (req, res) => {
                         orders: data.orders,
                         branch: data.branch
                     };
-                
+
                 case 'yearly':
                     key = range.label;
                     data = dataMap.get(key) || { sales: 0, orders: 0 };
@@ -186,21 +186,21 @@ export const metrics = async (req, res) => {
                 totalSales = todayData ? todayData.sales : 0;
                 newOrders = todayData ? todayData.orders : 0;
                 break;
-            
+
             case 'monthly':
                 // Find current month's data
                 const currentMonthLabel = formatMonthlyLabel(currentDate);
-                const currentMonthData = filledChartData.find(item => 
+                const currentMonthData = filledChartData.find(item =>
                     item.period === currentMonthLabel
                 );
                 totalSales = currentMonthData ? currentMonthData.sales : 0;
                 newOrders = currentMonthData ? currentMonthData.orders : 0;
                 break;
-            
+
             case 'yearly':
                 // Find current year's data
                 const currentYearLabel = currentYear.toString();
-                const currentYearData = filledChartData.find(item => 
+                const currentYearData = filledChartData.find(item =>
                     item.period === currentYearLabel
                 );
                 totalSales = currentYearData ? currentYearData.sales : 0;
@@ -243,28 +243,28 @@ export const metrics = async (req, res) => {
             const today = new Date();
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
-            
+
             if (date.toDateString() === today.toDateString()) {
                 return 'Today';
             } else if (date.toDateString() === yesterday.toDateString()) {
                 return 'Yesterday';
             } else {
-                return date.toLocaleDateString('en-US', { 
-                    weekday: 'short', 
-                    month: 'short', 
-                    day: 'numeric' 
+                return date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
                 });
             }
         }
 
         function formatMonthlyLabel(date) {
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short' 
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short'
             });
         }
 
-        return res.status(200).json({ 
+        return res.status(200).json({
             totalSales: totalSales,
             newOrders: newOrders,
             monthLeader: monthLeaderBranch,
