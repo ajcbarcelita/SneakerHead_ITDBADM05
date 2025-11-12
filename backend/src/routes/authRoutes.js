@@ -14,7 +14,4 @@ router.post("/register", registerUser);
 // Route for user login
 router.post("/login", loginUser);
 
-// Route for fetching Sys Admin dashboard metrics
-router.get("/metrics", metrics);
-
 export default router;

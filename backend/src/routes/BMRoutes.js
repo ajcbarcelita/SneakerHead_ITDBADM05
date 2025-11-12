@@ -6,11 +6,10 @@ const router = express.Router();
 
 let role = "Branch Manager";
 
-
 // Get all orders
-router.get("/ManageOrders", authenticateUser(role),  getOrders);
+router.get("/ManageOrders", authenticateUser(role), getOrders);
 
-// Get branch metrics
+// Get BM metrics
 router.get("/BMmetrics", authenticateUser(role), getMetrics);
 
 export default router;
