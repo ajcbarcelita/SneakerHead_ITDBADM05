@@ -212,6 +212,8 @@ export const metrics = async (req, res) => {
     // First row means latest month and year + highest total_sales
     let monthLeader = await knex("branch_monthly_sales_view")
       .select("branch_name", "total_sales")
+      .where("year", currentYear)
+      .andWhere("month", currentMonth)
       .first();
 
     // Convert to string and formatted number
@@ -225,6 +227,7 @@ export const metrics = async (req, res) => {
     // View is already ordered by order_count desc and date
     let dailyLeader = await knex("branch_daily_sales_view")
       .select("branch_name", "order_count")
+      .where("sale_date", currentDateStr)
       .first();
     let dailyLeaderBranch = String(dailyLeader?.branch_name ?? "No orders yet today");
     let dailyLeaderOrders = dailyLeader?.order_count
