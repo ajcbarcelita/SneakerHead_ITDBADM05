@@ -5,6 +5,7 @@ import { validateRegisterData } from "../services/validateRegister.js";
 import { registerUserService } from "../services/registerUserService.js";
 import { loginUserService } from "../services/loginUserService.js";
 import { createAccessToken }from "../utils/jwt.js";
+import { logEvent } from "../services/logEventService.js";
 
 
 export const registerUser = async (req, res) => {
@@ -47,7 +48,24 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password, rememberMe = false } = req.body;
     const result = await loginUserService({ email, password });
-    if (!result.success) return res.status(401).json({ message: result.message });
+
+    const forwarded = req.get("x-forwarded-for");
+    const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
+
+    if (!result.success) {
+      try {
+        await logEvent({
+          user_id: user.user_id,
+          role_id: user.role_id,
+          action: 'LOGIN_FAILED',
+          description: `Failed login attempt for email: ${email}`,
+          ip
+        })
+      } catch (logErr) {
+        console.error("logEvent failed:", logErr?.message ?? logErr);
+      }
+      return res.status(401).json({ message: result.message });
+    } 
 
     const user = result.user;
     const payload = {
@@ -58,6 +76,18 @@ export const loginUser = async (req, res) => {
     };
 
     const accessToken = createAccessToken(payload, rememberMe);
+
+    try {
+      await logEvent({
+      user_id: user.user_id,
+      role_id: user.role_id,
+      action: 'LOGIN_SUCCESS',
+      description: `Successful login for email: ${email}`,
+      ip
+    })
+    } catch (logErr) {
+      console.error("logEvent failed:", logErr?.message ?? logErr);
+    }
 
     return res.status(200).json({ accessToken, user });
   } catch (err) {

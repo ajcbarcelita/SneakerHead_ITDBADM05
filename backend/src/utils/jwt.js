@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET;
-const ACCESS_TOKEN_EXPIRES_SHORT = "30m";  // normal login
+const ACCESS_TOKEN_EXPIRES_SHORT = "30m"; // normal login
 const ACCESS_TOKEN_EXPIRES_LONG = "30d"; // remember me
 
 export function createAccessToken(payload, rememberMe = false) {

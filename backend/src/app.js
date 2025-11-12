@@ -34,7 +34,7 @@ app.use((req, _res, next) => {
 // Define and list routes here from imported route files later.
 app.use("/", authRoutes);
 app.use("/", cartRoutes);
-app.use('/', BMRoutes); 
+app.use("/", BMRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

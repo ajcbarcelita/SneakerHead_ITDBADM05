@@ -25,7 +25,7 @@ async function runSeeds() {
 
     // Fetch only base tables (exclude views) in the current schema and truncate them
     const [tables] = await db.raw(
-      "SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE';"
+      "SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE';",
     );
 
     if (!tables || tables.length === 0) {
