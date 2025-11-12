@@ -41,6 +41,8 @@ async function runSeeds() {
       "sneakerhead_province_inserts.sql",
       "sneakerhead_cities_municipalities_insert.sql",
       "sneakerhead_inserts.sql",
+      "promo_codes_inserts.sql",
+      "orders_inserts.sql",
     ];
 
     for (const file of sqlFiles) {
