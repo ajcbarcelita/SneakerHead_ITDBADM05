@@ -2,17 +2,16 @@ import Order from "../models/Order.js";
 
 export default async function getOrders(req, res) {
     try {
-        // Optional query parameter if you want to filter by branch_id
         const branch_id = req.query.branch_id || 1;
 
         // Fetch orders + relations
         const orders = await Order.query()
             .withGraphFetched("[user, branch, promoCode, orderItems.[shoe.[brand]]]")  
             .modifyGraph("user", (builder) => {
-                builder.select("user_id", "first_name", "last_name");
+                builder.select("user_id", "fname", "lname");
             })
             .modifyGraph("promoCode", (builder) => {
-                builder.select("promo_code", "discount_percent");
+                builder.select("promo_code");
             })
             .modifyGraph("branch", (builder) => {
                 builder.select("branch_id", "branch_name");
