@@ -16,7 +16,7 @@ import ViewLogs from '@/pages/SystemAdmin/ViewLogs.vue'
 
 
 // Branch Manager Pages
-import BranchManagement from '@/pages/Branch Manager/BranchDashboard.vue'
+import BranchDashboard from '@/pages/Branch Manager/BranchDashboard.vue'
 import ManageStock from '@/pages/Branch Manager/ManageStock.vue'
 import ManageOrders from '@/pages/Branch Manager/ManageOrders.vue'
 
@@ -109,24 +109,25 @@ const router = createRouter({
       component: ViewLogs,
       meta: {adminOnly: true}
     },
-    // Branch Manager Routes -- to be put requiresAuth
+
+    // Branch Manager Routes 
     {
       path: '/BMDashboard',
-      name: 'BranchManagement',
-      component: BranchManagement,
-      meta: { branchManagerOnly: true }
+      name: 'BranchDashboard',
+      component: BranchDashboard,
+      meta: { requiresAuth: true, branchManagerOnly: true }
     },
     {
       path: '/ManageStock',
       name: 'ManageStock',
       component: ManageStock,
-      meta: { branchManagerOnly: true }
+      meta: { requiresAuth: true, branchManagerOnly: true }
     },
     {
       path: '/ManageOrders',
       name: 'ManageOrders',
       component: ManageOrders,
-      meta: { branchManagerOnly: true }
+      meta: { requiresAuth: true, branchManagerOnly: true }
     }
   ],
 })
