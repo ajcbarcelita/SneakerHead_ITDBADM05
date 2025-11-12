@@ -23,17 +23,15 @@ async function runSeeds() {
     console.log("🧹 Disabling foreign key checks...");
     await db.raw("SET FOREIGN_KEY_CHECKS = 0;");
 
-    // Fetch only base tables (exclude views) in the current schema and truncate them
-    const [tables] = await db.raw(
-      "SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE';"
-    );
+    // Fetch all tables in the current DB schema
+    const [tables] = await db.raw("SHOW TABLES;");
+    const tableKey = Object.keys(tables[0])[0];
+    const typeKey = 'Table_type';
 
-    if (!tables || tables.length === 0) {
-      console.log("ℹ️ No base tables found to truncate.");
-    } else {
-      console.log("🗑️  Truncating all base tables...");
-      for (const row of tables) {
-        const table = row.TABLE_NAME;
+    console.log("🗑️  Truncating base tables only...");
+    for (const row of tables) {
+      if (row[typeKey] === 'BASE TABLE') {  // Only truncate actual tables, not views
+        const table = row[tableKey];
         await db.raw(`TRUNCATE TABLE \`${table}\`;`);
       }
     }

@@ -48,7 +48,6 @@
 import { useAuthStore } from "@/stores/authStore";
 
 const auth = useAuthStore()
-
 function logout() { auth.logout() }
 
 </script>
