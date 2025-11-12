@@ -7,11 +7,9 @@
     >
       <div class="w-full max-w-lg space-y-8 shadow-lg p-8 rounded-2xl bg-white">
         <div class="flex flex-col items-center text-center">
-          <img
-            src="@/assets/sneakerhead_logo_no_bg.png"
-            alt="logo"
-            class="h-42 w-42 rounded-full object-cover"
-          />
+          <router-link to="/" class="flex flex-col items-center mb-4">
+            <img src="@/assets/sneakerhead_logo_no_bg.png" alt="logo" class="h-42 w-42 rounded-full object-cover mb-0" />
+          </router-link>
           <h1 class="font-sans mt-4 text-3xl font-semibold text-oxford-blue">
             Welcome to the club!
           </h1>

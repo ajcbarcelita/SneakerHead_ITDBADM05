@@ -5,7 +5,10 @@
       <div class="w-full max-w-lg space-y-8 shadow-lg p-8 rounded-2xl bg-white">
 
         <div class="flex flex-col items-center">
-          <img src="@/assets/sneakerhead_logo_no_bg.png" alt="logo" class="h-42 w-42 rounded-full object-cover" />
+          <router-link to="/" class="flex flex-col items-center mb-4">
+            <img src="@/assets/sneakerhead_logo_no_bg.png" alt="logo" class="h-42 w-42 rounded-full object-cover mb-0" />
+          </router-link>
+
           <h1 class="font-sans mt-4 text-2xl font-semibold text-oxford-blue">Glad you're back.</h1>
           <p class="text-center font-sans mt-1 text-sm text-gray">
             Don't have an account?
@@ -119,14 +122,14 @@
           })
           
           const role = result.data.user.role_name
-          switch (role.toLowerCase()) {
-            case 'admin':
+          switch (role) {
+            case 'Admin':
               router.push({ name: 'SADashboard' })
               break
-            case 'branch manager':
+            case 'Branch Manager':
               router.push({ name: 'BranchDashboard' })
               break
-            case 'customer':
+            case 'Customer':
               router.push({ name: 'Landing' })
               break
           }
