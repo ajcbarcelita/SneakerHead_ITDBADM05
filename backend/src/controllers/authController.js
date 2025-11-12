@@ -55,8 +55,8 @@ export const loginUser = async (req, res) => {
     if (!result.success) {
       try {
         await logEvent({
-          user_id: user.user_id,
-          role_id: user.role_id,
+          user_id: result.user?.user_id || null,
+          role_id: result.user?.role_id || null,
           action: 'LOGIN_FAILED',
           description: `Failed login attempt for email: ${email}`,
           ip
