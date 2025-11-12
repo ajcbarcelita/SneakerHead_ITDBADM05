@@ -137,73 +137,50 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const user = authStore.user
 
-  // For guestOnly pages
+  // guest-only pages
   if (to.meta.guestOnly) {
-    if (user) {
-      switch (user.role_name) {
-        case 'Admin':
-          return next({ name: 'SADashboard' });
-        case 'Branch Manager':
-          return next({ name: 'BranchManagement' })
-        case 'Customer':
-          return next({ name: 'Landing' })
-        default:
-          authStore.logout()
-          return
-      }
+    if (user?.role_name) {
+      const role = user.role_name.toLowerCase()
+      if (role === 'admin') return next({ name: 'SADashboard' })
+      if (role === 'branch manager') return next({ name: 'BranchDashboard' })
+      if (role === 'customer') return next({ name: 'Landing' })
+      authStore.logout()
+      return next('/login')
     }
     return next()
   }
 
-  // For customerOnly pages
+  // customer-only pages
   if (to.meta.customerOnly) {
-    if (!user) return next('/login') // not logged in
-    switch (user.role_name) {
-      case 'Customer':
-        return next()
-      case 'Branch Manager':
-        return next({ name: 'BranchManagement' })
-      case 'Admin':
-      case 'System Admin':
-        return next({ name: 'SADashboard' })
-      default:
-        authStore.logout()
-        return
-    }
+    if (!user?.role_name) return next('/login')
+    const role = user.role_name.toLowerCase()
+    if (role === 'customer') return next()
+    if (role === 'branch manager') return next({ name: 'BranchDashboard' })
+    if (role === 'admin') return next({ name: 'SADashboard' })
+    authStore.logout()
+    return next('/login')
   }
 
-  // For branchManagerOnly pages
+  // branch manager-only pages
   if (to.meta.branchManagerOnly) {
-    if (!user) return next('/login')
-    switch (user.role_name) {
-      case 'Branch Manager':
-        return next()
-      case 'Customer':
-        return next({ name: 'Landing' })
-      case 'Admin':
-      case 'System Admin':
-        return next({ name: 'SADashboard' })
-      default:
-        authStore.logout()
-        return
-    }
+    if (!user?.role_name) return next('/login')
+    const role = user.role_name.toLowerCase()
+    if (role === 'branch manager') return next()
+    if (role === 'customer') return next({ name: 'Landing' })
+    if (role === 'admin') return next({ name: 'SADashboard' })
+    authStore.logout()
+    return next('/login')
   }
 
-  // For adminOnly pages
+  // admin-only pages
   if (to.meta.adminOnly) {
-    if (!user) return next('/login')
-    switch (user.role_name) {
-      case 'Branch Manager':
-        return next()
-      case 'Customer':
-        return next({ name: 'Landing' })
-      case 'Admin':
-      case 'System Admin':
-        return next({ name: 'SADashboard' })
-      default:
-        authStore.logout()
-        return
-    }
+    if (!user?.role_name) return next('/login')
+    const role = user.role_name.toLowerCase()
+    if (role === 'admin') return next()
+    if (role === 'branch manager') return next({ name: 'BranchDashboard' })
+    if (role === 'customer') return next({ name: 'Landing' })
+    authStore.logout()
+    return next('/login')
   }
 
   return next()
