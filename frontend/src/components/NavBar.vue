@@ -44,12 +44,11 @@
     </nav>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
+<script setup>
 import { useAuthStore } from "@/stores/authStore";
 
 const auth = useAuthStore()
+
 function logout() { auth.logout() }
 
-export default defineComponent({});
 </script>
