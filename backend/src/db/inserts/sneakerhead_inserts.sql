@@ -77,6 +77,6 @@ VALUES
 ('john_mendoza@dlsu.edu.ph', '$argon2id$v=19$m=65536,t=5,p=1$F/7lo34xW5g869oTL5sdFw$sR78CqT1/aNjEcGjo/w82G36cwMvhyyXegShZPJZFVI', 'Mendoza', 'John Kirbie', 'Garcia', NULL,2),
 ('josh_cariaga@dlsu.edu.ph', '$argon2id$v=19$m=65536,t=5,p=1$AOKE+pDGbFL08muN72tfyQ$c43JpgU9vZXeHxyS0keX3D6GHAAOzLuSFvZasH9scvM', 'Cariaga', 'Josh Enrico', 'Pesigan', NULL,2),
 ('joshua_nicolai_gonzales@dlsu.edu.ph', '$argon2id$v=19$m=65536,t=5,p=1$5artkKLQ9w2gYvgiOZ/Y9Q$sOA7xbrSRUGSYkSPB9YdvPpBhRN49TPWAJQOmkskMt0', 'Gonzales', 'Joshua Nicolai', 'Herrera', NULL,2),
-('kasane_teto@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$2Qz9521WNaiabskpksgq0A$82clm13kaMOZWYIljBRf5b+QFp8NOhT1YwWqaV+YoWI', 'Teto', 'Kasane', NULL, 1, 3),
-('akita_neru@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$yCFPWHrGWNIe4WqYYnBYRw$zN7esMqcwcCGWelrcX0WwxGGJQbOpSGDcETxl7cVlbU', 'Neru', 'Akita', NULL, 1, 3),
-('hatsune_miku@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$HAniNVgySRDOINOYvheGGQ$FZ1HzfEDKecxa0ggpmHdxoqenuFdj+Ddd+muUVR0A2A', 'Miku', 'Hatsune', NULL,1, 3);
+('kasane_teto@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$2Qz9521WNaiabskpksgq0A$82clm13kaMOZWYIljBRf5b+QFp8NOhT1YwWqaV+YoWI', 'Kasane', 'Teto', NULL, 1, 3),
+('akita_neru@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$yCFPWHrGWNIe4WqYYnBYRw$zN7esMqcwcCGWelrcX0WwxGGJQbOpSGDcETxl7cVlbU', 'Akita', 'Neru', NULL, 1, 3),
+('hatsune_miku@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$HAniNVgySRDOINOYvheGGQ$FZ1HzfEDKecxa0ggpmHdxoqenuFdj+Ddd+muUVR0A2A', 'Hatsune', 'Miku', NULL,1, 3);

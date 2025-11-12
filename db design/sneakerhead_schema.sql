@@ -529,6 +529,192 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 1;
 
 SHOW WARNINGS;
+USE `sneakerhead` ;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`branch_daily_sales_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_daily_sales_view` (`sale_date` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`daily_sales_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`daily_sales_view` (`sale_date` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`branch_monthly_sales_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_monthly_sales_view` (`year` INT, `month` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`monthly_sales_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`monthly_sales_view` (`year` INT, `month` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`branch_yearly_sales_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_yearly_sales_view` (`year` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`yearly_sales_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`yearly_sales_view` (`year` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`count_branch_low_stock`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`count_branch_low_stock` (`low_stock` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`branch_daily_sales_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`branch_daily_sales_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`branch_daily_sales_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW branch_daily_sales_view AS
+SELECT 
+    DATE(o.created_at) as sale_date,
+    b.branch_id,
+    b.branch_name,
+    SUM(o.total_price) as total_sales,
+    COUNT(*) as order_count,
+    AVG(o.total_price) as avg_order_value
+FROM orders o
+JOIN branches b ON o.branch_id = b.branch_id
+GROUP BY DATE(o.created_at), b.branch_id, b.branch_name
+ORDER BY sale_date DESC, total_sales DESC;
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`daily_sales_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`daily_sales_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`daily_sales_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW daily_sales_view AS
+SELECT 
+    DATE(o.created_at) as sale_date,
+    SUM(o.total_price) as total_sales,
+    COUNT(*) as order_count,
+    AVG(o.total_price) as avg_order_value
+FROM orders o
+GROUP BY DATE(o.created_at)
+ORDER BY sale_date DESC, order_count DESC, total_sales DESC;
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`branch_monthly_sales_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`branch_monthly_sales_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`branch_monthly_sales_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW branch_monthly_sales_view AS
+SELECT 
+    YEAR(o.created_at) as year,
+    MONTH(o.created_at) as month,
+    b.branch_id,
+    b.branch_name,
+    SUM(o.total_price) as total_sales,
+    COUNT(*) as order_count,
+    AVG(o.total_price) as avg_order_value
+FROM orders o
+JOIN branches b ON o.branch_id = b.branch_id
+GROUP BY YEAR(o.created_at), MONTH(o.created_at), b.branch_id, b.branch_name
+ORDER BY year DESC, month DESC;
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`monthly_sales_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`monthly_sales_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`monthly_sales_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW monthly_sales_view AS
+SELECT 
+    YEAR(o.created_at) as year,
+    MONTH(o.created_at) as month,
+    SUM(o.total_price) as total_sales,
+    COUNT(*) as order_count,
+    AVG(o.total_price) as avg_order_value
+FROM orders o
+GROUP BY YEAR(o.created_at), MONTH(o.created_at)
+ORDER BY year DESC, month DESC;
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`branch_yearly_sales_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`branch_yearly_sales_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`branch_yearly_sales_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW branch_yearly_sales_view AS
+SELECT 
+    YEAR(o.created_at) as year,
+    b.branch_id,
+    b.branch_name,
+    SUM(o.total_price) as total_sales,
+    COUNT(*) as order_count,
+    AVG(o.total_price) as avg_order_value
+FROM orders o
+JOIN branches b ON o.branch_id = b.branch_id
+GROUP BY YEAR(o.created_at), b.branch_id, b.branch_name
+ORDER BY year DESC, total_sales DESC;
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`yearly_sales_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`yearly_sales_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`yearly_sales_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW yearly_sales_view AS
+SELECT 
+    YEAR(o.created_at) as year,
+    SUM(o.total_price) as total_sales,
+    COUNT(*) as order_count,
+    AVG(o.total_price) as avg_order_value
+FROM orders o
+GROUP BY YEAR(o.created_at)
+ORDER BY year DESC, total_sales DESC;
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`count_branch_low_stock`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`count_branch_low_stock`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`count_branch_low_stock` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW count_branch_low_stock AS
+SELECT COUNT(stock) AS low_stock
+FROM shoe_size_inventory
+WHERE stock <= 5;
+SHOW WARNINGS;
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 USE `sneakerhead`;
 
 DELIMITER $$
@@ -548,10 +734,6 @@ END$$
 SHOW WARNINGS$$
 
 DELIMITER ;
-
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- begin attached script 'script'
 DELIMITER $$
 
