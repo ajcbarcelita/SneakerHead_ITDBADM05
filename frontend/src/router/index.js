@@ -139,26 +139,38 @@ router.beforeEach((to, from, next) => {
 
   // guest-only pages
   if (to.meta.guestOnly) {
-    if (user?.role_name) {
-      const role = user.role_name.toLowerCase()
-      if (role === 'admin') return next({ name: 'SADashboard' })
-      if (role === 'branch manager') return next({ name: 'BranchDashboard' })
-      if (role === 'customer') return next({ name: 'Landing' })
-      authStore.logout()
-      return next('/login')
+    if (user) {
+      switch (user.role_name) {
+        case 'Admin':
+          return next({ name: 'SADashboard' });
+        case 'Branch Manager':
+          return next({ name: 'BranchDashboard' })
+        case 'Customer':
+          return next({ name: 'Landing' })
+        default:
+          authStore.logout()
+          return
+      }
     }
     return next()
   }
 
-  // customer-only pages
+  
+  // For customerOnly pages
   if (to.meta.customerOnly) {
-    if (!user?.role_name) return next('/login')
-    const role = user.role_name.toLowerCase()
-    if (role === 'customer') return next()
-    if (role === 'branch manager') return next({ name: 'BranchDashboard' })
-    if (role === 'admin') return next({ name: 'SADashboard' })
-    authStore.logout()
-    return next('/login')
+    if (!user) return next('/login') // not logged in
+    switch (user.role_name) {
+      case 'Customer':
+        return next()
+      case 'Branch Manager':
+        return next({ name: 'BranchDashboard' })
+      case 'Admin':
+      case 'System Admin':
+        return next({ name: 'SADashboard' })
+      default:
+        authStore.logout()
+        return
+    }
   }
 
   // branch manager-only pages

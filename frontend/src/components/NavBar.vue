@@ -32,7 +32,7 @@
                     </router-link>
 
                     <!-- Sign-in / Register -->
-                    <router-link to="/login" class="nav-link">SIGN IN</router-link>
+                    <button @click="logout" class="nav-link">SIGN IN</button>
 
                     <!-- Edit Profile -->
                     <router-link to="/profile" class="p-2 rounded-full hover:bg-white/10" aria-label="Profile">
@@ -46,6 +46,10 @@
 
 <script>
 import { defineComponent } from 'vue';
+import { useAuthStore } from "@/stores/authStore";
+
+const auth = useAuthStore()
+function logout() { auth.logout() }
 
 export default defineComponent({});
 </script>

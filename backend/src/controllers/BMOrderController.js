@@ -26,7 +26,7 @@ export default async function getOrders(req, res) {
         // Format response for frontend table
         const formatted = orders.map((order) => ({
             order_id: order.order_id,
-            full_name: `${order.user.first_name} ${order.user.last_name}`,
+            full_name: `${order.user.fname} ${order.user.lname}`,
             branch_id: order.branch_id,
             total_price: order.total_price,
             items_count: order.orderItems ? order.orderItems.length : 0,  

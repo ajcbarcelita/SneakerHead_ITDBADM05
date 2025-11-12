@@ -124,7 +124,7 @@
               router.push({ name: 'SADashboard' })
               break
             case 'branch manager':
-              router.push({ name: 'BranchManagement' })
+              router.push({ name: 'BranchDashboard' })
               break
             case 'customer':
               router.push({ name: 'Landing' })

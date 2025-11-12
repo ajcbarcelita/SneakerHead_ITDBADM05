@@ -18,7 +18,7 @@
 
                 <!-- RIGHT SIDE: Profile & Sign Out -->
                 <div class="flex items-center justify-end space-x-4">
-                    <router-link to="/login" class="nav-link">SIGN OUT</router-link>
+                    <button @click="logout" class="nav-link">SIGN OUT</button>
                     <router-link to="/profile" class="p-2 rounded-full hover:bg-white/10" aria-label="Profile">
                         <img src="@/assets/Profile.png" alt="Profile" class="h-8 w-8 rounded-full invert" />
                     </router-link>
@@ -59,8 +59,11 @@
 import { ref } from "vue";
 import Drawer from "primevue/drawer";
 import Button from "primevue/button";
+import { useAuthStore } from "@/stores/authStore";
 
 const drawerVisible = ref(false);
+const auth = useAuthStore()
+function logout() { auth.logout() }
 
 const menuItems = [
     { label: "Dashboard Overview", icon: "pi pi-home", to: "/SysAdminDashboard" },
