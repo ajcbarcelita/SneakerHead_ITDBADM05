@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS `sneakerhead`.`branches` (
   `branch_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `branch_name` VARCHAR(100) NOT NULL,
   `address_id` INT UNSIGNED NOT NULL,
+  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`branch_id`),
   INDEX `branchFK_address_idx` (`address_id` ASC) VISIBLE,
   CONSTRAINT `branchFK_address`
