@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 
+import LandingPage from '@/pages/LandingPage.vue'
 import LoginPage from '@/pages/LoginPage.vue'
 import RegisterPage from '@/pages/RegisterPage.vue'
 import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
@@ -38,6 +40,12 @@ import ProfilePage from '@/pages/ProfilePage.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+
+    {
+      path: '/',
+      name: 'Landing',
+      component: LandingPage
+    },
     // Auth Routes
     {
       path: '/login',
@@ -124,5 +132,80 @@ const router = createRouter({
 })
 
 // Add navigation guards here if needed using router.beforeEach
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  const user = authStore.user
+
+  // For guestOnly pages
+  if (to.meta.guestOnly) {
+    if (user) {
+      switch (user.role_name) {
+        case 'Admin':
+          return next({ name: 'SADashboard' });
+        case 'Branch Manager':
+          return next({ name: 'BranchManagement' })
+        case 'Customer':
+          return next({ name: 'Landing' })
+        default:
+          authStore.logout()
+          return
+      }
+    }
+    return next()
+  }
+
+  // For customerOnly pages
+  if (to.meta.customerOnly) {
+    if (!user) return next('/login') // not logged in
+    switch (user.role_name) {
+      case 'Customer':
+        return next()
+      case 'Branch Manager':
+        return next({ name: 'BranchManagement' })
+      case 'Admin':
+      case 'System Admin':
+        return next({ name: 'SADashboard' })
+      default:
+        authStore.logout()
+        return
+    }
+  }
+
+  // For branchManagerOnly pages
+  if (to.meta.branchManagerOnly) {
+    if (!user) return next('/login')
+    switch (user.role_name) {
+      case 'Branch Manager':
+        return next()
+      case 'Customer':
+        return next({ name: 'Landing' })
+      case 'Admin':
+      case 'System Admin':
+        return next({ name: 'SADashboard' })
+      default:
+        authStore.logout()
+        return
+    }
+  }
+
+  // For adminOnly pages
+  if (to.meta.adminOnly) {
+    if (!user) return next('/login')
+    switch (user.role_name) {
+      case 'Branch Manager':
+        return next()
+      case 'Customer':
+        return next({ name: 'Landing' })
+      case 'Admin':
+      case 'System Admin':
+        return next({ name: 'SADashboard' })
+      default:
+        authStore.logout()
+        return
+    }
+  }
+
+  return next()
+})
 
 export default router

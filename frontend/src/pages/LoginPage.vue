@@ -117,7 +117,19 @@
             detail: `Welcome back, ${result.data.user.fname}!`,
             life: 5000
           })
-          router.push('/'); // Redirect after successful login
+          
+          const role = result.data.user.role_name
+          switch (role.toLowerCase()) {
+            case 'admin':
+              router.push({ name: 'SADashboard' })
+              break
+            case 'branch manager':
+              router.push({ name: 'BranchManagement' })
+              break
+            case 'customer':
+              router.push({ name: 'Landing' })
+              break
+          }
         } else {
           // merge backend errors
           Object.assign(errors.value, authStore.errors)
