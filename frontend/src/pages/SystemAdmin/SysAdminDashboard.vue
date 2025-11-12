@@ -104,6 +104,7 @@ import Card from 'primevue/card'
 import Dropdown from 'primevue/dropdown'
 import Chart from 'primevue/chart'
 import { ref, watch, onMounted, computed } from 'vue'
+import SAService from '@/services/SAService'
 
 // Reactive data
 const selectedRange = ref({ label: 'Daily', value: 'daily' })
@@ -145,25 +146,21 @@ const formattedTotalSales = computed(() => {
 
 // Fetch metrics from DB
 async function fetchMetrics() {
-    loading.value = true
+    loading.value = true;
     try {
-        const params = {
-            period: selectedRange.value.value,
-            branch: selectedBranch.value.value
-        }
+        const period = selectedRange.value.value;
+        const branch = selectedBranch.value.value;
         
-        const response = await fetch(`http://localhost:3000/metrics?${new URLSearchParams(params)}`)
-        if (!response.ok) throw new Error('Failed to fetch metrics')
-        
-        const data = await response.json()
-        metrics.value = data
-        updateChart()
+        const response = await SAService.getMetrics(period, branch);
+        const data = await response.data;
+        metrics.value = data;
+        updateChart();
     } catch (error) {
-        console.error('Failed to fetch metrics:', error)
+        console.error('Failed to fetch metrics:', error);
         // Reset metrics on error
-        metrics.value = { totalSales: 0, newOrders: 0, chartData: [] }
+        metrics.value = { totalSales: 0, newOrders: 0, chartData: [] };
     } finally {
-        loading.value = false
+        loading.value = false;
     }
 }
 

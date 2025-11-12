@@ -7,7 +7,7 @@ import RegisterPage from '@/pages/RegisterPage.vue'
 import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
 import CheckoutPage from '@/pages/CheckoutPage.vue'
 
-// System Admin Pages
+// Admin Pages
 import SysAdminDashboard from '@/pages/SystemAdmin/SysAdminDashboard.vue'
 import ManageBranch from '@/pages/SystemAdmin/ManageBranch.vue'
 import ManagePromoCodes from '@/pages/SystemAdmin/ManagePromoCodes.vue'
@@ -78,36 +78,36 @@ const router = createRouter({
       meta: {requiresAuth: true}
     },
 
-    // System Admin Routes -- to be put requiresAuth
+    // Admin Routes -- to be put requiresAuth
     {
       path: '/SysAdminDashboard',
       name: 'SADashboard',
       component: SysAdminDashboard,
-      meta: {adminOnly: true}
+      meta: { requiresAuth: true, adminOnly: true }
     },
     {
       path: '/ManageBranch',
       name: 'ManageBranch',
       component: ManageBranch,
-      meta: {adminOnly: true}
+      meta: { requiresAuth: true, adminOnly: true }
     },
     {
       path: '/ManagePromoCodes',
       name: 'ManagePromoCodes',
       component: ManagePromoCodes,
-      meta: {adminOnly: true}
+      meta: { requiresAuth: true, adminOnly: true }
     },
     {
       path: '/ManageShoes',
       name: 'ManageShoes',
       component: ManageShoes,
-      meta: {adminOnly: true}
+      meta: { requiresAuth: true, adminOnly: true }
     },
     {
       path: '/ViewLogs',
       name: 'ViewLogs',
       component: ViewLogs,
-      meta: {adminOnly: true}
+      meta: { requiresAuth: true, adminOnly: true }
     },
 
     // Branch Manager Routes 
@@ -165,7 +165,6 @@ router.beforeEach((to, from, next) => {
       case 'Branch Manager':
         return next({ name: 'BranchDashboard' })
       case 'Admin':
-      case 'System Admin':
         return next({ name: 'SADashboard' })
       default:
         authStore.logout()
