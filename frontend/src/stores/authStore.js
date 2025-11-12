@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import * as authService from '@/services/authService'
 import{ jwtDecode }from 'jwt-decode'
 
@@ -99,5 +99,10 @@ export const useAuthStore = defineStore('auth', () => {
     router.push('/login')
   }
 
-  return { user, loading, errors, register, login, clearErrors, logout }
+  const isLoggedIn = computed(() => !!user.value)
+  const isCustomer = computed(() => user.value?.role_name === 'Customer')
+  const isBranchManager = computed(() => user.value?.role_name === 'Branch Manager')
+  const isAdmin = computed(() => user.value?.role_name === 'Admin' || user.value?.role_name === 'System Admin')
+
+  return { user, loading, errors, register, login, clearErrors, logout, isLoggedIn, isCustomer, isBranchManager, isAdmin }
 })
