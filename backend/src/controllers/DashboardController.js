@@ -1,4 +1,3 @@
-import Model from "objection";
 import Order from "../models/Order.js";
 
 export const metrics = async (req, res) => {

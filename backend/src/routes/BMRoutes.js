@@ -1,11 +1,15 @@
 import express from "express";
-import getOrders from "../controllers/BMOrderController.js";
+import { getOrders, getMetrics } from "../controllers/BMController.js";
 import { authenticateUser } from "../middlewares/authMiddleware.js";
+
 const router = express.Router();
 
-router.use(authenticateUser("Branch Manager"));
+let role = "Branch Manager";
 
 // Get all orders
-router.get("/ManageOrders", getOrders);
+router.get("/ManageOrders", authenticateUser(role), getOrders);
+
+// Get BM metrics
+router.get("/BMmetrics", authenticateUser(role), getMetrics);
 
 export default router;
