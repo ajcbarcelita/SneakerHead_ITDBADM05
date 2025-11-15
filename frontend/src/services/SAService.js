@@ -30,6 +30,33 @@ const SAService = {
         }
     },
 
+    async addBranch(branchData) {
+        try {
+            const response = await api.post('/branches', branchData);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async updateBranch(branchId, branchData) {
+        try {
+            const response = await api.put(`/branches/${branchId}`, branchData);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async getCities() {
+        try {
+            const response = await api.get('/cities');
+            return response
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async updateUser(userId, userData) {
         try {
             const response = await api.put(`/users/${userId}`, userData);

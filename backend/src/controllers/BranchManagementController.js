@@ -1,5 +1,7 @@
 import User from "../models/User.js";
 import Branch from "../models/Branch.js";
+import City_Municipality from "../models/City_Municipality.js";
+import { logEvent } from "../services/logEventService.js";
 
 export const getUsers = async (req, res) => {
     try {
@@ -22,7 +24,6 @@ export const getUsers = async (req, res) => {
             .leftJoin("ref_roles", "users.role_id", "ref_roles.role_id")
             .leftJoin("addresses", "users.address_id", "addresses.address_id")
             .leftJoin("branches", "addresses.address_id", "branches.address_id")
-            .where("users.is_deleted", false)
             .orderBy("branches.branch_id", "asc");
 
         // Format the response
@@ -37,6 +38,7 @@ export const getUsers = async (req, res) => {
             mname: user.mname,
             lname: user.lname,
             role_id: user.role_id,
+            is_deleted: Boolean(user.is_deleted),
             created_at: user.created_at,
             updated_at: user.updated_at
         }));
@@ -59,7 +61,8 @@ export const getBranches = async (req, res) => {
                 "addresses.addressline1",
                 "addresses.addressline2", 
                 "addresses.city_id",
-                "ref_ph_cities_municipalities.city_name"
+                "ref_ph_cities_municipalities.city_name",
+                "branches.is_deleted"
             )
             .leftJoin("addresses", "branches.address_id", "addresses.address_id")
             .leftJoin("ref_ph_cities_municipalities", "addresses.city_id", "ref_ph_cities_municipalities.city_id")
@@ -72,10 +75,90 @@ export const getBranches = async (req, res) => {
             addressline1: branch.addressline1,
             addressline2: branch.addressline2,
             city_id: branch.city_id,
-            city_name: branch.city_name
+            city_name: branch.city_name,
+            is_deleted: Boolean(branch.is_deleted)
         }));
 
         res.status(200).json({ branches: formattedBranches });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+}
+
+export const getCities = async (req, res) => {
+    try {
+        const knex = City_Municipality.knex();
+        const cities = await knex("ref_ph_cities_municipalities")
+            .select(
+                "city_id",
+                "city_name"
+            )
+            .orderBy("city_id", "asc");
+
+        const formattedCities = cities.map(city => ({
+            city_id: city.city_id,
+            city_name: city.city_name
+        }));
+
+        res.status(200).json({ cities: formattedCities });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+}
+
+export const addBranch = async (req, res) => {
+    try {
+        const { 
+            branch_name, 
+            addressline1, 
+            addressline2, 
+            city_id 
+        } = req.body;
+
+        const knex = Branch.knex();
+        
+        await knex.raw('CALL add_branch(?, ?, ?, ?)', [
+            branch_name,
+            addressline1 || '',
+            addressline2 || '',
+            city_id
+        ]);
+
+        res.status(201).json({ message: "Branch added successfully" });
+
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+}
+
+export const updateBranch = async (req, res) => {
+    try {
+        const { branchId } = req.params;
+        const { 
+            branch_name, 
+            addressline1, 
+            addressline2, 
+            city_id,
+            is_deleted 
+        } = req.body;
+
+        // Convert is_deleted to proper
+        const isDeletedValue = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null;
+
+        const knex = Branch.knex();
+        
+        // Call the stored procedure
+        await knex.raw('CALL update_branch(?, ?, ?, ?, ?, ?)', [
+            branchId,
+            branch_name || null,
+            addressline1 || null,
+            addressline2 || null,
+            city_id || null,
+            isDeletedValue
+        ]);
+
+        res.status(200).json({ message: "Branch updated successfully" });
+
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
@@ -92,8 +175,11 @@ export const updateUser = async (req, res) => {
             mname, 
             address_id, 
             role_id, 
-            is_deleted 
+            is_deleted
         } = req.body;
+
+        // Convert is_deleted to proper MySQL boolean
+        const isDeletedValue = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null;
 
         const knex = User.knex();
         
@@ -107,10 +193,10 @@ export const updateUser = async (req, res) => {
             mname || null,
             address_id || null,
             role_id || null,
-            is_deleted || null
+            isDeletedValue
         ]);
 
-        res.status(200).json({ success: true, message: "User updated successfully" });
+        res.status(200).json({ message: "User updated successfully" });
     } catch (error) {
         console.error('Update user error:', error);
         res.status(500).json({ message: "Server error", error: error.message });
