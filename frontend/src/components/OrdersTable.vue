@@ -35,7 +35,7 @@
         icon="pi pi-filter-slash"
         outlined
         @click="clearFilters"
-        class="text-oxford-blue border-oxford-blue hover:bg-oxford-blue hover:text-white"
+        class="text-oxford-blue border border-oxford-blue hover:bg-oxford-blue hover:text-white transition-colors"
       />
     </div>
 
@@ -78,7 +78,7 @@
       <!-- Date Column -->
       <Column field="created_at" header="Order Date" sortable style="min-width: 12rem">
         <template #body="{ data }">
-          <span>{{ formatDate(data.created_at) }}</span>
+          <span class="text-charcoal">{{ formatDate(data.created_at) }}</span>
         </template>
       </Column>
 
@@ -87,7 +87,7 @@
         <template #body="{ data }">
           <div class="flex items-center gap-2">
             <i class="pi pi-map-marker text-oxford-blue"></i>
-            <span>{{ data.branch_name }}</span>
+            <span class="text-charcoal">{{ data.branch_name }}</span>
           </div>
         </template>
       </Column>
@@ -137,19 +137,19 @@
 
             <Column field="shoe_size" header="Size" style="min-width: 8rem">
               <template #body="{ data: item }">
-                <span>US {{ item.shoe_size }}</span>
+                <span class="text-charcoal">US {{ item.shoe_size }}</span>
               </template>
             </Column>
 
             <Column field="quantity" header="Quantity" style="min-width: 8rem">
               <template #body="{ data: item }">
-                <span>{{ item.quantity }}</span>
+                <span class="text-charcoal">{{ item.quantity }}</span>
               </template>
             </Column>
 
             <Column field="price_at_purchase" header="Price" style="min-width: 10rem">
               <template #body="{ data: item }">
-                <span>₱{{ formatPrice(item.price_at_purchase) }}</span>
+                <span class="text-charcoal">₱{{ formatPrice(item.price_at_purchase) }}</span>
               </template>
             </Column>
 
@@ -210,6 +210,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -218,206 +219,43 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import DatePicker from 'primevue/datepicker'
 import Tag from 'primevue/tag'
+import orderService from '../services/orderService.js'
 
-// Sample orders data (replace with API call)
-// Data structure matches database schema:
-// orders: order_id, user_id, branch_id, total_price, promo_code, created_at
-// order_items: order_item_id, order_id, shoe_id, shoe_size, branch_id, quantity, price_at_purchase, subtotal, created_at
-// Note: branch_name, shoe_name, brand_name, shoe_image are joined from related tables (branches, shoes, brands, shoe_images)
-const orders = ref([
-  {
-    order_id: 1001,
-    user_id: 1,
-    branch_id: 1,
-    branch_name: 'Sneakerhead Manila', // joined from branches table
-    total_price: 15999.00,
-    promo_code: null,
-    created_at: '2024-11-01T10:30:00',
-    items_count: 2, // calculated from order_items count
-    items: [
-      {
-        order_item_id: 1,
-        order_id: 1001,
-        shoe_id: 1,
-        shoe_size: 10.5,
-        branch_id: 1,
-        quantity: 1,
-        price_at_purchase: 8999.00,
-        subtotal: 8999.00,
-        created_at: '2024-11-01T10:30:00',
-        // Joined data from related tables:
-        shoe_name: 'Air Jordan 1 Retro High', // from shoes.name
-        brand_name: 'Nike', // from ref_shoe_brands.brand_name via shoes.brand_id
-        shoe_image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400' // from shoe_images table
-      },
-      {
-        order_item_id: 2,
-        order_id: 1001,
-        shoe_id: 2,
-        shoe_size: 11.0,
-        branch_id: 1,
-        quantity: 1,
-        price_at_purchase: 7000.00,
-        subtotal: 7000.00,
-        created_at: '2024-11-01T10:30:00',
-        shoe_name: 'Yeezy Boost 350 V2',
-        brand_name: 'Adidas',
-        shoe_image: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400'
-      }
-    ]
-  },
-  {
-    order_id: 1002,
-    user_id: 1,
-    branch_id: 2,
-    branch_name: 'Sneakerhead Makati',
-    total_price: 12500.00,
-    promo_code: 'WELCOME10',
-    created_at: '2024-11-05T14:15:00',
-    items_count: 3,
-    items: [
-      {
-        order_item_id: 3,
-        order_id: 1002,
-        shoe_id: 3,
-        shoe_size: 9.0,
-        branch_id: 2,
-        quantity: 2,
-        price_at_purchase: 2999.00,
-        subtotal: 5998.00,
-        created_at: '2024-11-05T14:15:00',
-        shoe_name: 'Chuck Taylor All Star',
-        brand_name: 'Converse',
-        shoe_image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400'
-      },
-      {
-        order_item_id: 4,
-        order_id: 1002,
-        shoe_id: 4,
-        shoe_size: 10.0,
-        branch_id: 2,
-        quantity: 1,
-        price_at_purchase: 4500.00,
-        subtotal: 4500.00,
-        created_at: '2024-11-05T14:15:00',
-        shoe_name: 'New Balance 574',
-        brand_name: 'New Balance',
-        shoe_image: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=400'
-      },
-      {
-        order_item_id: 5,
-        order_id: 1002,
-        shoe_id: 5,
-        shoe_size: 11.5,
-        branch_id: 2,
-        quantity: 1,
-        price_at_purchase: 6500.00,
-        subtotal: 6500.00,
-        created_at: '2024-11-05T14:15:00',
-        shoe_name: 'Air Max 90',
-        brand_name: 'Nike',
-        shoe_image: 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=400'
-      }
-    ]
-  },
-  {
-    order_id: 1003,
-    user_id: 1,
-    branch_id: 1,
-    branch_name: 'Sneakerhead Manila',
-    total_price: 8999.00,
-    promo_code: null,
-    created_at: '2024-11-08T09:45:00',
-    items_count: 1,
-    items: [
-      {
-        order_item_id: 6,
-        order_id: 1003,
-        shoe_id: 6,
-        shoe_size: 9.5,
-        branch_id: 1,
-        quantity: 1,
-        price_at_purchase: 3999.00,
-        subtotal: 3999.00,
-        created_at: '2024-11-08T09:45:00',
-        shoe_name: 'Old Skool',
-        brand_name: 'Vans',
-        shoe_image: 'https://images.unsplash.com/photo-1543508282-6319a3e2621f?w=400'
-      }
-    ]
-  },
-  {
-    order_id: 1004,
-    user_id: 1,
-    branch_id: 3,
-    branch_name: 'Sneakerhead Quezon City',
-    total_price: 21999.00,
-    promo_code: null,
-    created_at: '2024-11-09T16:20:00',
-    items_count: 2,
-    items: [
-      {
-        order_item_id: 7,
-        order_id: 1004,
-        shoe_id: 7,
-        shoe_size: 10.0,
-        branch_id: 3,
-        quantity: 1,
-        price_at_purchase: 5999.00,
-        subtotal: 5999.00,
-        created_at: '2024-11-09T16:20:00',
-        shoe_name: 'Air Force 1',
-        brand_name: 'Nike',
-        shoe_image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400'
-      },
-      {
-        order_item_id: 8,
-        order_id: 1004,
-        shoe_id: 8,
-        shoe_size: 11.0,
-        branch_id: 3,
-        quantity: 1,
-        price_at_purchase: 9500.00,
-        subtotal: 9500.00,
-        created_at: '2024-11-09T16:20:00',
-        shoe_name: 'Ultra Boost',
-        brand_name: 'Adidas',
-        shoe_image: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=400'
-      }
-    ]
-  },
-  {
-    order_id: 1005,
-    user_id: 1,
-    branch_id: 2,
-    branch_name: 'Sneakerhead Makati',
-    total_price: 4999.00,
-    promo_code: 'SUMMER20',
-    created_at: '2024-10-28T11:00:00',
-    items_count: 1,
-    items: [
-      {
-        order_item_id: 9,
-        order_id: 1005,
-        shoe_id: 9,
-        shoe_size: 9.0,
-        branch_id: 2,
-        quantity: 1,
-        price_at_purchase: 3499.00,
-        subtotal: 3499.00,
-        created_at: '2024-10-28T11:00:00',
-        shoe_name: 'Classic Leather',
-        brand_name: 'Reebok',
-        shoe_image: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=400'
-      }
-    ]
-  }
-])
+const toast = useToast()
 
+const orders = ref([])
+const allOrders = ref([]) // Keep original data for filtering
 const loading = ref(false)
 const expandedRows = ref([])
 const searchValue = ref('')
 const dateRange = ref(null)
+
+onMounted(async () => {
+  await fetchOrderHistory()
+})
+
+/**
+ * Fetch order history from backend
+ */
+const fetchOrderHistory = async () => {
+  try {
+    loading.value = true
+    const data = await orderService.getOrderHistory()
+    allOrders.value = data
+    orders.value = data
+  } catch (error) {
+    console.error('Failed to fetch orders:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load order history',
+      life: 3000
+    })
+    orders.value = []
+  } finally {
+    loading.value = false
+  }
+}
 
 // Methods
 const formatDate = (dateString) => {
@@ -439,42 +277,59 @@ const formatPrice = (price) => {
 }
 
 const onDateRangeChange = () => {
+  applyFilters()
+}
+
+const applyFilters = () => {
+  let filtered = [...allOrders.value]
+
+  // Filter by search text (order ID)
+  if (searchValue.value) {
+    const searchTerm = searchValue.value.toLowerCase()
+    filtered = filtered.filter(order =>
+      order.order_id.toString().includes(searchTerm) ||
+      order.branch_name?.toLowerCase().includes(searchTerm)
+    )
+  }
+
+  // Filter by date range
   if (dateRange.value && dateRange.value[0] && dateRange.value[1]) {
     const startDate = new Date(dateRange.value[0])
     const endDate = new Date(dateRange.value[1])
-    orders.value = orders.value.filter(order => {
+    endDate.setHours(23, 59, 59, 999) // Include entire end date
+
+    filtered = filtered.filter(order => {
       const orderDate = new Date(order.created_at)
       return orderDate >= startDate && orderDate <= endDate
     })
   }
+
+  orders.value = filtered
 }
 
-const clearFilters = () => {
+const clearFilters = async () => {
   searchValue.value = ''
   dateRange.value = null
-  // TODO: Fetch original data from API
-  console.log('Filters cleared')
+  await fetchOrderHistory()
+
+  toast.add({
+    severity: 'success',
+    summary: 'Cleared',
+    detail: 'Filters have been cleared',
+    life: 2000
+  })
 }
 
-// Lifecycle
-onMounted(() => {
-  // TODO: Fetch orders from API
-  // Example: await fetchOrderHistory()
-  console.log('Order history component mounted')
+// Watch for search value changes
+import { watch } from 'vue'
+watch(searchValue, () => {
+  applyFilters()
 })
+
 </script>
 
 <style scoped>
-/* Custom color scheme variables */
-:deep(.p-datatable) {
-  font-family: 'Montserrat', sans-serif;
-}
-
-:deep(.p-datatable-header) {
-  background-color: #102540;
-  color: #F3F3F3;
-}
-
+/* PrimeUI table header customization */
 :deep(.p-datatable-thead > tr > th) {
   background-color: #102540;
   color: #F3F3F3;
@@ -485,51 +340,7 @@ onMounted(() => {
   background-color: #F1F3F2;
 }
 
-:deep(.p-paginator) {
-  background-color: transparent;
-}
-
-.text-oxford-blue {
-  color: #102540;
-}
-
-.text-giants-orange {
-  color: #EA662D;
-}
-
-.text-white-smoke {
-  color: #F3F3F3;
-}
-
-.text-charcoal {
-  color: #313D4D;
-}
-
-.text-gray {
-  color: #777B7E;
-}
-
-.bg-white-smoke {
-  background-color: #F3F3F3;
-}
-
-.bg-oxford-blue {
-  background-color: #102540;
-}
-
-.border-oxford-blue {
-  border-color: #102540;
-}
-
-.border-giants-orange {
-  border-color: #EA662D;
-}
-
-.hover\:bg-oxford-blue:hover {
-  background-color: #102540;
-}
-
-.hover\:bg-giants-orange:hover {
-  background-color: #EA662D;
+:deep(.p-datatable) {
+  font-family: 'Montserrat', sans-serif;
 }
 </style>
