@@ -4,7 +4,7 @@
         <main class="flex-1 container bg-antiflash-white">
             <div class="flex flex-col md:flex-row justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold text-charcoal uppercase">
-                    Manage Stock - {{ managerBranch }} Branch
+                    Manage Stock - {{ branchName }} Branch
                 </h1>
 
                 <!-- Notice to when it is red it is low stock -->
@@ -64,7 +64,7 @@
                             </div>
                         </template>
                     </Column>
-            
+
                     <!-- UPDATE STOCK BUTTON -->
                     <Column header="Update Stock">
                         <template #body="slotProps">
@@ -137,7 +137,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -145,53 +145,21 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Card from 'primevue/card'
 import Dialog from 'primevue/dialog'
+import BMService from '../services/BMService.js'
 
-const managerBranch = 'Cebu'
+const managerBranchId = ref(null)
+const branchName = ref('')
+
 const searchQuery = ref('')
 const dialogVisible = ref(false)
 const selectedShoe = ref(null)
+const shoes = ref([])
 
-const shoes = ref([
-    {
-        id: 1,
-        name: 'Nike Air Max 270',
-        price: 7995,
-        category: 'Lifestyle',
-        image: '/images/nike-airmax-270.jpg',
-        sizes: [
-            { size: 8, quantity: 12 },
-            { size: 9, quantity: 3 },
-            { size: 10, quantity: 0 }
-        ],
-        totalStock: 15
-    },
-    {
-        id: 2,
-        name: 'Adidas Ultraboost 5.0',
-        price: 8995,
-        category: 'Running',
-        image: '/images/adidas-ultraboost.jpg',
-        sizes: [
-            { size: 8, quantity: 2 },
-            { size: 9, quantity: 1 },
-            { size: 10, quantity: 0 },
-            { size: 12, quantity: 2 }
-        ],
-        totalStock: 5
-    },
-    {
-        id: 3,
-        name: 'Jordan 1 Retro High',
-        price: 12995,
-        category: 'Basketball',
-        image: '/images/jordan-1-retro.jpg',
-        sizes: [
-            { size: 9, quantity: 6 },
-            { size: 10, quantity: 7 }
-        ],
-        totalStock: 13
-    }
-])
+const totalStock = computed(() => shoes.value.reduce((sum, s) => sum + (s.totalStock || 0), 0))
+// Count total sizes that are low stock (5 or less) -- s = shoe, sz = size
+const lowStockCount = computed(() => shoes.value.reduce((count, s) => { return count + s.sizes.filter(sz => sz.quantity <= 5).length }, 0))
+// Count total sizes that are available (More than 5)
+const availableCount = computed(() => shoes.value.reduce((count, s) => { return count + s.sizes.filter(sz => sz.quantity > 5).length }, 0))
 
 const filteredShoes = computed(() => {
     if (!searchQuery.value) return shoes.value
@@ -201,31 +169,70 @@ const filteredShoes = computed(() => {
     )
 })
 
-const totalStock = computed(() => shoes.value.reduce((sum, s) => sum + s.totalStock, 0))
-// Count total sizes that are low stock (5 or less) -- s = shoe, sz = size
-const lowStockCount = computed(() => shoes.value.reduce((count, s) => { return count + s.sizes.filter(sz => sz.quantity <= 5).length}, 0))
-// Count total sizes that are available (More than 5)
-const availableCount = computed(() => shoes.value.reduce((count, s) => { return count + s.sizes.filter(sz => sz.quantity > 5).length}, 0))
 
 const openDialog = (shoe) => {
     selectedShoe.value = JSON.parse(JSON.stringify(shoe))
     // Ensure quantities are numbers
     selectedShoe.value.sizes = selectedShoe.value.sizes.map(s => ({
-        ...s,
-        quantity: Number(s.quantity) || 0
+        ...s, quantity: Number(s.quantity) || 0
     }))
     dialogVisible.value = true
 }
 
-const saveDialog = () => {
-    const index = shoes.value.findIndex(s => s.id === selectedShoe.value.id)
-    if (index !== -1) {
-        shoes.value[index].sizes = selectedShoe.value.sizes
-        // Recalculate total stock
-        shoes.value[index].totalStock = selectedShoe.value.sizes.reduce((sum, sz) => sum + sz.quantity, 0)
+const saveDialog = async () => {
+    if (!selectedShoe.value) {
+        dialogVisible.value = false
+        return
     }
-    dialogVisible.value = false
+
+    try {
+        await BMService.updateStock(selectedShoe.value.id, { sizes: selectedShoe.value.sizes })
+
+        const index = shoes.value.findIndex(s => s.id === selectedShoe.value.id)
+        if (index !== -1) {
+            shoes.value[index].sizes = selectedShoe.value.sizes
+            // Recalculate total stock
+            shoes.value[index].totalStock = selectedShoe.value.sizes.reduce((sum, sz) => sum + Number(sz.quantity || 0), 0)
+        }
+    } catch (err) {
+        console.error('Failed to save stock:', err)
+    } finally {
+        dialogVisible.value = false
+    }
 }
+
+// Load manager's branch assignment
+const loadBranchAssignment = async () => {
+    try {
+        const res = await BMService.getBranchAssignment()
+        managerBranchId.value = res?.data?.branchId ?? null
+        branchName.value = res?.data?.branchName ?? ''
+    } catch (err) {
+        console.warn('Failed to load branch assignment:', err)
+    }
+}
+
+// Load shoes from backend
+const loadShoes = async () => {
+    
+    try {
+        const res = await BMService.getStocks(managerBranchId.value)
+        const data = res?.data?.data ?? res?.data ?? []
+
+        shoes.value = data.map(s => ({
+            ...s,
+            sizes: (s.sizes || []).map(sz => ({ ...sz, quantity: Number(sz.quantity) || 0 })),
+            totalStock: s.totalStock ?? (s.sizes ? s.sizes.reduce((sum, sz) => sum + Number(sz.quantity || 0), 0) : 0)
+        }))
+    } catch (err) {
+        console.error('Failed to load shoes:', err)
+    }
+}
+
+onMounted(async () => {
+    await loadBranchAssignment()
+    await loadShoes()
+})
 </script>
 
 <style scoped>

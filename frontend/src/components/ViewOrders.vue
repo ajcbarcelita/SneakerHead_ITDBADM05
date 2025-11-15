@@ -160,20 +160,33 @@ import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import DatePicker from "primevue/datepicker";
 
-// Reactive state
-const branchName = "Sneakerhead Manila";
-const branchId = 1;
+
+const managerBranchId = ref(null);
+const branchName = ref("");
+
 const loading = ref(false);
 const expandedRows = ref([]);
 const searchValue = ref("");
 const dateRange = ref(null);
 const orders = ref([]);
 
+
+// Load branch assignment
+const loadBranchAssignment = async () => {
+  try {
+    const res = await BMService.getBranchAssignment();
+    managerBranchId.value = res?.data?.branchId ?? null;
+    branchName.value = res?.data?.branchName ?? "";
+  } catch (err) {
+    console.warn("Failed to load branch assignment:", err);
+  }
+};
+
 // Fetch orders from backend
 const fetchOrders = async () => {
   loading.value = true;
   try {
-    const res = await BMService.getOrders(branchId);
+    const res = await BMService.getOrders(managerBranchId.value);
     orders.value = res.data;
   } catch (err) {
     console.error("Failed to fetch orders:", err);
@@ -235,7 +248,8 @@ const formatPrice = (price) =>
     maximumFractionDigits: 2,
   });
 
-onMounted(() => {
-  fetchOrders();
+onMounted(async () => {
+  await loadBranchAssignment();
+  await fetchOrders();
 });
 </script>
