@@ -124,9 +124,26 @@ export const addBranch = async (req, res) => {
             city_id
         ]);
 
+        const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
+        await logEvent({
+          user_id: res.user?.user_id || null,
+          role_id: res.user?.role_id || null,
+          action: 'BRANCH INSERT SUCCESS',
+          description: `Branch ${branch_name} was successfully inserted`,
+          ip
+        })
+
         res.status(201).json({ message: "Branch added successfully" });
 
     } catch (error) {
+      await logEvent({
+          user_id: res.user?.user_id || null,
+          role_id: res.user?.role_id || null,
+          action: 'BRANCH INSERT FAILURE',
+          description: `Branch ${branch_name} was insertion failed: ${error.message}`,
+          ip
+        })
+
         res.status(500).json({ message: "Server error", error: error.message });
     }
 }
@@ -157,9 +174,27 @@ export const updateBranch = async (req, res) => {
             isDeletedValue
         ]);
 
+        const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
+        // Maybe make this more detailed later?
+        await logEvent({
+          user_id: res.user?.user_id || null,
+          role_id: res.user?.role_id || null,
+          action: 'BRANCH UPDATE SUCCESS',
+          description: `Branch ${branch_name} was successfully updated`,
+          ip
+        })
+
         res.status(200).json({ message: "Branch updated successfully" });
 
     } catch (error) {
+      await logEvent({
+          user_id: res.user?.user_id || null,
+          role_id: res.user?.role_id || null,
+          action: 'BRANCH UPDATE FAILED',
+          description: `Branch ${branch_name} updating failed: ${error.message}`,
+          ip
+        })
+
         res.status(500).json({ message: "Server error", error: error.message });
     }
 }
@@ -196,9 +231,26 @@ export const updateUser = async (req, res) => {
             isDeletedValue
         ]);
 
+        const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
+        // Maybe make this more detailed later?
+        await logEvent({
+          user_id: res.user?.user_id || null,
+          role_id: res.user?.role_id || null,
+          action: 'USER UPDATE SUCCESS',
+          description: `User ${fname, mname, lname} was successfully updated`,
+          ip
+        })
+
         res.status(200).json({ message: "User updated successfully" });
     } catch (error) {
-        console.error('Update user error:', error);
+        await logEvent({
+          user_id: res.user?.user_id || null,
+          role_id: res.user?.role_id || null,
+          action: 'USER UPDATE FAILED',
+          description: `User ${fname, mname, lname} updating failed: ${error.message}`,
+          ip
+        })
+
         res.status(500).json({ message: "Server error", error: error.message });
     }
 }
