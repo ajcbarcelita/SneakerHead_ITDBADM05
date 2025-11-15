@@ -46,13 +46,14 @@ const BMService = {
 
   // Update sizes for a shoe
   async updateStock(shoeId, payload) {
-    try {
-      const response = await api.put(`/ManageStock/${shoeId}`, payload)
-      return response
-    } catch (error) {
-      throw error
-    }
+  try {
+    if (!shoeId) throw new Error('Missing shoeId!')
+    const response = await api.put(`/ManageStock/${shoeId}`, payload)
+    return response.data
+  } catch (error) {
+    throw error
   }
+}
 
 
 }

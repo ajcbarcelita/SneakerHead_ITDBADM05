@@ -186,7 +186,10 @@ const saveDialog = async () => {
     }
 
     try {
-        await BMService.updateStock(selectedShoe.value.id, { sizes: selectedShoe.value.sizes })
+        await BMService.updateStock(selectedShoe.value.id, { 
+            branchId: managerBranchId.value,
+            sizes: selectedShoe.value.sizes 
+        })
 
         const index = shoes.value.findIndex(s => s.id === selectedShoe.value.id)
         if (index !== -1) {
@@ -196,6 +199,7 @@ const saveDialog = async () => {
         }
     } catch (err) {
         console.error('Failed to save stock:', err)
+        console.error('Error details:', err.response?.data) 
     } finally {
         dialogVisible.value = false
     }
@@ -214,7 +218,6 @@ const loadBranchAssignment = async () => {
 
 // Load shoes from backend
 const loadShoes = async () => {
-    
     try {
         const res = await BMService.getStocks(managerBranchId.value)
         const data = res?.data?.data ?? res?.data ?? []

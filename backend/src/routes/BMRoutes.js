@@ -4,7 +4,7 @@ import { authenticateUser } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-let role = "Branch Manager";
+const role = "Branch Manager";
 
 // Get branch assignment for logged-in BM
 router.get("/branch-assignment", authenticateUser(role), getBranchAssignment);

@@ -2,6 +2,7 @@ import { transaction } from "objection";
 import Order from "../models/Order.js";
 import Shoe from "../models/Shoe.js";
 import BranchAdminAssignment from "../models/BranchAdminAssignment.js";
+import { logEvent } from "../services/logEventService.js";
 
 export async function getBranchAssignment(req, res) {
     try {
@@ -123,9 +124,64 @@ export async function getStocks(req, res) {
 }
 
 export async function updateStock(req, res) {
+    const shoeId = Number(req.params.id);
+    const branchId = Number(req.body?.branchId);
+    const sizes = req.body?.sizes; // Array of { size, quantity }
 
-}
+    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip || null;
+    const userId = req.user?.user_id ?? null;
+    const roleId = req.user?.role_id ?? null;
 
-export async function getMetrics(req, res) {
+    const knex = Shoe.knex();
 
-}
+    try {
+        // Validate input
+        if (!shoeId || !branchId || !Array.isArray(sizes)) {
+            return res.status(400).json({
+                message: 'Invalid input: shoeId, branchId, and sizes array are required'
+            });
+        }
+
+        // Convert sizes array to JSON string
+        const sizesJson = JSON.stringify(sizes);
+        // sizes = [ { size: '8', quantity: 10 }, { size: '9', quantity: 5 } ] for example
+
+        // Call the stored procedure
+        await knex.raw('CALL update_shoe_stock(?, ?, ?)', [shoeId, branchId, sizesJson]);
+
+
+        await logEvent({
+            user_id: userId,
+            role_id: roleId,
+            action: 'UPDATE_STOCK_SUCCESS',
+            description: `Updated stock for shoe_id=${shoeId}, branch_id=${branchId}`,
+            ip
+        }).catch(() => { });
+
+        return res.json({
+            success: true,
+            message: 'Stock updated successfully'
+        });
+
+
+    } catch (err) {
+        await logEvent({
+            user_id: userId,
+            role_id: roleId,
+            action: 'UPDATE_STOCK_FAILED',
+            description: `Failed to update stock for shoe_id=${shoeId}: ${err.message}`,
+            ip
+        }).catch(() => { });
+
+        console.error(err);
+        return res.status(500).json({
+            message: 'Failed to update stock',
+            error: err.message
+        });
+    }
+
+
+
+    export async function getMetrics(req, res) {
+
+    }
