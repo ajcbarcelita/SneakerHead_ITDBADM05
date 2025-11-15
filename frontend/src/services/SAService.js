@@ -14,7 +14,7 @@ const SAService = {
 
     async getUsers() {
         try {
-            const response = await api.get('/getUsers');
+            const response = await api.get('/users');
             return response;
         } catch (error) {
             throw error;
@@ -23,22 +23,21 @@ const SAService = {
 
     async getBranches() {
         try {
-            const response = await api.get('/getBranches');
+            const response = await api.get('/branches');
             return response;
         } catch (error) {
             throw error;
         }
     },
-/*
-    async updateUserRole(userId, newRoleId) {
+
+    async updateUser(userId, userData) {
         try {
-            const response = await api.put(`/users/${userId}/role`, { roleId: newRoleId });
+            const response = await api.put(`/users/${userId}`, userData);
             return response;
         } catch (error) {
             throw error;
         }
     }
-        */
 }
 
 export default SAService;

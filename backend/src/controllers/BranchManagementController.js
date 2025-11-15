@@ -81,26 +81,38 @@ export const getBranches = async (req, res) => {
     }
 }
 
-// frontend API call
-const updateUser = async (userId, userData) => {
-  try {
-    const response = await fetch(`/api/users/${userId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData)
-    });
+export const updateUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { 
+            email, 
+            pw_hash,
+            fname,   
+            lname,    
+            mname, 
+            address_id, 
+            role_id, 
+            is_deleted 
+        } = req.body;
 
-    const result = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(result.message || 'Failed to update user');
+        const knex = User.knex();
+        
+        // Call the stored procedure with correct parameter order
+        await knex.raw('CALL update_user(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            userId,
+            email || null,
+            pw_hash || null, 
+            fname || null, 
+            lname || null, 
+            mname || null,
+            address_id || null,
+            role_id || null,
+            is_deleted || null
+        ]);
+
+        res.status(200).json({ success: true, message: "User updated successfully" });
+    } catch (error) {
+        console.error('Update user error:', error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
-
-    return result;
-  } catch (error) {
-    console.error('Error updating user:', error);
-    throw error;
-  }
-};
+}

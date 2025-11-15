@@ -49,10 +49,6 @@
                     class="w-48"
                   />
                 </div>
-
-                <!-- ADD USER BUTTON -->
-                <Button label="Add User" icon="pi pi-plus" class="add-btn" 
-                        @click="showAddUserDialog = true" />
               </div>
             </div>
           </div>
@@ -91,11 +87,6 @@
                       icon="pi pi-pencil" 
                       class="p-button-rounded p-button-text edit-btn" 
                       @click="editUser(slotProps.data)" 
-                    />
-                    <Button 
-                      icon="pi pi-trash" 
-                      class="p-button-rounded p-button-text delete-btn" 
-                      @click="confirmDeleteUser(slotProps.data)" 
                     />
                   </div>
                 </template>
@@ -199,72 +190,6 @@
       <Footer />
     </footer>
 
-    <!-- ADD USER DIALOG -->
-    <Dialog v-model:visible="showAddUserDialog" header="Add New User" :modal="true" class="w-1/3">
-      <div class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="field">
-            <label class="font-semibold text-charcoal">First Name <span class="text-red-500">*</span></label>
-            <InputText v-model="newUser.fname" class="w-full" placeholder="Enter first name" />
-          </div>
-          <div class="field">
-            <label class="font-semibold text-charcoal">Middle Name</label>
-            <InputText v-model="newUser.mname" class="w-full" placeholder="Enter middle name" />
-          </div>
-        </div>
-        
-        <div class="field">
-          <label class="font-semibold text-charcoal">Last Name <span class="text-red-500">*</span></label>
-          <InputText v-model="newUser.lname" class="w-full" placeholder="Enter last name" />
-        </div>
-
-        <div class="field">
-          <label class="font-semibold text-charcoal">Email <span class="text-red-500">*</span></label>
-          <InputText v-model="newUser.email" class="w-full" placeholder="Enter email address" />
-        </div>
-
-        <div class="field">
-          <label class="font-semibold text-charcoal">Password <span class="text-red-500">*</span></label>
-          <InputText v-model="newUser.password" type="password" class="w-full" placeholder="Enter password" />
-          <small class="text-gray-500 mt-1 block">Password must be at least 8 characters long</small>
-        </div>
-
-        <div class="field">
-          <label class="font-semibold text-charcoal">Confirm Password <span class="text-red-500">*</span></label>
-          <InputText v-model="newUser.confirmPassword" type="password" class="w-full" placeholder="Confirm password" />
-        </div>
-
-        <div class="field">
-          <label class="font-semibold text-charcoal">User Role <span class="text-red-500">*</span></label>
-          <Dropdown
-            v-model="newUser.role_id"
-            :options="userRoleOptionsForEdit"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Select Role"
-            class="w-full"
-          />
-        </div>
-
-        <div class="field">
-          <label class="font-semibold text-charcoal">Branch Assignment</label>
-          <Dropdown
-            v-model="newUser.branchId"
-            :options="availableBranchesForEdit"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Select Branch"
-            class="w-full"
-          />
-          <small class="text-gray-500 mt-1 block">Leave unassigned if no branch assignment needed</small>
-        </div>
-      </div>
-      <template #footer>
-        <Button label="Cancel" icon="pi pi-times" class="p-button-text cancel-btn" @click="cancelAddUser" />
-        <Button label="Save" icon="pi pi-check" class="save-btn" @click="saveUser" :loading="loadingAddUser" />
-      </template>
-    </Dialog>
-
     <!-- EDIT USER DIALOG -->
     <Dialog v-model:visible="showEditUserDialog" :header="editUserDialogHeader" :modal="true" class="w-1/3">
       <div class="space-y-6">
@@ -310,7 +235,7 @@
           <div class="field">
             <label class="font-semibold text-charcoal block mb-2">Branch</label>
             <Dropdown
-              v-model="editingUser.branchId"
+              v-model="editingUser.address_id"
               :options="availableBranchesForEdit"
               optionLabel="label"
               optionValue="value"
@@ -382,13 +307,6 @@
           <label class="font-semibold text-charcoal">City</label>
           <InputText v-model="editingBranch.city_name" class="w-full" placeholder="Enter city" />
         </div>
-        <div class="field">
-          <div class="flex items-center space-x-4">
-            <Checkbox v-model="editingBranch.is_deleted" :binary="true" inputId="branchIsDeleted" />
-            <label for="branchIsDeleted" class="font-semibold text-charcoal">Deactivate Branch</label>
-          </div>
-          <small class="text-gray-500 mt-1 block">When checked, branch will be deactivated and cannot be assigned to users</small>
-        </div>
       </div>
       <template #footer>
         <Button label="Cancel" icon="pi pi-times" class="p-button-text cancel-btn" @click="cancelEditBranch" />
@@ -432,10 +350,8 @@ const selectedUserBranch = ref({ label: 'All Branches', value: 'all' })
 const userSearchQuery = ref('')
 const users = ref([])
 const loadingUsers = ref(false)
-const loadingAddUser = ref(false)
 const loadingUpdateUser = ref(false)
 const loadingDelete = ref(false)
-const showAddUserDialog = ref(false)
 
 // BRANCHES DATA
 const branchSearchQuery = ref('')
@@ -451,18 +367,6 @@ const newBranch = ref({
   city_name: ''
 })
 
-// ADD USER DIALOG STATE
-const newUser = ref({
-  fname: '',
-  mname: '',
-  lname: '',
-  email: '',
-  password: '',
-  confirmPassword: '',
-  role_id: null,
-  branchId: null
-})
-
 // EDIT USER DIALOG STATE
 const showEditUserDialog = ref(false)
 const editingUser = ref({
@@ -472,7 +376,7 @@ const editingUser = ref({
   lname: '',
   email: '',
   role_id: null,
-  branchId: null,
+  address_id: null,
   is_deleted: false
 })
 
@@ -492,12 +396,12 @@ const deleteType = ref('') // 'user' or 'branch'
 const deleteDialogHeader = ref('')
 const deleteDialogMessage = ref('')
 
-// Dropdown options for user roles - updated to match your data
+// Dropdown options for user roles
 const userRoleOptions = [
   { label: 'All Roles', value: 'all' },
-  { label: 'Admin', value: 'admin' },
-  { label: 'Branch Manager', value: 'branch manager' },
-  { label: 'Customer', value: 'customer' }
+  { label: 'Admin', value: 'Admin' },
+  { label: 'Branch Manager', value: 'Branch Manager' },
+  { label: 'Customer', value: 'Customer' }
 ]
 
 // Dropdown options for user branches
@@ -519,7 +423,7 @@ const availableBranchesForEdit = computed(() => {
     { label: 'Unassigned', value: null },
     ...(branches.value.map(branch => ({
       label: branch.branch_name,
-      value: branch.branch_id
+      value: branch.address_id // Use address_id since users link via address_id
     })) || [])
   ]
 })
@@ -538,10 +442,8 @@ const filteredUsers = computed(() => {
   // Filter by branch
   if (selectedUserBranch.value.value !== 'all') {
     if (selectedUserBranch.value.value === 'unassigned') {
-      // Show users with no branch (null branchName)
       filtered = filtered.filter(user => !user.branchName)
     } else {
-      // Show users with specific branch
       filtered = filtered.filter(user => 
         user.branchName && user.branchName.toLowerCase() === selectedUserBranch.value.value.toLowerCase()
       )
@@ -578,12 +480,12 @@ const filteredBranches = computed(() => {
 
 // Edit user dialog header
 const editUserDialogHeader = computed(() => {
-  return `Manage User: ${editingUser.value.fname} ${editingUser.value.lname}`;
+  return `Manage User: ${editingUser.value.fname} ${editingUser.value.lname}`
 })
 
 // Edit branch dialog header
 const editBranchDialogHeader = computed(() => {
-  return `Edit Branch: ${editingBranch.value.branch_name}`;
+  return `Edit Branch: ${editingBranch.value.branch_name}`
 })
 
 // Methods
@@ -599,13 +501,11 @@ const getRoleSeverity = (role) => {
 const fetchUsers = async () => {
   loadingUsers.value = true
   try {
-    const response = await SAService.getUsers();
-
-    const data = response.data;
-    users.value = data.users || []
+    const response = await SAService.getUsers()
+    users.value = response.data.users || []
     
-    // Update branch options dynamically from actual data
-    const uniqueBranches = [...new Set(data.users
+    // Update branch options from actual db
+    const uniqueBranches = [...new Set(response.data.users
       .map(user => user.branchName)
       .filter(branchName => branchName !== null && branchName !== '')
     )]
@@ -620,7 +520,7 @@ const fetchUsers = async () => {
     ]
     
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users', life: 3000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users: ' + error.message, life: 3000 })
     users.value = []
   } finally {
     loadingUsers.value = false
@@ -630,104 +530,18 @@ const fetchUsers = async () => {
 const fetchBranches = async () => {
   loadingBranches.value = true
   try {
-    const response = await SAService.getBranches();
-
-    const data = response.data;
-
-    branches.value = data.branches || []
-    
+    const response = await SAService.getBranches()
+    branches.value = response.data.branches || []
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load branches', life: 3000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load branches: ' + error.message, life: 3000 })
     branches.value = []
   } finally {
     loadingBranches.value = false
   }
 }
 
-// ADD USER METHODS
-const saveUser = async () => {
-  loadingAddUser.value = true
-  try {
-    // Validate required fields
-    if (!newUser.value.fname || !newUser.value.lname || !newUser.value.email || !newUser.value.password || !newUser.value.role_id) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill in all required fields', life: 3000 })
-      return
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(newUser.value.email)) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Please enter a valid email address', life: 3000 })
-      return
-    }
-
-    // Validate password length
-    if (newUser.value.password.length < 8) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Password must be at least 8 characters long', life: 3000 })
-      return
-    }
-
-    // Validate password confirmation
-    if (newUser.value.password !== newUser.value.confirmPassword) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Passwords do not match', life: 3000 })
-      return
-    }
-
-    const userData = {
-      fname: newUser.value.fname,
-      lname: newUser.value.lname,
-      email: newUser.value.email,
-      password: newUser.value.password,
-      role_id: newUser.value.role_id,
-      mname: newUser.value.mname || null,
-      branch_id: newUser.value.branchId || null
-    };
-
-    const response = await fetch('http://localhost:3000/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      toast.add({ severity: 'success', summary: 'Success', detail: 'User created successfully', life: 3000 });
-      showAddUserDialog.value = false;
-      resetNewUser();
-      await fetchUsers(); // Refresh the user list
-    } else {
-      throw new Error(result.message);
-    }
-    
-  } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to create user: ' + error.message, life: 3000 });
-  } finally {
-    loadingAddUser.value = false;
-  }
-}
-
-const cancelAddUser = () => {
-  showAddUserDialog.value = false
-  resetNewUser()
-}
-
-const resetNewUser = () => {
-  newUser.value = {
-    fname: '',
-    mname: '',
-    lname: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role_id: null,
-    branchId: null
-  }
-}
-
 // EDIT USER METHODS
 const editUser = (user) => {
-  // Populate the editing form with selected user data
   editingUser.value = {
     id: user.id,
     fname: user.fname,
@@ -735,7 +549,7 @@ const editUser = (user) => {
     lname: user.lname,
     email: user.email,
     role_id: user.role_id,
-    branchId: user.branchId,
+    address_id: user.address_id,
     is_deleted: user.is_deleted || false
   }
   
@@ -745,7 +559,6 @@ const editUser = (user) => {
 const saveUserChanges = async () => {
   loadingUpdateUser.value = true
   try {
-    // Validate required fields
     if (!editingUser.value.role_id) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a role', life: 3000 })
       return
@@ -753,30 +566,20 @@ const saveUserChanges = async () => {
     
     const updateData = {
       role_id: editingUser.value.role_id,
-      branch_id: editingUser.value.branchId,
+      address_id: editingUser.value.address_id,
       is_deleted: editingUser.value.is_deleted
-    };
-
-    const response = await fetch(`http://localhost:3000/api/users/${editingUser.value.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updateData)
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      toast.add({ severity: 'success', summary: 'Success', detail: 'User updated successfully', life: 3000 });
-      showEditUserDialog.value = false;
-      await fetchUsers(); // Refresh the user list
-    } else {
-      throw new Error(result.message);
     }
+
+    await SAService.updateUser(editingUser.value.id, updateData)
+    
+    toast.add({ severity: 'success', summary: 'Success', detail: 'User updated successfully', life: 3000 })
+    showEditUserDialog.value = false
+    await fetchUsers()
     
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update user: ' + error.message, life: 3000 });
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update user: ' + error.message, life: 3000 })
   } finally {
-    loadingUpdateUser.value = false;
+    loadingUpdateUser.value = false
   }
 }
 
@@ -793,14 +596,13 @@ const resetEditingUser = () => {
     lname: '',
     email: '',
     role_id: null,
-    branchId: null,
+    address_id: null,
     is_deleted: false
   }
 }
 
 // BRANCH METHODS
 const editBranch = (branch) => {
-  // Populate the editing form with branch data
   editingBranch.value = {
     branch_id: branch.branch_id,
     branch_name: branch.branch_name,
@@ -815,21 +617,18 @@ const editBranch = (branch) => {
 
 const saveBranchChanges = async () => {
   try {
-    // Validate required fields
     if (!editingBranch.value.branch_name) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please enter a branch name', life: 3000 })
       return
     }
     
-    // For now, just show success message
+    // TODO: Implement actual branch update API call
     toast.add({ severity: 'success', summary: 'Success', detail: 'Branch updated successfully', life: 3000 })
-    
-    // Close dialog and refresh data
     showEditBranchDialog.value = false
-    await fetchBranches() // Refresh the branches list
+    await fetchBranches()
     
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update branch', life: 3000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update branch: ' + error.message, life: 3000 })
   }
 }
 
@@ -849,14 +648,6 @@ const resetEditingBranch = () => {
   }
 }
 
-const confirmDeleteUser = (user) => {
-  itemToDelete.value = user
-  deleteType.value = 'user'
-  deleteDialogHeader.value = 'Confirm User Deletion'
-  deleteDialogMessage.value = `Are you sure you want to delete user ${user.name}? This action cannot be undone.`
-  showDeleteDialog.value = true
-}
-
 const confirmDeleteBranch = (branch) => {
   itemToDelete.value = branch
   deleteType.value = 'branch'
@@ -868,37 +659,11 @@ const confirmDeleteBranch = (branch) => {
 const executeDelete = async () => {
   loadingDelete.value = true
   try {
-    if (deleteType.value === 'user') {
-      // Call delete user API
-      const response = await fetch(`http://localhost:3000/api/users/${itemToDelete.value.id}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        toast.add({ severity: 'success', summary: 'Success', detail: 'User deleted successfully', life: 3000 });
-      } else {
-        throw new Error(result.message);
-      }
-    } else if (deleteType.value === 'branch') {
-      // Call delete branch API
-      const response = await fetch(`http://localhost:3000/api/branches/${itemToDelete.value.branch_id}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Branch deleted successfully', life: 3000 });
-      } else {
-        throw new Error(result.message);
-      }
+    if (deleteType.value === 'branch') {
+      // TODO: Implement actual branch delete API call
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Branch deleted successfully', life: 3000 })
     }
     
-    // Refresh data
     await fetchUsers()
     await fetchBranches()
     
@@ -914,21 +679,19 @@ const executeDelete = async () => {
 
 const saveBranch = async () => {
   try {
-    // Validate required fields
     if (!newBranch.value.branch_name) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please enter a branch name', life: 3000 })
       return
     }
     
+    // TODO: Implement actual branch creation API call
     toast.add({ severity: 'success', summary: 'Success', detail: 'Branch added successfully', life: 3000 })
     showAddBranchDialog.value = false
     resetNewBranch()
-    
-    // Refresh branches list
     await fetchBranches()
     
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add branch', life: 3000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add branch: ' + error.message, life: 3000 })
   }
 }
 
@@ -954,7 +717,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Your existing styles remain the same */
 .search-btn.p-button {
   background-color: var(--color-oxford-blue) !important;
   border-color: var(--color-oxford-blue) !important;
