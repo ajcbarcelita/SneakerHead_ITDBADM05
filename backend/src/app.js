@@ -13,6 +13,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import BMRoutes from "./routes/BMRoutes.js";
 import SARoutes from "./routes/SARoutes.js";
+import shoeRoutes from "./routes/shoeRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -39,8 +40,9 @@ app.use("/", authRoutes);
 app.use("/", cartRoutes);
 app.use("/", orderRoutes);
 app.use("/", userRoutes);
-app.use('/', BMRoutes); 
-app.use('/', SARoutes); 
+app.use("/", BMRoutes);
+app.use("/", SARoutes);
+app.use("/shoes", shoeRoutes);
 
 
 app.use((err, req, res, next) => {
