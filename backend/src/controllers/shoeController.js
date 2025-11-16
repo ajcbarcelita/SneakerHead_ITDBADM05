@@ -7,7 +7,7 @@ import {
 } from "../services/shoeService.js";
 
 // Get all shoes for a branch
-export async function getShoesByBranch(req, res) {
+export async function getShoesByBranchController(req, res) {
   try {
     const branch_id = parseInt(req.params.branch_id);
     const shoes = await getShoesByBranch(branch_id);
@@ -19,7 +19,7 @@ export async function getShoesByBranch(req, res) {
 }
 
 // Get single shoe info (basic + categories + images + sizes)
-export async function getShoeDetails(req, res) {
+export async function getShoeDetailsController(req, res) {
   try {
     const shoe_id = parseInt(req.params.shoe_id);
     const branch_id = parseInt(req.params.branch_id);
