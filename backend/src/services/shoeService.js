@@ -1,4 +1,4 @@
-import knex from "../db/knex.js";
+import knex from "../db/db.js";
 
 // Get all shoes for a branch
 export async function getShoesByBranch(branch_id) {
