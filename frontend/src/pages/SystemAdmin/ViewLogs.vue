@@ -8,19 +8,6 @@
     <main class="flex-1 container mx-auto px-6 py-10 space-y-8 bg-antiflash-white">
       <div class="flex flex-col md:flex-row justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-charcoal uppercase">User Activity Logs</h1>
-        
-        <div class="flex items-center space-x-4">
-          <!-- SEARCH BAR -->
-          <div class="flex items-center space-x-2 w-auto">
-            <InputText 
-              v-model="searchQuery" 
-              placeholder="Search logs..." 
-              class="w-80"
-            />
-            <Button icon="pi pi-search" class="search-btn" />
-          </div>
-          
-        </div>
       </div>
 
       <!-- FILTERS -->
@@ -72,23 +59,26 @@
 
       <!-- LOGS TABLE -->
       <div class="card">
-        <DataTable :value="filteredLogs" tableStyle="min-width: 80rem" :paginator="true" :rows="10">
+        <DataTable :value="filteredLogs" tableStyle="min-width: 80rem" :paginator="true" :rows="10" :loading="loadingLogs">
           <Column field="log_id" header="Log ID" :sortable="true">
             <template #body="slotProps">
               <span class="font-mono font-semibold text-oxford-blue">#{{ slotProps.data.log_id }}</span>
             </template>
           </Column>
           
-          <Column field="user_id" header="User ID" :sortable="true">
+          <Column field="user_name" header="User" :sortable="true">
             <template #body="slotProps">
-              <span class="font-semibold text-charcoal">{{ slotProps.data.user_id }}</span>
+              <div class="flex flex-col">
+                <span class="font-semibold text-charcoal">{{ slotProps.data.user_name }}</span>
+                <span class="text-xs text-gray">{{ slotProps.data.email }}</span>
+              </div>
             </template>
           </Column>
           
-          <Column field="role" header="Role" :sortable="true">
+          <Column field="role_name" header="Role" :sortable="true">
             <template #body="slotProps">
-              <Tag :value="slotProps.data.role" 
-                   :severity="getRoleSeverity(slotProps.data.role)" />
+              <Tag :value="slotProps.data.role_name" 
+                   :severity="getRoleSeverity(slotProps.data.role_name)" />
             </template>
           </Column>
           
@@ -96,21 +86,22 @@
             <template #body="slotProps">
               <div class="flex items-center space-x-2">
                 <i :class="getActionIcon(slotProps.data.action)" class="text-giants-orange"></i>
-                <span class="font-medium text-charcoal">{{ slotProps.data.action }}</span>
+                <span class="font-medium text-charcoal">{{ formatActionText(slotProps.data.action) }}</span>
               </div>
+            </template>
+          </Column>
+
+          <!-- NEW PASS/FAIL COLUMN -->
+          <Column field="status" header="Status" :sortable="true">
+            <template #body="slotProps">
+              <Tag :value="getActionStatus(slotProps.data.action)" 
+                   :severity="getActionStatus(slotProps.data.action) === 'PASS' ? 'success' : 'danger'" />
             </template>
           </Column>
           
           <Column field="description" header="Description" :sortable="true">
             <template #body="slotProps">
               <span class="text-charcoal">{{ slotProps.data.description }}</span>
-            </template>
-          </Column>
-
-          <Column field="status" header="Status" :sortable="true">
-            <template #body="slotProps">
-              <Tag :value="slotProps.data.status" 
-                   :severity="slotProps.data.status === 'PASS' ? 'success' : 'danger'" />
             </template>
           </Column>
           
@@ -132,11 +123,26 @@
           <Column header="Actions">
             <template #body="slotProps">
               <div class="flex space-x-2">
-                <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-btn" 
-                        @click="deleteLog(slotProps.data)" />
+                <Button icon="pi pi-eye" class="p-button-rounded p-button-text view-btn" 
+                        @click="viewLogDetails(slotProps.data)" 
+                        v-tooltip="'View Details'" />
               </div>
             </template>
           </Column>
+
+          <template #empty>
+            <div class="text-center py-8 text-gray-500">
+              <i class="pi pi-history text-4xl mb-4"></i>
+              <p>No logs found</p>
+            </div>
+          </template>
+
+          <template #loading>
+            <div class="text-center py-8">
+              <i class="pi pi-spinner pi-spin text-2xl mr-2"></i>
+              Loading logs...
+            </div>
+          </template>
         </DataTable>
       </div>
 
@@ -201,33 +207,43 @@
               
               <div>
                 <label class="font-semibold text-gray">User ID:</label>
-                <p class="text-charcoal font-semibold">{{ selectedLog.user_id }}</p>
+                <p class="text-charcoal font-semibold">{{ selectedLog.user_id || 'System' }}</p>
               </div>
             </div>
             
             <div>
-              <label class="font-semibold text-gray">Role:</label>
-              <Tag :value="selectedLog.role" 
-                   :severity="getRoleSeverity(selectedLog.role)" />
+              <label class="font-semibold text-gray">User Name:</label>
+              <p class="text-charcoal">{{ selectedLog.user_name }}</p>
             </div>
+
+            <div>
+              <label class="font-semibold text-gray">Email:</label>
+              <p class="text-charcoal">{{ selectedLog.email }}</p>
+            </div>
+            
+            <div>
+              <label class="font-semibold text-gray">Role:</label>
+              <Tag :value="selectedLog.role_name" 
+                   :severity="getRoleSeverity(selectedLog.role_name)" />
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <h3 class="font-semibold text-lg border-b pb-2 text-charcoal">Action Details</h3>
             
             <div>
               <label class="font-semibold text-gray">Action:</label>
               <div class="flex items-center space-x-2 mt-1">
                 <i :class="getActionIcon(selectedLog.action)" class="text-giants-orange"></i>
-                <span class="font-medium text-charcoal">{{ selectedLog.action }}</span>
+                <span class="font-medium text-charcoal">{{ formatActionText(selectedLog.action) }}</span>
               </div>
             </div>
 
             <div>
               <label class="font-semibold text-gray">Status:</label>
-              <Tag :value="selectedLog.status" 
-                   :severity="selectedLog.status === 'PASS' ? 'success' : 'danger'" />
+              <Tag :value="getActionStatus(selectedLog.action)" 
+                   :severity="getActionStatus(selectedLog.action) === 'PASS' ? 'success' : 'danger'" />
             </div>
-          </div>
-
-          <div class="space-y-4">
-            <h3 class="font-semibold text-lg border-b pb-2 text-charcoal">Technical Details</h3>
             
             <div>
               <label class="font-semibold text-gray">IP Address:</label>
@@ -237,11 +253,6 @@
             <div>
               <label class="font-semibold text-gray">Date & Time:</label>
               <p class="text-charcoal">{{ formatDateTime(selectedLog.created_at) }}</p>
-            </div>
-            
-            <div>
-              <label class="font-semibold text-gray">Timestamp:</label>
-              <p class="text-charcoal font-mono text-sm">{{ selectedLog.created_at }}</p>
             </div>
           </div>
         </div>
@@ -260,30 +271,12 @@
                 @click="showLogDetailsDialog = false" />
       </template>
     </Dialog>
-
-    <!-- DELETE CONFIRMATION DIALOG -->
-    <Dialog v-model:visible="showDeleteDialog" header="Confirm Delete" :modal="true" class="w-1/3">
-      <div class="flex items-center space-x-4" v-if="logToDelete">
-        <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
-        <div>
-          <p class="font-semibold text-charcoal">Are you sure you want to delete this log?</p>
-          <p class="text-gray text-sm mt-1">Log #{{ logToDelete.log_id }} - {{ logToDelete.action }}</p>
-          <p class="text-red-500 text-xs mt-2">This action cannot be undone.</p>
-        </div>
-      </div>
-      
-      <template #footer>
-        <Button label="Cancel" icon="pi pi-times" class="p-button-text cancel-btn" 
-                @click="showDeleteDialog = false" />
-        <Button label="Delete" icon="pi pi-trash" class="delete-confirm-btn" 
-                @click="confirmDelete" />
-      </template>
-    </Dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import NavBarSA from '@/components/NavBarSA.vue'
 import Footer from '@/components/Footer.vue'
 import DataTable from 'primevue/datatable'
@@ -295,14 +288,15 @@ import Dropdown from 'primevue/dropdown'
 import Calendar from 'primevue/calendar'
 import Dialog from 'primevue/dialog'
 import Card from 'primevue/card'
+import SAService from '@/services/SAService'
+
+const toast = useToast()
 
 // Data
-const searchQuery = ref('')
 const showLogDetailsDialog = ref(false)
-const showDeleteDialog = ref(false)
 const logs = ref([])
 const selectedLog = ref(null)
-const logToDelete = ref(null)
+const loadingLogs = ref(false)
 const selectedRole = ref({ label: 'All Roles', value: 'all' })
 const selectedAction = ref({ label: 'All Actions', value: 'all' })
 const selectedStatus = ref({ label: 'All Status', value: 'all' })
@@ -311,21 +305,19 @@ const dateRange = ref(null)
 // Options
 const roleOptions = [
   { label: 'All Roles', value: 'all' },
-  { label: 'System Admin', value: 'system admin' },
-  { label: 'Branch Manager', value: 'branch manager' },
-  { label: 'Customer', value: 'customer' }
+  { label: 'System Admin', value: 'System Admin' },
+  { label: 'Branch Manager', value: 'Branch Manager' },
+  { label: 'Customer', value: 'Customer' }
 ]
 
+// Hardcoded for now?
 const actionOptions = [
   { label: 'All Actions', value: 'all' },
-  { label: 'Login', value: 'login' },
-  { label: 'Logout', value: 'logout' },
-  { label: 'Create', value: 'create' },
-  { label: 'Update', value: 'update' },
-  { label: 'Delete', value: 'delete' },
-  { label: 'View', value: 'view' },
-  { label: 'Purchase', value: 'purchase' },
-  { label: 'Register', value: 'register' }
+  { label: 'Login', value: 'LOGIN' },
+  { label: 'User Management', value: 'USER' },
+  { label: 'Branch Management', value: 'BRANCH' },
+  { label: 'Promo Code', value: 'PROMO_CODE' },
+  { label: 'Shoe Management', value: 'SHOE' }
 ]
 
 const statusOptions = [
@@ -334,151 +326,36 @@ const statusOptions = [
   { label: 'FAIL', value: 'FAIL' }
 ]
 
-// TEMP data - sample logs based on your schema
-const sampleLogs = [
-  {
-    log_id: 1001,
-    user_id: 235,
-    role: 'system admin',
-    action: 'Login',
-    description: 'User logged in successfully',
-    status: 'PASS',
-    ip_address: '192.168.1.105',
-    created_at: '2024-01-20 14:30:22'
-  },
-  {
-    log_id: 1002,
-    user_id: 142,
-    role: 'branch manager',
-    action: 'Create',
-    description: 'Created new inventory item - Nike Air Max 270',
-    status: 'PASS',
-    ip_address: '192.168.1.110',
-    created_at: '2024-01-20 14:25:10'
-  },
-  {
-    log_id: 1003,
-    user_id: 301,
-    role: 'customer',
-    action: 'Purchase',
-    description: 'Completed order #ORD-7842 for ₱7,995.00',
-    status: 'PASS',
-    ip_address: '192.168.1.125',
-    created_at: '2024-01-20 13:45:33'
-  },
-  {
-    log_id: 1004,
-    user_id: 301,
-    role: 'customer',
-    action: 'Login',
-    description: 'Invalid password attempt',
-    status: 'FAIL',
-    ip_address: '192.168.1.125',
-    created_at: '2024-01-20 13:30:15'
-  },
-  {
-    log_id: 1005,
-    user_id: 235,
-    role: 'system admin',
-    action: 'Delete',
-    description: 'Deleted expired promo code SUMMER2023',
-    status: 'PASS',
-    ip_address: '192.168.1.105',
-    created_at: '2024-01-20 12:15:42'
-  },
-  {
-    log_id: 1006,
-    user_id: 178,
-    role: 'branch manager',
-    action: 'Update',
-    description: 'Updated stock levels for multiple products',
-    status: 'PASS',
-    ip_address: '192.168.1.115',
-    created_at: '2024-01-20 11:20:18'
-  },
-  {
-    log_id: 1007,
-    user_id: 401,
-    role: 'customer',
-    action: 'Register',
-    description: 'New customer account created successfully',
-    status: 'PASS',
-    ip_address: '192.168.1.130',
-    created_at: '2024-01-20 10:45:29'
-  },
-  {
-    log_id: 1008,
-    user_id: 142,
-    role: 'branch manager',
-    action: 'Delete',
-    description: 'Failed to delete product - insufficient permissions',
-    status: 'FAIL',
-    ip_address: '192.168.1.110',
-    created_at: '2024-01-20 09:15:37'
-  },
-  {
-    log_id: 1009,
-    user_id: 235,
-    role: 'system admin',
-    action: 'Update',
-    description: 'Modified user permissions for U-142',
-    status: 'PASS',
-    ip_address: '192.168.1.105',
-    created_at: '2024-01-20 08:30:22'
-  },
-  {
-    log_id: 1010,
-    user_id: 302,
-    role: 'customer',
-    action: 'Purchase',
-    description: 'Payment failed - insufficient funds',
-    status: 'FAIL',
-    ip_address: '192.168.1.126',
-    created_at: '2024-01-19 16:20:45'
-  }
-]
-
 // Computed properties
 const filteredLogs = computed(() => {
   let filtered = logs.value
 
   // Filter by role
   if (selectedRole.value.value !== 'all') {
-    filtered = filtered.filter(log => log.role === selectedRole.value.value)
+    filtered = filtered.filter(log => log.role_name === selectedRole.value.value)
   }
 
   // Filter by action
   if (selectedAction.value.value !== 'all') {
-    filtered = filtered.filter(log => log.action.toLowerCase().includes(selectedAction.value.value))
+    filtered = filtered.filter(log => log.action.includes(selectedAction.value.value))
   }
 
   // Filter by status
   if (selectedStatus.value.value !== 'all') {
-    filtered = filtered.filter(log => log.status === selectedStatus.value.value)
+    const status = selectedStatus.value.value
+    filtered = filtered.filter(log => getActionStatus(log.action) === status)
   }
 
   // Filter by date range
   if (dateRange.value && dateRange.value.length === 2) {
     const startDate = new Date(dateRange.value[0])
     const endDate = new Date(dateRange.value[1])
+    endDate.setHours(23, 59, 59, 999)
     
     filtered = filtered.filter(log => {
       const logDate = new Date(log.created_at)
       return logDate >= startDate && logDate <= endDate
     })
-  }
-
-  // Filter by search query
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(log => 
-      log.log_id.toString().includes(query) ||
-      log.user_id.toString().includes(query) ||
-      log.action.toLowerCase().includes(query) ||
-      log.description.toLowerCase().includes(query) ||
-      log.role.toLowerCase().includes(query) ||
-      log.ip_address.includes(query)
-    )
   }
 
   return filtered
@@ -487,36 +364,66 @@ const filteredLogs = computed(() => {
 const stats = computed(() => {
   const totalLogs = logs.value.length
   const today = new Date().toISOString().split('T')[0]
-  const todayLogs = logs.value.filter(log => log.created_at.split(' ')[0] === today).length
-  const passLogs = logs.value.filter(log => log.status === 'PASS').length
-  const failLogs = logs.value.filter(log => log.status === 'FAIL').length
+  const todayLogs = logs.value.filter(log => log.created_at.split('T')[0] === today).length
+  const passLogs = logs.value.filter(log => getActionStatus(log.action) === 'PASS').length
+  const failLogs = logs.value.filter(log => getActionStatus(log.action) === 'FAIL').length
 
   return { totalLogs, todayLogs, passLogs, failLogs }
 })
 
 // Methods
+const getActionStatus = (action) => {
+  const failIndicators = ['_FAIL', ' FAIL', 'FAILED', 'FAILURE']
+  const hasFail = failIndicators.some(indicator => 
+    action.toUpperCase().includes(indicator)
+  )
+  
+  return hasFail ? 'FAIL' : 'PASS'
+}
+
+// Maybe remove when we make sure that the action of the user logs is consistent
+const formatActionText = (action) => {
+  let formatted = action
+    .replace(/_FAIL$/, '')
+    .replace(/_FAILED$/, '')
+    .replace(/_FAILURE$/, '')
+    .replace(/ FAIL$/, '')
+    .replace(/ FAILED$/, '')
+    .replace(/ FAILURE$/, '')
+    .replace(/_/g, ' ')
+    .trim()
+  
+  return formatted.split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
 const getRoleSeverity = (role) => {
   const severities = {
-    'system admin': 'danger',
-    'branch manager': 'warning',
-    'customer': 'success'
+    'System Admin': 'danger',
+    'Branch Manager': 'warning',
+    'Customer': 'success'
   }
   return severities[role] || 'secondary'
 }
 
 const getActionIcon = (action) => {
   const icons = {
-    'Login': 'pi pi-sign-in',
-    'Logout': 'pi pi-sign-out',
-    'Create': 'pi pi-plus',
-    'Update': 'pi pi-pencil',
-    'Delete': 'pi pi-trash',
-    'View': 'pi pi-eye',
-    'Purchase': 'pi pi-shopping-cart',
-    'Register': 'pi pi-user-plus',
-    'Failed Login': 'pi pi-exclamation-triangle'
+    'LOGIN': 'pi pi-sign-in',
+    'LOGOUT': 'pi pi-sign-out',
+    'USER': 'pi pi-users',
+    'BRANCH': 'pi pi-building',
+    'PROMO_CODE': 'pi pi-ticket',
+    'SHOE': 'pi pi-shopping-bag'
   }
-  return icons[action] || 'pi pi-info-circle'
+  
+  if (action.includes('INSERT')) return 'pi pi-plus'
+  if (action.includes('UPDATE')) return 'pi pi-pencil'
+  if (action.includes('DELETE')) return 'pi pi-trash'
+  if (getActionStatus(action) === 'FAIL') return 'pi pi-exclamation-triangle'
+  
+  const baseAction = formatActionText(action).toUpperCase().replace(/ /g, '_')
+  return icons[baseAction] || 'pi pi-info-circle'
 }
 
 const formatDate = (dateString) => {
@@ -532,7 +439,8 @@ const formatTime = (dateString) => {
   if (!dateString) return '-'
   return new Date(dateString).toLocaleTimeString('en-US', {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    second: '2-digit'
   })
 }
 
@@ -552,46 +460,39 @@ const viewLogDetails = (log) => {
   showLogDetailsDialog.value = true
 }
 
-const deleteLog = (log) => {
-  logToDelete.value = log
-  showDeleteDialog.value = true
-}
-
-const confirmDelete = () => {
-  if (logToDelete.value) {
-    logs.value = logs.value.filter(log => log.log_id !== logToDelete.value.log_id)
-    showDeleteDialog.value = false
-    logToDelete.value = null
-  }
-}
-
 const clearFilters = () => {
   selectedRole.value = { label: 'All Roles', value: 'all' }
   selectedAction.value = { label: 'All Actions', value: 'all' }
   selectedStatus.value = { label: 'All Status', value: 'all' }
   dateRange.value = null
-  searchQuery.value = ''
+}
+
+const fetchLogs = async () => {
+  loadingLogs.value = true
+  try {
+    const response = await SAService.getLogs()
+    logs.value = response.data.logs || []
+  } catch (error) {
+    console.error('Error fetching logs:', error)
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: 'Failed to load activity logs', 
+      life: 3000 
+    })
+    logs.value = []
+  } finally {
+    loadingLogs.value = false
+  }
 }
 
 // Initialize data
 onMounted(() => {
-  logs.value = sampleLogs
+  fetchLogs()
 })
 </script>
 
 <style scoped>
-.search-btn.p-button {
-  background-color: var(--color-oxford-blue) !important;
-  border-color: var(--color-oxford-blue) !important;
-  color: var(--color-antiflash-white) !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.search-btn.p-button:hover {
-  background-color: #0a1a2d !important;
-}
-
 .clear-btn.p-button {
   color: var(--color-gray) !important;
   border-color: var(--color-gray) !important;
@@ -601,22 +502,12 @@ onMounted(() => {
   background-color: rgba(119, 123, 126, 0.1) !important;
 }
 
-.delete-btn.p-button {
-  color: #dc2626 !important;
+.view-btn.p-button {
+  color: var(--color-oxford-blue) !important;
 }
 
-.delete-btn.p-button:hover {
-  background-color: rgba(220, 38, 38, 0.1) !important;
-}
-
-.delete-confirm-btn.p-button {
-  background-color: #dc2626 !important;
-  border-color: #dc2626 !important;
-  color: white !important;
-}
-
-.delete-confirm-btn.p-button:hover {
-  background-color: #b91c1c !important;
+.view-btn.p-button:hover {
+  background-color: rgba(16, 37, 64, 0.1) !important;
 }
 
 .cancel-btn.p-button {

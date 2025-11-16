@@ -1,20 +1,21 @@
-import Order from "../models/Order.js";
-import OrderItem from "../models/OrderItem.js";
-import OrderHistoryView from "../models/OrderHistoryView.js";
+import Order from '../models/Order.js'
+import OrderItem from '../models/OrderItem.js'
 
 /**
  * Get order history for the logged-in user
  */
 export const getOrderHistory = async (req, res) => {
   try {
-    const userId = req.user.user_id;
-    console.log("Getting order history for user_id:", userId);
+    const userId = req.user.user_id
+    console.log('Getting order history for user_id:', userId)
+
+    const knex = Order.knex()
 
     // Fetch all order items for the user from the view
-    const items = await OrderHistoryView.query()
-      .where("user_id", userId)
-      .orderBy("order_created_at", "desc")
-      .orderBy("order_id", "desc");
+    const items = await knex('order_history_view')
+      .where('user_id', userId)
+      .orderBy('order_created_at', 'desc')
+      .orderBy('order_id', 'desc')
 
     console.log("Order items found:", items.length);
 
@@ -48,14 +49,16 @@ export const getOrderHistory = async (req, res) => {
  */
 export const getOrderDetails = async (req, res) => {
   try {
-    const userId = req.user.user_id;
-    const orderId = req.params.orderId;
-    console.log("Getting order details for order_id:", orderId, "user_id:", userId);
+    const userId = req.user.user_id
+    const orderId = req.params.orderId
+    console.log('Getting order details for order_id:', orderId, 'user_id:', userId)
+
+    const knex = Order.knex()
 
     // Fetch order items for the specific order from the view
-    const items = await OrderHistoryView.query()
-      .where("user_id", userId)
-      .where("order_id", orderId);
+    const items = await knex('order_history_view')
+      .where('user_id', userId)
+      .where('order_id', orderId)
 
     if (!items || items.length === 0) {
       return res.status(404).json({ error: "Order not found" });

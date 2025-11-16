@@ -334,6 +334,7 @@ const saveProfile = async () => {
       lname: editForm.lname,
       addressline1: editForm.addressline1,
       addressline2: editForm.addressline2,
+      province_id: editForm.province_id,
       city_id: editForm.city_id,
     }
 
