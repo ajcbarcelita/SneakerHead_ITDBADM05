@@ -74,6 +74,33 @@ const SAService = {
             throw error;
         }
     },
+
+    async getPromoCodes() {
+    try {
+        const response = await api.get('/promo-codes');
+        return response;
+    } catch (error) {
+        throw error;
+    }
+    },
+
+    async addPromoCode(promoData) {
+    try {
+        const response = await api.post('/promo-codes', promoData);
+        return response;
+    } catch (error) {
+        throw error;
+    }
+    },
+
+    async updatePromoCode(promoCode, updateData) {
+    try {
+        const response = await api.put(`/promo-codes/${promoCode}`, updateData);
+        return response;
+    } catch (error) {
+        throw error;
+    }
+    }
 }
 
 export default SAService;

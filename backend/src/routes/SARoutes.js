@@ -8,6 +8,10 @@ import { getUsers,
         updateBranch,
         addUser
 } from "../controllers/BranchManagementController.js";
+import { getPromoCodes,
+         addPromoCode,
+         updatePromoCode
+} from "../controllers/ManagePromoCodesController.js";
 import { authenticateUser } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -23,19 +27,28 @@ router.get("/users", authenticateUser(role), getUsers);
 // Fetch all branches
 router.get("/branches", authenticateUser(role), getBranches);
 
+// Fetch all cities
+router.get("/cities", authenticateUser(role), getCities);
+
+// Fetch all promo codes
+router.get("/promo-codes", authenticateUser(role), getPromoCodes);
+
 // Add a new user
 router.post("/users", authenticateUser(role), addUser);
 
 // Add a new branch
 router.post("/branches", authenticateUser(role), addBranch);
 
+// Add a new promo code
+router.post("/promo-codes", authenticateUser(role), addPromoCode);
+
 // Update branch
 router.put("/branches/:branchId", authenticateUser(role), updateBranch);
 
-// Fetch all cities
-router.get("/cities", authenticateUser(role), getCities);
-
 // Update user
 router.put("/users/:userId", authenticateUser(role), updateUser);
+
+// Update promo code
+router.put("/promo-codes/:promoCode", authenticateUser(role), updatePromoCode);
 
 export default router;

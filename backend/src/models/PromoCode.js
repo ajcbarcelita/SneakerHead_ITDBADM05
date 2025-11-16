@@ -12,7 +12,7 @@ export default class PromoCode extends Model {
       discount_type: { type: "string", enum: ["percentage", "fixed"] }, // Adjust enum values based on your actual options
       discount_value: { type: "number" },
       min_order_value: { type: ["number", "null"] },
-      is_fmt_time_only: { type: ["boolean", "null"], default: false },
+      is_first_time_only: { type: ["boolean", "null"], default: false },
       start_date: { type: "string", format: "date" },
       end_date: { type: "string", format: "date" },
       used_count: { type: "integer", default: 0 },
