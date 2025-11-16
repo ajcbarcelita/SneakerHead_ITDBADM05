@@ -88,6 +88,8 @@ import Dialog from 'primevue/dialog'
 import Password from 'primevue/password'
 import FloatLabel from 'primevue/floatlabel'
 import Button from 'primevue/button'
+import { useToast } from 'primevue/usetoast'
+import userService from '@/services/userService.js'
 
 const props = defineProps({
   visible: {
@@ -100,6 +102,7 @@ const emit = defineEmits(['update:visible', 'password-updated'])
 
 const visible = ref(props.visible)
 const isLoading = ref(false)
+const toast = useToast()
 
 // Password form data
 const passwordForm = reactive({
@@ -208,14 +211,10 @@ const handleUpdatePassword = async () => {
   isLoading.value = true
 
   try {
-    // TODO: Call API to update password
-    // await updatePassword({
-    //   currentPassword: passwordForm.currentPassword,
-    //   newPassword: passwordForm.newPassword
-    // })
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    await userService.changePassword(
+      passwordForm.currentPassword,
+      passwordForm.newPassword
+    )
 
     // Emit success event
     emit('password-updated')
@@ -223,10 +222,28 @@ const handleUpdatePassword = async () => {
     // Close dialog
     visible.value = false
 
-    console.log('Password update successful')
+    // Show success toast
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Password changed successfully',
+      life: 3000,
+    })
   } catch (error) {
     console.error('Password update failed:', error)
-    errors.currentPassword = 'Current password is incorrect'
+    const errorMessage = error.response?.data?.error || 'Failed to change password'
+
+    // Handle specific error messages
+    if (errorMessage.includes('incorrect')) {
+      errors.currentPassword = errorMessage
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: errorMessage,
+        life: 3000,
+      })
+    }
   } finally {
     isLoading.value = false
   }
@@ -247,5 +264,3 @@ const closeDialog = () => {
   visible.value = false
 }
 </script>
-
-<style src="@/styles/tailwind.css"></style>

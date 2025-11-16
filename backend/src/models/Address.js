@@ -23,7 +23,7 @@ export default class Address extends Model {
     const User = require("./User.js").default;
 
     return {
-      city: {
+      city_municipality: {
         relation: Model.BelongsToOneRelation,
         modelClass: City,
         join: {

@@ -9,6 +9,8 @@ import db from "./db/db.js";
 // Import all routes here later.
 import authRoutes from "./routes/authRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import BMRoutes from "./routes/BMRoutes.js";
 import SARoutes from "./routes/SARoutes.js";
 
@@ -35,6 +37,8 @@ app.use((req, _res, next) => {
 // Define and list routes here from imported route files later.
 app.use("/", authRoutes);
 app.use("/", cartRoutes);
+app.use("/", orderRoutes);
+app.use("/", userRoutes);
 app.use('/', BMRoutes); 
 app.use('/', SARoutes); 
 

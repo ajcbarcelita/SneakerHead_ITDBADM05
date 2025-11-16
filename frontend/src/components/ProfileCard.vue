@@ -19,7 +19,24 @@
 
       <!-- Profile Content -->
       <template #content>
-        <div v-if="!isEditing" class="space-y-4">
+        <!-- Loading State -->
+        <div v-if="loading" class="flex justify-center items-center p-8">
+          <i class="pi pi-spin pi-spinner text-2xl text-giants-orange" />
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="p-4 bg-red-50 border border-red-200 rounded">
+          <p class="text-red-600">{{ error }}</p>
+          <Button
+            label="Retry"
+            icon="pi pi-refresh"
+            @click="fetchUserProfile"
+            class="mt-3 p-button-sm"
+          />
+        </div>
+
+        <!-- View Content -->
+        <div v-else-if="!isEditing" class="space-y-4">
           <!-- Personal Information -->
           <div class="border-b border-gray-200 pb-4">
             <h3 class="text-lg font-semibold text-oxford-blue mb-3">Personal Information</h3>
@@ -207,67 +224,50 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import FloatLabel from 'primevue/floatlabel'
 import Select from 'primevue/select'
+import { useToast } from 'primevue/usetoast'
 import ChangePasswordDialog from '@/components/ChangePasswordDialog.vue'
+import userService from '@/services/userService.js'
 import phJSONData from '@/data/ph_locations.json'
 
 // Profile data based on database schema
-// users table: user_id, email, pw_hash, lname, fname, mname, address_id, role_id, created_at, updated_at, is_deleted
-// addresses table: address_id, addressline1, addressline2, city_id
-// Joined with ref_roles, ref_ph_cities_municipalities, ref_ph_provinces
 const profileData = ref({
-  // From users table
-  user_id: 1,
-  email: 'juan.delacruz@email.com',
-  fname: 'Juan',
-  mname: 'Santos',
-  lname: 'Dela Cruz',
-  address_id: 1,
-  role_id: 1,
-  created_at: '2024-01-15T08:30:00Z',
-  updated_at: '2024-11-10T10:30:00Z',
+  user_id: null,
+  email: '',
+  fname: '',
+  mname: '',
+  lname: '',
+  address_id: null,
+  role_id: null,
+  created_at: '',
+  updated_at: '',
   is_deleted: 0,
-
-  // From addresses table (joined via address_id)
-  addressline1: '123 Rizal Street',
-  addressline2: 'Barangay San Jose',
-  city_id: 1,
-
-  // From ref_ph_cities_municipalities (joined via city_id)
-  city_name: 'Manila',
-  province_id: 1,
-
-  // From ref_ph_provinces (joined via province_id)
-  province_name: 'Metro Manila',
-
-  // From ref_roles (joined via role_id)
+  addressline1: '',
+  addressline2: '',
+  city_id: null,
+  city_name: '',
+  province_id: null,
+  province_name: '',
   role_name: 'Customer',
 })
 
 const isEditing = ref(false)
 const showPasswordDialog = ref(false)
+const loading = ref(false)
+const error = ref(null)
+const toast = useToast()
 const provinces = ref(phJSONData.provinces)
 const cities = ref([])
 
 // Edit form matching database schema
 const editForm = reactive({
-  // users table fields
   fname: '',
   mname: '',
   lname: '',
   email: '',
-
-  // addresses table fields
   addressline1: '',
   addressline2: '',
   city_id: '',
-
-  // For dropdowns
   province_id: ''
-})
-
-onMounted(() => {
-  // TODO: Fetch user profile from API
-  // profileData.value = await fetchUserProfile(userId)
 })
 
 const formatDate = (dateString) => {
@@ -276,8 +276,32 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
+const fetchUserProfile = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    const profile = await userService.getUserProfile()
+    Object.assign(profileData.value, profile)
+
+    // Load cities for user's province
+    if (profileData.value.province_id) {
+      cities.value = phJSONData.cities[profileData.value.province_id] || []
+    }
+  } catch (err) {
+    error.value = 'Failed to load profile'
+    console.error('Error loading profile:', err)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load profile',
+      life: 3000,
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
 const startEditing = () => {
-  // Copy current data to edit form (matching database schema)
   editForm.fname = profileData.value.fname
   editForm.mname = profileData.value.mname
   editForm.lname = profileData.value.lname
@@ -301,43 +325,55 @@ const cancelEditing = () => {
   Object.keys(editForm).forEach(key => editForm[key] = '')
 }
 
-const saveProfile = () => {
-  // TODO: Send update request to API
-  // Backend should update:
-  // 1. users table: fname, mname, lname
-  // 2. addresses table: addressline1, addressline2, city_id
-  // await updateUserProfile(profileData.value.user_id, editForm)
+const saveProfile = async () => {
+  try {
+    loading.value = true
+    const updateData = {
+      fname: editForm.fname,
+      mname: editForm.mname,
+      lname: editForm.lname,
+      addressline1: editForm.addressline1,
+      addressline2: editForm.addressline2,
+      city_id: editForm.city_id,
+    }
 
-  // Update local data (temporary until API is integrated)
-  profileData.value.fname = editForm.fname
-  profileData.value.mname = editForm.mname
-  profileData.value.lname = editForm.lname
-  profileData.value.addressline1 = editForm.addressline1
-  profileData.value.addressline2 = editForm.addressline2
-  profileData.value.city_id = editForm.city_id
-  profileData.value.province_id = editForm.province_id
+    const updatedProfile = await userService.updateUserProfile(updateData)
+    Object.assign(profileData.value, updatedProfile)
 
-  // Find and update province and city names for display
-  const selectedProvince = provinces.value.find(p => p.province_id === editForm.province_id)
-  const selectedCity = cities.value.find(c => c.id === editForm.city_id)
+    // Update local city and province names for display
+    const selectedProvince = provinces.value.find(p => p.province_id === editForm.province_id)
+    const selectedCity = cities.value.find(c => c.id === editForm.city_id)
 
-  if (selectedProvince) {
-    profileData.value.province_name = selectedProvince.province_name
+    if (selectedProvince) {
+      profileData.value.province_name = selectedProvince.province_name
+    }
+    if (selectedCity) {
+      profileData.value.city_name = selectedCity.name
+    }
+
+    isEditing.value = false
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Profile updated successfully',
+      life: 3000,
+    })
+  } catch (err) {
+    console.error('Error saving profile:', err)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: err.response?.data?.error || 'Failed to update profile',
+      life: 3000,
+    })
+  } finally {
+    loading.value = false
   }
-  if (selectedCity) {
-    profileData.value.city_name = selectedCity.name
-  }
-
-  // Update timestamp
-  profileData.value.updated_at = new Date().toISOString()
-
-  isEditing.value = false
-  console.log('Profile updated:', editForm)
 }
 
 const onProvinceChange = (provinceId) => {
   cities.value = phJSONData.cities[provinceId] || []
-  editForm.city = ''
+  editForm.city_id = ''
 }
 
 const showChangePassword = () => {
@@ -345,11 +381,11 @@ const showChangePassword = () => {
 }
 
 const handlePasswordUpdated = () => {
-  // TODO: Show success message/toast
   console.log('Password updated successfully!')
-  // You can add a toast notification here
 }
 
-</script>
+onMounted(() => {
+  fetchUserProfile()
+})
 
-<style src="@/styles/tailwind.css"></style>
+</script>
