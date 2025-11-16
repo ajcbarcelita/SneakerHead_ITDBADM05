@@ -182,5 +182,178 @@ export async function updateStock(req, res) {
 }
 
 export async function getMetrics(req, res) {
-    // TODO: Implement metrics endpoint
+    try {
+        const knex = Order.knex();
+        const { period = "daily", branchName = "SneakerHead Makati" } = req.query;
+
+        // Manila time
+        const time = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+
+        // Determine view
+        const viewName =
+            period === "monthly"
+                ? "branch_monthly_sales_view"
+                : period === "yearly"
+                ? "branch_yearly_sales_view"
+                : "branch_daily_sales_view";
+
+        // Build base query
+        let query = knex(viewName);
+
+        // Branch filter
+        if (branchName !== "All Branches") {
+            query = query.where("branch_name", branchName);
+        }
+
+        // DB Rows
+        let chartRows = await query.select("*");
+
+        // Sort depending on view 
+        if (period === "daily") chartRows.sort((a, b) => new Date(a.sale_date) - new Date(b.sale_date));
+        if (period === "monthly") chartRows.sort((a, b) => a.year - b.year || a.month - b.month);
+        if (period === "yearly") chartRows.sort((a, b) => a.year - b.year);
+
+        // Date Ranges
+        const ranges = [];
+        // 7-day, 12-month, 5-year ranges
+        if (period === "daily") {
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(time);
+                d.setDate(time.getDate() - i);
+
+                const dateKey = d.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+
+                ranges.push({
+                    key: dateKey,
+                    label: formatDailyLabel(d),
+                });
+            }
+        }
+        if (period === "monthly") {
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date(time.getFullYear(), time.getMonth() - i, 1);
+
+                const year = d.getFullYear();
+                const month = d.getMonth() + 1;
+
+                const key = `${year}-${String(month).padStart(2, "0")}`;
+
+                ranges.push({
+                    key,
+                    year,
+                    month,
+                    label: formatMonthlyLabel(d),
+                });
+            }
+        }
+        if (period === "yearly") {
+            for (let i = 4; i >= 0; i--) {
+                const year = time.getFullYear() - i;
+                ranges.push({
+                    key: year.toString(),
+                    year,
+                    label: year.toString(),
+                });
+            }
+        }
+        
+        const dataMap = new Map();
+        for (const row of chartRows) {
+            let key;
+            if (period === "daily") {
+                key = new Date(row.sale_date).toLocaleDateString("en-CA", {
+                    timeZone: "Asia/Manila",
+                });
+            }
+            if (period === "monthly") {
+                key = `${row.year}-${String(row.month).padStart(2, "0")}`;
+            }
+            if (period === "yearly") {
+                key = row.year.toString();
+            }
+            dataMap.set(key, {
+                sales: Number(row.total_sales || 0),
+                orders: Number(row.order_count || 0),
+                branch: row.branch_name,
+            });
+        }
+
+        // Chart Data
+        const filledChartData = ranges.map(r => {
+            const data = dataMap.get(r.key) || { sales: 0, orders: 0 };
+
+            return {
+                period: r.label,
+                sales: data.sales,
+                orders: data.orders,
+                branch: data.branch,
+            };
+        });
+
+        let totalSales = 0;
+        let newOrders = 0;
+
+        if (period === "daily") {
+            const todayKey = time.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+            const todayData = dataMap.get(todayKey);
+            if (todayData) {
+                totalSales = todayData.sales;
+                newOrders = todayData.orders;
+            }
+        }
+        if (period === "monthly") {
+            const key = `${time.getFullYear()}-${String(time.getMonth() + 1).padStart(2, "0")}`;
+            const d = dataMap.get(key);
+            if (d) {
+                totalSales = d.sales;
+                newOrders = d.orders;
+            }
+        }
+        if (period === "yearly") {
+            const key = time.getFullYear().toString();
+            const d = dataMap.get(key);
+            if (d) {
+                totalSales = d.sales;
+                newOrders = d.orders;
+            }
+        }
+
+        // Low stock items
+        const lowResult = await knex("count_low_stock").first("low_stock");
+        const lowStockItems = Number(lowResult?.low_stock || 0);
+
+        return res.status(200).json({
+            totalSales,
+            newOrders,
+            lowStockItems,
+            chartData: filledChartData,
+            period,
+            branch: branchName,
+        });
+    } catch (err) {
+        console.error("Error fetching BM metrics:", err);
+        res.status(500).json({ message: "Failed to get metrics", error: err.message });
+    }
+}
+
+
+function formatDailyLabel(date) {
+    const today = new Date();
+    const manilaDate = new Date(today.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+    const target = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+
+    const diff = target.toDateString() === manilaDate.toDateString()
+        ? "Today"
+        : new Date(manilaDate.setDate(manilaDate.getDate() - 1)).toDateString() === target.toDateString()
+        ? "Yesterday"
+        : target.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+
+    return diff;
+}
+
+function formatMonthlyLabel(date) {
+    return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+    });
 }
