@@ -12,6 +12,11 @@ import { getPromoCodes,
          addPromoCode,
          updatePromoCode
 } from "../controllers/ManagePromoCodesController.js";
+import { getShoes,
+        addShoe,
+        updateShoe,
+        getBrands
+} from "../controllers/ManageShoesController.js";
 import { authenticateUser } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -33,6 +38,12 @@ router.get("/cities", authenticateUser(role), getCities);
 // Fetch all promo codes
 router.get("/promo-codes", authenticateUser(role), getPromoCodes);
 
+// Fetch all shoes
+router.get("/shoes", authenticateUser(role), getShoes);
+
+// Fetch all brands
+router.get("/brands", authenticateUser(role), getBrands);
+
 // Add a new user
 router.post("/users", authenticateUser(role), addUser);
 
@@ -42,6 +53,9 @@ router.post("/branches", authenticateUser(role), addBranch);
 // Add a new promo code
 router.post("/promo-codes", authenticateUser(role), addPromoCode);
 
+// Add a new shoe
+router.post("/shoes", authenticateUser(role), addShoe)
+
 // Update branch
 router.put("/branches/:branchId", authenticateUser(role), updateBranch);
 
@@ -50,5 +64,8 @@ router.put("/users/:userId", authenticateUser(role), updateUser);
 
 // Update promo code
 router.put("/promo-codes/:promoCode", authenticateUser(role), updatePromoCode);
+
+// Update shoe
+router.put("/shoes/:shoeId", authenticateUser(role), updateShoe);
 
 export default router;

@@ -27,11 +27,7 @@ export const getPromoCodes = async (req, res) => {
         
         res.status(200).json({ codes: formattedPromoCodes });
     } catch (error) {
-        console.error('Error in getPromoCodes:', error);
-        res.status(500).json({ 
-            message: "Internal server error", 
-            error: error.message 
-        });
+        res.status(500).json({ message: "Internal server error", });
     }
 }
 
@@ -49,8 +45,6 @@ export const addPromoCode = async (req, res) => {
             is_active
         } = req.body;
 
-        console.log('Received promo data:', req.body);
-
         const knex = PromoCode.knex();
         
         // Check if promo code already exists
@@ -59,9 +53,7 @@ export const addPromoCode = async (req, res) => {
             .first();
             
         if (existingPromo) {
-            return res.status(400).json({ 
-                message: "Promo code already exists" 
-            });
+            return res.status(400).json({ message: "Promo code already exists" });
         }
 
         // Date formatting function
@@ -104,8 +96,6 @@ export const addPromoCode = async (req, res) => {
         
         res.status(201).json({ message: "Promo code added successfully" });
     } catch (error) {
-        console.error('Error in addPromoCode:', error);
-        
         const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         await logEvent({
@@ -132,8 +122,6 @@ export const updatePromoCode = async (req, res) => {
             is_active
         } = req.body;   
 
-        console.log('Updating promo code:', promoCode, 'with data:', req.body);
-
         const formatDateForMySQL = (dateString) => {
             if (!dateString) return null;
             // If it's already in YYYY-MM-DD format, return as is
@@ -149,7 +137,6 @@ export const updatePromoCode = async (req, res) => {
         const isActive = is_active !== undefined ? (is_active ? 1 : 0) : null;
 
         const knex = PromoCode.knex();
-        
         const updateData = {};
         
         if (end_date !== undefined) {
@@ -164,8 +151,6 @@ export const updatePromoCode = async (req, res) => {
             updateData.is_active = isActive;
         }
 
-        console.log('Formatted update data:', updateData); // Debug log
-
         const result = await knex('promo_codes')
             .where('promo_code', promoCode)
             .update(updateData);
@@ -178,7 +163,6 @@ export const updatePromoCode = async (req, res) => {
 
         const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
-
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,

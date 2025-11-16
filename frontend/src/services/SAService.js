@@ -76,31 +76,67 @@ const SAService = {
     },
 
     async getPromoCodes() {
-    try {
-        const response = await api.get('/promo-codes');
-        return response;
-    } catch (error) {
-        throw error;
-    }
+        try {
+            const response = await api.get('/promo-codes');
+            return response;
+        } catch (error) {
+            throw error;
+        }
     },
 
     async addPromoCode(promoData) {
-    try {
-        const response = await api.post('/promo-codes', promoData);
-        return response;
-    } catch (error) {
-        throw error;
-    }
+        try {
+            const response = await api.post('/promo-codes', promoData);
+            return response;
+        } catch (error) {
+            throw error;
+        }
     },
 
     async updatePromoCode(promoCode, updateData) {
-    try {
-        const response = await api.put(`/promo-codes/${promoCode}`, updateData);
-        return response;
-    } catch (error) {
-        throw error;
-    }
-    }
+        try {
+            const response = await api.put(`/promo-codes/${promoCode}`, updateData);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async getShoes() {
+        try {
+            const response = await api.get('/shoes');
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async addShoe(shoeData) {
+        try {
+            const response = await api.post('/shoes', shoeData);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async updateShoe(shoeId, updateData) {
+        try {
+            const response = await api.put(`/shoes/${shoeId}`, updateData);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async getBrands() {
+        try {
+            const response = await api.get('/brands');
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
 }
 
 export default SAService;
