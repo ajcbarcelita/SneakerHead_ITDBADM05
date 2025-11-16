@@ -8,7 +8,6 @@ import { hashPassword, verifyPassword } from '../utils/password.js'
 export const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.user_id
-    console.log('Getting profile for user_id:', userId)
 
     const knex = User.knex()
 
@@ -16,8 +15,6 @@ export const getUserProfile = async (req, res) => {
     const userProfile = await knex('user_details_view')
       .where('user_id', userId)
       .first()
-
-    console.log('User profile found:', userProfile ? 'Yes' : 'No')
 
     if (!userProfile) {
       return res.status(404).json({ error: 'User not found' })
