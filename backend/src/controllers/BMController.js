@@ -324,10 +324,9 @@ export async function getMetrics(req, res) {
         const [tp] = await knex.raw("CALL get_top_product(?, ?)", [period, branchName]);
         topProduct = tp?.[0]?.[0] || null;
 
-
         // Low stock items
-        const lowResult = await knex("count_low_stock").first("low_stock");
-        const lowStockItems = Number(lowResult?.low_stock || 0);
+        const [ls] = await knex.raw("CALL get_low_stock_branch(?)", [branchName]);
+        const lowStockItems = ls?.[0]?.[0]?.low_stock || 0;
 
         return res.status(200).json({
             totalSales,

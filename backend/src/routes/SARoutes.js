@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import { metrics } from "../controllers/DashboardController.js";
 import { getUsers, 
         getBranches, 
@@ -15,7 +16,9 @@ import { getPromoCodes,
 import { getShoes,
         addShoe,
         updateShoe,
-        getBrands
+        getBrands,
+        getCategories,
+        getShoeById
 } from "../controllers/ManageShoesController.js";
 import { getLogs } from "../controllers/ViewLogsController.js";
 import { authenticateUser } from "../middlewares/authMiddleware.js";
@@ -23,6 +26,22 @@ import { authenticateUser } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 let role = "Admin";
+
+// Configure multer for file uploads
+const upload = multer({
+    storage: multer.memoryStorage(), // Store files in memory for Cloudinary
+    limits: { 
+        fileSize: 5 * 1024 * 1024, // 5MB limit per file
+        fieldSize: 10 * 1024 * 1024 // 10MB for form fields
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'), false);
+        }
+    },
+});
 
 // Route for fetching Admin dashboard metrics
 router.get("/metrics", authenticateUser(role), metrics);
@@ -45,6 +64,9 @@ router.get("/shoes", authenticateUser(role), getShoes);
 // Fetch all brands
 router.get("/brands", authenticateUser(role), getBrands);
 
+// Fetch all categories
+router.get("/categories", authenticateUser(role), getCategories);
+
 // Fetch all logs
 router.get("/logs", authenticateUser(role), getLogs);
 
@@ -57,8 +79,8 @@ router.post("/branches", authenticateUser(role), addBranch);
 // Add a new promo code
 router.post("/promo-codes", authenticateUser(role), addPromoCode);
 
-// Add a new shoe
-router.post("/shoes", authenticateUser(role), addShoe)
+// Add a new shoe - WITH MULTER FOR FILE UPLOADS
+router.post("/shoes", authenticateUser(role), upload.array('images', 10), addShoe);
 
 // Update branch
 router.put("/branches/:branchId", authenticateUser(role), updateBranch);
@@ -70,6 +92,9 @@ router.put("/users/:userId", authenticateUser(role), updateUser);
 router.put("/promo-codes/:promoCode", authenticateUser(role), updatePromoCode);
 
 // Update shoe
-router.put("/shoes/:shoeId", authenticateUser(role), updateShoe);
+router.put("/shoes/:shoeId", authenticateUser(role), upload.array('images', 10), updateShoe);
+
+// Get shoe by ID
+router.get("/shoes/:shoeId", authenticateUser(role), getShoeById);
 
 export default router;

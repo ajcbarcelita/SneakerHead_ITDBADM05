@@ -113,7 +113,11 @@ const SAService = {
 
     async addShoe(shoeData) {
         try {
-            const response = await api.post('/shoes', shoeData);
+            const response = await api.post('/shoes', shoeData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             return response;
         } catch (error) {
             throw error;
@@ -122,7 +126,11 @@ const SAService = {
 
     async updateShoe(shoeId, updateData) {
         try {
-            const response = await api.put(`/shoes/${shoeId}`, updateData);
+            const response = await api.put(`/shoes/${shoeId}`, updateData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             return response;
         } catch (error) {
             throw error;
@@ -141,6 +149,24 @@ const SAService = {
     async getLogs() {
         try {
             const response = await api.get('/logs');
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async getCategories() {
+        try {
+            const response = await api.get('/categories');
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async getShoeById(shoeId) {
+        try {
+            const response = await api.get(`/shoes/${shoeId}`);
             return response;
         } catch (error) {
             throw error;
