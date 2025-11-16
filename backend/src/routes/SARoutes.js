@@ -5,7 +5,8 @@ import { getUsers,
         updateUser, 
         getCities,
         addBranch,
-        updateBranch
+        updateBranch,
+        addUser
 } from "../controllers/BranchManagementController.js";
 import { authenticateUser } from "../middlewares/authMiddleware.js";
 
@@ -21,6 +22,9 @@ router.get("/users", authenticateUser(role), getUsers);
 
 // Fetch all branches
 router.get("/branches", authenticateUser(role), getBranches);
+
+// Add a new user
+router.post("/users", authenticateUser(role), addUser);
 
 // Add a new branch
 router.post("/branches", authenticateUser(role), addBranch);

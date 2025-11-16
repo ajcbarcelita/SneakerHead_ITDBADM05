@@ -64,7 +64,16 @@ const SAService = {
         } catch (error) {
             throw error;
         }
-    }
+    },
+
+    async addUser(userData) {
+        try {
+            const response = await api.post('/users', userData);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
 }
 
 export default SAService;

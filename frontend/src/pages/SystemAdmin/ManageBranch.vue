@@ -62,6 +62,9 @@
                   />
                 </div>
               </div>
+
+              <Button label="Add User" icon="pi pi-plus" class="add-btn" 
+                      @click="showAddUserDialog = true" />
             </div>
           </div>
 
@@ -216,6 +219,54 @@
       <Footer />
     </footer>
 
+    <!-- ADD USER DIALOG -->
+    <Dialog v-model:visible="showAddUserDialog" header="Add New User" :modal="true" class="w-1/3">
+      <div class="space-y-4">
+        <div class="field">
+          <label class="font-semibold text-charcoal">First Name <span class="text-red-500">*</span></label>
+          <InputText v-model="newUser.fname" class="w-full" placeholder="Enter first name" />
+        </div>
+        <div class="field">
+          <label class="font-semibold text-charcoal">Middle Name</label>
+          <InputText v-model="newUser.mname" class="w-full" placeholder="Enter middle name" />
+        </div>
+        <div class="field">
+          <label class="font-semibold text-charcoal">Last Name <span class="text-red-500">*</span></label>
+          <InputText v-model="newUser.lname" class="w-full" placeholder="Enter last name" />
+        </div>
+        <div class="field">
+          <label class="font-semibold text-charcoal">Email <span class="text-red-500">*</span></label>
+          <InputText v-model="newUser.email" class="w-full" placeholder="Enter email address" />
+        </div>
+        <div class="field">
+          <label class="font-semibold text-charcoal">Password <span class="text-red-500">*</span></label>
+          <Password 
+            v-model="newUser.pw_hash" 
+            class="w-full" 
+            placeholder="Enter password"
+            :feedback="false"
+            toggleMask
+          />
+        </div>
+        <div class="field">
+          <label class="font-semibold text-charcoal">Branch Assignment</label>
+          <Dropdown
+            v-model="newUser.address_id"
+            :options="availableBranchesForAdd"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select Branch"
+            class="w-full"
+          />
+          <small class="text-gray-500 mt-1 block">Leave unassigned if no branch assignment needed</small>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" icon="pi pi-times" class="p-button-text cancel-btn" @click="cancelAddUser" />
+        <Button label="Save" icon="pi pi-check" class="save-btn" @click="saveUser" :loading="loadingAddUser" />
+      </template>
+    </Dialog>
+
     <!-- EDIT USER DIALOG -->
     <Dialog v-model:visible="showEditUserDialog" :header="editUserDialogHeader" :modal="true" class="w-1/3">
       <div class="space-y-6">
@@ -235,24 +286,14 @@
                 {{ editingUser.email }}
               </div>
             </div>
+            <div class="field">
+              <label class="font-semibold text-charcoal block mb-1">Role</label>
+              <div class="p-2 bg-gray-50 rounded border border-gray-200 text-charcoal">
+                {{ getRoleLabel(editingUser.role_id) }}
+              </div>
+            </div>
           </div>
-          <p class="text-sm text-gray-500 mt-2">Personal information cannot be modified</p>
-        </div>
-
-        <!-- Editable Role Section -->
-        <div class="border-b pb-4">
-          <h3 class="text-lg font-semibold text-charcoal mb-4">Role Assignment</h3>
-          <div class="field">
-            <label class="font-semibold text-charcoal block mb-2">User Role <span class="text-red-500">*</span></label>
-            <Dropdown
-              v-model="editingUser.role_id"
-              :options="userRoleOptionsForEdit"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Select Role"
-              class="w-full"
-            />
-          </div>
+          <p class="text-sm text-gray-500 mt-2">Personal information and role cannot be modified</p>
         </div>
 
         <!-- Editable Branch Assignment Section -->
@@ -425,6 +466,7 @@ import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import Dialog from 'primevue/dialog'
 import Checkbox from 'primevue/checkbox'
+import Password from 'primevue/password'
 import SAService from '@/services/SAService'
 
 const toast = useToast()
@@ -437,6 +479,9 @@ const userSearchQuery = ref('')
 const users = ref([])
 const loadingUsers = ref(false)
 const loadingUpdateUser = ref(false)
+const loadingAddUser = ref(false)
+const showAddUserDialog = ref(false)
+const showEditUserDialog = ref(false)
 
 // BRANCHES DATA
 const branchSearchQuery = ref('')
@@ -446,6 +491,16 @@ const branches = ref([])
 const loadingBranches = ref(false)
 const loadingAddBranch = ref(false)
 const loadingUpdateBranch = ref(false)
+
+// ADD USER DIALOG STATE
+const newUser = ref({
+  fname: '',
+  lname: '',
+  mname: '',
+  email: '',
+  pw_hash: '',
+  address_id: null
+})
 
 // ADD BRANCH DIALOG STATE
 const newBranch = ref({
@@ -470,7 +525,6 @@ const editingBranch = ref({
 })
 
 // EDIT USER DIALOG STATE
-const showEditUserDialog = ref(false)
 const editingUser = ref({
   id: null,
   fname: '',
@@ -496,21 +550,27 @@ const userBranchOptions = ref([
   { label: 'Unassigned', value: 'unassigned' }
 ])
 
-// NEW: Dropdown options for user status
+// Dropdown options for user status
 const userStatusOptions = [
   { label: 'All Status', value: 'all' },
   { label: 'Active', value: 'active' },
   { label: 'Inactive', value: 'inactive' }
 ]
 
-// Dropdown options for editing user roles
-const userRoleOptionsForEdit = ref([
-  { label: 'Admin', value: 1 },
-  { label: 'Branch Manager', value: 2 },
-  { label: 'Customer', value: 3 }
-])
+// Available branches for assignment (for add user)
+const availableBranchesForAdd = computed(() => {
+  const activeBranches = branches.value.filter(branch => !branch.is_deleted);
+  
+  return [
+    { label: 'Unassigned', value: null },
+    ...(activeBranches.map(branch => ({
+      label: branch.branch_name,
+      value: branch.address_id
+    })) || [])
+  ]
+})
 
-// Available branches for assignment
+// Available branches for assignment (for edit user)
 const availableBranchesForEdit = computed(() => {
   const activeBranches = branches.value.filter(branch => !branch.is_deleted);
   
@@ -585,6 +645,15 @@ const filteredBranches = computed(() => {
 const getCityName = (cityId) => {
   const city = cityOptions.value.find(c => c.city_id === cityId)
   return city ? city.city_name : 'Unknown City'
+}
+
+const getRoleLabel = (roleId) => {
+  const roles = {
+    1: 'Admin',
+    2: 'Branch Manager', 
+    3: 'Customer'
+  }
+  return roles[roleId] || 'Unknown Role'
 }
 
 // Edit user dialog header
@@ -663,6 +732,65 @@ const fetchCities = async () => {
   }
 }
 
+// ADD USER METHODS
+const saveUser = async () => {
+  loadingAddUser.value = true
+  try {
+    // Validate required fields
+    if (!newUser.value.fname || !newUser.value.lname || !newUser.value.email || !newUser.value.pw_hash) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill in all required fields', life: 3000 })
+      return
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(newUser.value.email)) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please enter a valid email address', life: 3000 })
+      return
+    }
+
+    const userData = {
+      fname: newUser.value.fname,
+      lname: newUser.value.lname,
+      mname: newUser.value.mname || '',
+      email: newUser.value.email,
+      pw_hash: newUser.value.pw_hash,
+      address_id: newUser.value.address_id || null
+    }
+
+    await SAService.addUser(userData)
+    toast.add({ severity: 'success', summary: 'Success', detail: 'User added successfully', life: 3000 })
+    showAddUserDialog.value = false
+    resetNewUser()
+    await fetchUsers()
+    
+  } catch (error) {
+    if (error.response?.data?.message?.includes('Email already in use')) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Email address is already in use', life: 3000 })
+    } else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add user: ' + error.message, life: 3000 })
+    }
+  } finally {
+    loadingAddUser.value = false
+  }
+}
+
+const cancelAddUser = () => {
+  showAddUserDialog.value = false
+  resetNewUser()
+}
+
+const resetNewUser = () => {
+  newUser.value = {
+    fname: '',
+    lname: '',
+    mname: '',
+    email: '',
+    pw_hash: '',
+    address_id: null
+  }
+}
+
 // EDIT USER METHODS
 const editUser = (user) => {
   editingUser.value = {
@@ -682,13 +810,7 @@ const editUser = (user) => {
 const saveUserChanges = async () => {
   loadingUpdateUser.value = true
   try {
-    if (!editingUser.value.role_id) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a role', life: 3000 })
-      return
-    }
-    
     const updateData = {
-      role_id: editingUser.value.role_id,
       address_id: editingUser.value.address_id,
       is_deleted: editingUser.value.is_deleted
     }
@@ -724,7 +846,7 @@ const resetEditingUser = () => {
   }
 }
 
-// BRANCH METHODS
+// BRANCH METHODS (unchanged)
 const editBranch = (branch) => {
   editingBranch.value = {
     branch_id: branch.branch_id,
@@ -759,7 +881,6 @@ const saveBranchChanges = async () => {
       is_deleted: editingBranch.value.is_deleted || false
     }
 
-    // Update branch
     await SAService.updateBranch(editingBranch.value.branch_id, updateData)
     
     toast.add({ severity: 'success', summary: 'Success', detail: 'Branch updated successfully', life: 3000 })

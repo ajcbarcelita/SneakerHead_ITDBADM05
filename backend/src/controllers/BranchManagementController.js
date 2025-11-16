@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Branch from "../models/Branch.js";
 import City_Municipality from "../models/City_Municipality.js";
 import { logEvent } from "../services/logEventService.js";
+import { hashPassword } from "../utils/password.js";
 
 export const getUsers = async (req, res) => {
     try {
@@ -147,6 +148,66 @@ export const addBranch = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 }
+
+export const addUser = async (req, res) => {
+    try {
+        const { 
+            fname,
+            lname,
+            mname,
+            email,
+            pw_hash,
+            address_id,
+            role_id = 2
+        } = req.body;
+
+        hashPassword(pw_hash);
+
+        // Check if email already exists
+        const existing = await User.query().findOne({ email });
+        if (existing) {
+            return res.status(400).json({ message: "Email already in use" });
+        }
+
+        // Insert new user
+        const knex = User.knex();
+        const [userId] = await knex('users')
+            .insert({
+                fname,
+                lname,
+                mname: mname || null,
+                email,
+                pw_hash,
+                address_id: address_id || null,
+                role_id,
+                is_deleted: 0
+            })
+
+        // Log the event
+        const ip = req.ip || (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(",")[0].trim() : null);
+        await logEvent({
+            user_id: res.user?.user_id || null,
+            role_id: res.user?.role_id || null,
+            action: 'USER INSERT SUCCESS',
+            description: `User ${fname} ${lname} (${email}) with ID ${userId} was successfully inserted`,
+            ip
+        });
+
+        res.status(201).json({ message: "User added successfully", });
+
+    } catch (error) {
+        const ip = req.ip || (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(",")[0].trim() : null);
+        await logEvent({
+            user_id: res.user?.user_id || null,
+            role_id: res.user?.role_id || null,
+            action: 'USER INSERT FAILURE',
+            description: `User ${req.body.fname} ${req.body.lname} insertion failed: ${error.message}`,
+            ip
+        });
+
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
 
 export const updateBranch = async (req, res) => {
     try {
