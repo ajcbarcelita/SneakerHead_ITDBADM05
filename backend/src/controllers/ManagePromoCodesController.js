@@ -124,11 +124,11 @@ export const updatePromoCode = async (req, res) => {
 
         const formatDateForMySQL = (dateString) => {
             if (!dateString) return null;
-            // If it's already in YYYY-MM-DD format, return as is
+            // If it's already in YYYY-MM-DD format return as is
             if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
                 return dateString;
             }
-            // If it's an ISO datetime, extract the date part
+            // If it's an ISO datetime extract the date part
             const date = new Date(dateString);
             return date.toISOString().split('T')[0]; // Get YYYY-MM-DD
         };

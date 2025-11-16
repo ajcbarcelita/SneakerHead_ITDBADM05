@@ -57,7 +57,7 @@ export const addShoe = async (req, res) => {
 
         const knex = Shoe.knex();
 
-        // Check if there is a same shoe
+        // Check if there is a same shoe (for now brand_name basehan)
         const existingShoe = await knex('shoes')
             .where('name', name)
             .first();
@@ -110,6 +110,7 @@ export const updateShoe = async (req, res) => {
             is_deleted
         } = req.body
 
+        // Convert is_deleted to proper tinyInt for DB
         const isDeleted = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null
 
         const knex = Shoe.knex()

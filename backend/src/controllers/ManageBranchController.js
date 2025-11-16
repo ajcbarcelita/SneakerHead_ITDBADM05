@@ -115,8 +115,8 @@ export const addBranch = async (req, res) => {
             city_id 
         } = req.body;
 
+        // Use the stored procedure
         const knex = Branch.knex();
-        
         await knex.raw('CALL add_branch(?, ?, ?, ?)', [
             branch_name,
             addressline1 || '',
@@ -163,6 +163,7 @@ export const addUser = async (req, res) => {
             role_id = 2
         } = req.body;
 
+        // Hash password ofc
         hashPassword(pw_hash);
 
         // Check if email already exists
@@ -185,7 +186,6 @@ export const addUser = async (req, res) => {
                 is_deleted: 0
             })
 
-        // Log the event
         const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         await logEvent({
@@ -224,7 +224,7 @@ export const updateBranch = async (req, res) => {
             is_deleted 
         } = req.body;
 
-        // Convert is_deleted to proper
+        // Convert is_deleted to proper tinyInt for DB
         const isDeletedValue = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null;
 
         const knex = Branch.knex();
@@ -281,12 +281,12 @@ export const updateUser = async (req, res) => {
             is_deleted
         } = req.body;
 
-        // Convert is_deleted to proper MySQL boolean
+        // Convert is_deleted to proper tinyInt for DB
         const isDeletedValue = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null;
 
         const knex = User.knex();
         
-        // Call the stored procedure with correct parameter order
+        // Call the stored procedure
         await knex.raw('CALL update_user(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             userId,
             email || null,
