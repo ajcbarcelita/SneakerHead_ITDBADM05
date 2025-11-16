@@ -179,9 +179,8 @@ export async function updateStock(req, res) {
             error: err.message
         });
     }
+}
 
-
-
-    export async function getMetrics(req, res) {
-
-    }
+export async function getMetrics(req, res) {
+    // TODO: Implement metrics endpoint
+}

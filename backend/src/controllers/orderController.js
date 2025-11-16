@@ -1,5 +1,6 @@
 import Order from '../models/Order.js'
 import OrderItem from '../models/OrderItem.js'
+import OrderHistoryView from '../models/OrderHistoryView.js'
 
 /**
  * Get order history for the logged-in user
@@ -9,42 +10,33 @@ export const getOrderHistory = async (req, res) => {
     const userId = req.user.user_id
     console.log('Getting order history for user_id:', userId)
 
-    // Fetch all orders for the user with order items and shoe details
-    const orders = await Order.query()
+    // Fetch all order items for the user from the view
+    const items = await OrderHistoryView.query()
       .where('user_id', userId)
-      .withGraphFetched('[orderItems.[shoe.[brand, images]]]')
-      .orderBy('created_at', 'desc')
+      .orderBy('order_created_at', 'desc')
+      .orderBy('order_id', 'desc')
 
-    console.log('Orders found:', orders.length)
+    console.log('Order items found:', items.length)
 
-    // Format response data
-    const formattedOrders = orders.map(order => ({
-      order_id: order.order_id,
-      user_id: order.user_id,
-      branch_id: order.branch_id,
-      branch_name: order.branch_name,
-      promo_code: order.promo_code || null,
-      discount_amount: order.discount_amount || 0,
-      total_price: order.total_price,
-      delivery_type: order.delivery_type,
-      delivery_address: order.delivery_address,
-      status: order.status,
-      created_at: order.created_at,
-      updated_at: order.updated_at,
-      items: order.orderItems?.map(item => ({
-        order_item_id: item.order_item_id,
-        order_id: item.order_id,
-        shoe_id: item.shoe_id,
-        quantity: item.quantity,
-        size: item.shoe_size,
-        price_at_purchase: item.price_at_purchase,
-        shoe_name: item.shoe?.name,
-        brand_name: item.shoe?.brand?.brand_name,
-        image_url: item.shoe?.images?.[0]?.image_url || null,
-      })) || [],
+    // Format response data - map view fields to frontend expectations
+    const formattedItems = items.map(item => ({
+      order_item_id: item.order_item_id,
+      order_id: item.order_id,
+      order_created_at: item.order_created_at,
+      shoe_id: item.shoe_id,
+      branch_name: item.branch_name,
+      quantity: item.quantity,
+      size: item.size,
+      price_at_purchase: item.price_at_purchase,
+      subtotal: item.subtotal,
+      total_price: item.total_price,
+      promo_code: item.promo_code || null,
+      shoe_name: item.shoe_name,
+      brand_name: item.brand_name,
+      image_url: item.image_path || null,
     }))
 
-    return res.json(formattedOrders)
+    return res.json(formattedItems)
   } catch (error) {
     console.error('Get order history error:', error)
     return res.status(500).json({ error: 'Failed to fetch order history' })
@@ -60,49 +52,34 @@ export const getOrderDetails = async (req, res) => {
     const orderId = req.params.orderId
     console.log('Getting order details for order_id:', orderId, 'user_id:', userId)
 
-    // Fetch specific order with all details
-    const order = await Order.query()
-      .findById(orderId)
-      .withGraphFetched('[orderItems.[shoe.[brand, images]]]')
+    // Fetch order items for the specific order from the view
+    const items = await OrderHistoryView.query()
+      .where('user_id', userId)
+      .where('order_id', orderId)
 
-    if (!order) {
+    if (!items || items.length === 0) {
       return res.status(404).json({ error: 'Order not found' })
     }
 
-    // Verify that the order belongs to the logged-in user
-    if (order.user_id !== userId) {
-      console.log('Unauthorized: Order belongs to different user')
-      return res.status(403).json({ error: 'Unauthorized - Cannot access this order' })
-    }
-
     // Format response data
-    const formattedOrder = {
-      order_id: order.order_id,
-      user_id: order.user_id,
-      branch_id: order.branch_id,
-      branch_name: order.branch_name,
-      promo_code: order.promo_code || null,
-      discount_amount: order.discount_amount || 0,
-      total_price: order.total_price,
-      delivery_type: order.delivery_type,
-      delivery_address: order.delivery_address,
-      status: order.status,
-      created_at: order.created_at,
-      updated_at: order.updated_at,
-      items: order.orderItems?.map(item => ({
-        order_item_id: item.order_item_id,
-        order_id: item.order_id,
-        shoe_id: item.shoe_id,
-        quantity: item.quantity,
-        size: item.shoe_size,
-        price_at_purchase: item.price_at_purchase,
-        shoe_name: item.shoe?.name,
-        brand_name: item.shoe?.brand?.brand_name,
-        image_url: item.shoe?.images?.[0]?.image_url || null,
-      })) || [],
-    }
+    const formattedItems = items.map(item => ({
+      order_item_id: item.order_item_id,
+      order_id: item.order_id,
+      order_created_at: item.order_created_at,
+      shoe_id: item.shoe_id,
+      branch_name: item.branch_name,
+      quantity: item.quantity,
+      size: item.size,
+      price_at_purchase: item.price_at_purchase,
+      subtotal: item.subtotal,
+      total_price: item.total_price,
+      promo_code: item.promo_code || null,
+      shoe_name: item.shoe_name,
+      brand_name: item.brand_name,
+      image_url: item.image_path || null,
+    }))
 
-    return res.json(formattedOrder)
+    return res.json(formattedItems)
   } catch (error) {
     console.error('Get order details error:', error)
     return res.status(500).json({ error: 'Failed to fetch order details' })
