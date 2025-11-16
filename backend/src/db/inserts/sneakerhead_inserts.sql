@@ -90,9 +90,8 @@ INSERT INTO `sneakerhead`.`shoe_images`
 (3, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763307901/KD18_SE_EP_gib9xi.avif"),
 (3, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763307903/KD18_SE_EP_1_zge9hz.avif"),
 (3, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763307905/KD18_SE_EP_2_jkisbk.avif"),
-(4, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763307901/KD18_SE_EP_gib9xi.avif"),
-(4, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763307903/KD18_SE_EP_1_zge9hz.avif"),
-(4, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763307905/KD18_SE_EP_2_jkisbk.avif"),
+(4, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763315846/W_NIKE_ZOOM_VOMERO_5_1_sagajh.avif"),
+(4, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763315838/W_NIKE_ZOOM_VOMERO_5_adgd03.avif"),
 (5, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763309073/airbinays_t0togf.jpg"),
 (6, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763308577/shoes/opqgdlspj78xolelbsmg.jpg"),
 (6, "https://res.cloudinary.com/dalvc6cds/image/upload/v1763308580/shoes/ndtqvhdvbltqzvuxxgou.jpg");
