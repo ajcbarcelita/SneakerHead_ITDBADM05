@@ -1,6 +1,5 @@
 import Order from '../models/Order.js'
 import OrderItem from '../models/OrderItem.js'
-import OrderHistoryView from '../models/OrderHistoryView.js'
 
 /**
  * Get order history for the logged-in user
@@ -10,8 +9,10 @@ export const getOrderHistory = async (req, res) => {
     const userId = req.user.user_id
     console.log('Getting order history for user_id:', userId)
 
+    const knex = Order.knex()
+
     // Fetch all order items for the user from the view
-    const items = await OrderHistoryView.query()
+    const items = await knex('order_history_view')
       .where('user_id', userId)
       .orderBy('order_created_at', 'desc')
       .orderBy('order_id', 'desc')
@@ -52,8 +53,10 @@ export const getOrderDetails = async (req, res) => {
     const orderId = req.params.orderId
     console.log('Getting order details for order_id:', orderId, 'user_id:', userId)
 
+    const knex = Order.knex()
+
     // Fetch order items for the specific order from the view
-    const items = await OrderHistoryView.query()
+    const items = await knex('order_history_view')
       .where('user_id', userId)
       .where('order_id', orderId)
 
