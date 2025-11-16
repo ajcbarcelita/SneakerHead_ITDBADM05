@@ -137,6 +137,48 @@ export async function updateStock(req, res) {
       return res.status(400).json({
         message: "Invalid input: shoeId, branchId, and sizes array are required",
       });
+    try {
+        // Validate input
+        if (!shoeId || !branchId || !Array.isArray(sizes)) {
+            return res.status(400).json({
+                message: 'Invalid input: shoeId, branchId, and sizes array are required'
+            });
+        }
+
+        // Convert sizes array to JSON string
+        const sizesJson = JSON.stringify(sizes);
+        // sizes = [ { size: '8', quantity: 10 }, { size: '9', quantity: 5 } ] for example
+
+        // Call the stored procedure
+        await knex.raw('CALL update_shoe_stock(?, ?, ?)', [shoeId, branchId, sizesJson]);
+
+        await logEvent({
+            user_id: userId,
+            role_id: roleId,
+            action: 'UPDATE_STOCK_SUCCESS',
+            description: `Updated stock for shoe_id=${shoeId}, branch_id=${branchId}`,
+            ip
+        }).catch(() => { });
+
+        return res.json({
+            success: true,
+            message: 'Stock updated successfully'
+        });
+    } catch (err) {
+        await logEvent({
+            user_id: userId,
+            role_id: roleId,
+            action: 'UPDATE_STOCK_FAILED',
+            description: `Failed to update stock for shoe_id=${shoeId}: ${err.message}`,
+            ip
+        }).catch(() => { });
+
+        console.error(err);
+        return res.status(500).json({
+            message: 'Failed to update stock',
+            error: err.message
+        });
+>>>>>>> Stashed changes
     }
 
     // Convert sizes array to JSON string
@@ -188,8 +230,8 @@ export async function getMetrics(req, res) {
             period === "monthly"
                 ? "branch_monthly_sales_view"
                 : period === "yearly"
-                ? "branch_yearly_sales_view"
-                : "branch_daily_sales_view";
+                    ? "branch_yearly_sales_view"
+                    : "branch_daily_sales_view";
 
         // Build base query
         let query = knex(viewName);
@@ -250,7 +292,7 @@ export async function getMetrics(req, res) {
                 });
             }
         }
-        
+
         const dataMap = new Map();
         for (const row of chartRows) {
             let key;
@@ -312,6 +354,19 @@ export async function getMetrics(req, res) {
             }
         }
 
+        let topCustomer = {};
+        let topProduct = {};    
+
+        // Get Top Customer -- first row (depending on period)
+        const [tc] = await knex.raw("CALL get_top_customer(?, ?)", [period, branchName]);
+        // Check if first row exists since LIMIT 1
+        topCustomer = tc?.[0]?.[0] || null;
+
+        // Get Top Product -- first row (depending on period)
+        const [tp] = await knex.raw("CALL get_top_product(?, ?)", [period, branchName]);
+        topProduct = tp?.[0]?.[0] || null;
+
+
         // Low stock items
         const lowResult = await knex("count_low_stock").first("low_stock");
         const lowStockItems = Number(lowResult?.low_stock || 0);
@@ -323,13 +378,14 @@ export async function getMetrics(req, res) {
             chartData: filledChartData,
             period,
             branch: branchName,
+            topCustomer,
+            topProduct
         });
     } catch (err) {
         console.error("Error fetching BM metrics:", err);
         res.status(500).json({ message: "Failed to get metrics", error: err.message });
     }
 }
-
 
 function formatDailyLabel(date) {
     const today = new Date();
@@ -339,8 +395,8 @@ function formatDailyLabel(date) {
     const diff = target.toDateString() === manilaDate.toDateString()
         ? "Today"
         : new Date(manilaDate.setDate(manilaDate.getDate() - 1)).toDateString() === target.toDateString()
-        ? "Yesterday"
-        : target.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+            ? "Yesterday"
+            : target.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
     return diff;
 }
