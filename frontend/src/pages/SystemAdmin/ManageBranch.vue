@@ -432,7 +432,7 @@ const toast = useToast()
 // USERS DATA
 const selectedUserRole = ref({ label: 'All Roles', value: 'all' })
 const selectedUserBranch = ref({ label: 'All Branches', value: 'all' })
-const selectedUserStatus = ref({ label: 'All Status', value: 'all' }) // NEW
+const selectedUserStatus = ref({ label: 'All Status', value: 'all' }) 
 const userSearchQuery = ref('')
 const users = ref([])
 const loadingUsers = ref(false)
@@ -512,9 +512,11 @@ const userRoleOptionsForEdit = ref([
 
 // Available branches for assignment
 const availableBranchesForEdit = computed(() => {
+  const activeBranches = branches.value.filter(branch => !branch.is_deleted);
+  
   return [
     { label: 'Unassigned', value: null },
-    ...(branches.value.map(branch => ({
+    ...(activeBranches.map(branch => ({
       label: branch.branch_name,
       value: branch.address_id
     })) || [])
@@ -543,7 +545,7 @@ const filteredUsers = computed(() => {
     }
   }
 
-  // NEW: Filter by status
+  // Filter by user status
   if (selectedUserStatus.value.value !== 'all') {
     if (selectedUserStatus.value.value === 'active') {
       filtered = filtered.filter(user => !user.is_deleted)
