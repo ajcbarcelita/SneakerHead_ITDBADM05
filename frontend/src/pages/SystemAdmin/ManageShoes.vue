@@ -26,105 +26,30 @@
         </div>
       </div>
 
-      <!-- FILTERS -->
-      <div class="flex flex-wrap items-center gap-4 p-4 bg-white rounded-lg shadow-sm">
-        <div class="flex items-center space-x-2">
-          <span class="font-semibold text-charcoal">Brand:</span>
-          <Dropdown
-            v-model="selectedBrand"
-            :options="brandOptions"
-            optionLabel="label"
-            placeholder="All Brands"
-            class="w-48"
-          />
-        </div>
-        
-        <div class="flex items-center space-x-2">
-          <span class="font-semibold text-charcoal">Category:</span>
-          <Dropdown
-            v-model="selectedCategory"
-            :options="categoryOptions"
-            optionLabel="label"
-            placeholder="All Categories"
-            class="w-48"
-          />
-        </div>
-        
-        <div class="flex items-center space-x-2">
-          <span class="font-semibold text-charcoal">Status:</span>
-          <Dropdown
-            v-model="selectedStatus"
-            :options="statusOptions"
-            optionLabel="label"
-            placeholder="All Status"
-            class="w-48"
-          />
-        </div>
-      </div>
-
       <!-- SHOES TABLE -->
       <div class="card">
-        <DataTable :value="filteredShoes" tableStyle="min-width: 70rem" :paginator="true" :rows="10">
-          <Column header="Image">
+        <DataTable :value="filteredShoes" tableStyle="min-width: 70rem" :paginator="true" :rows="10" :loading="loadingShoes">
+          <Column field="shoe_id" header="ID" :sortable="true">
             <template #body="slotProps">
-              <div class="w-16 h-16 flex items-center justify-center bg-gray-100 rounded">
-                <img 
-                  v-if="slotProps.data.images && slotProps.data.images.length > 0" 
-                  :src="slotProps.data.images[0]" 
-                  :alt="slotProps.data.name"
-                  class="w-full h-full object-cover rounded"
-                />
-                <i v-else class="pi pi-image text-gray text-2xl"></i>
-              </div>
+              <span class="font-mono text-sm text-charcoal">#{{ slotProps.data.shoe_id }}</span>
             </template>
           </Column>
           
           <Column field="name" header="Name" :sortable="true">
             <template #body="slotProps">
-              <div>
-                <div class="font-semibold text-charcoal">{{ slotProps.data.name }}</div>
-                <div class="text-sm text-gray">{{ slotProps.data.brand }}</div>
-              </div>
+              <div class="font-semibold text-charcoal">{{ slotProps.data.name }}</div>
             </template>
           </Column>
           
           <Column field="price" header="Price" :sortable="true">
             <template #body="slotProps">
-              <span class="font-semibold text-charcoal">₱{{ slotProps.data.price.toLocaleString() }}</span>
+              <span class="font-semibold text-charcoal">₱{{ formatPrice(slotProps.data.price) }}</span>
             </template>
           </Column>
           
-          <Column field="category" header="Category" :sortable="true">
+          <Column field="brand_id" header="Brand" :sortable="true">
             <template #body="slotProps">
-              <Tag :value="slotProps.data.category" class="mr-1" />
-            </template>
-          </Column>
-          
-          <Column header="Available Sizes">
-            <template #body="slotProps">
-              <div class="flex flex-wrap gap-1 max-w-xs">
-                <span 
-                  v-for="size in slotProps.data.availableSizes" 
-                  :key="size"
-                  class="text-xs px-2 py-1 bg-gray-100 rounded text-charcoal"
-                >
-                  {{ size }}
-                </span>
-              </div>
-            </template>
-          </Column>
-          
-          <Column field="branches" header="Available In" :sortable="true">
-            <template #body="slotProps">
-              <div class="flex flex-wrap gap-1 max-w-xs">
-                <Tag 
-                  v-for="branch in slotProps.data.branches" 
-                  :key="branch"
-                  :value="branch" 
-                  severity="info"
-                  class="text-xs"
-                />
-              </div>
+              <Tag :value="getBrandName(slotProps.data.brand_id)" class="mr-1" />
             </template>
           </Column>
           
@@ -142,16 +67,23 @@
               <div class="flex space-x-2">
                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-btn" 
                         @click="editShoe(slotProps.data)" />
-                <Button 
-                  :icon="slotProps.data.is_deleted ? 'pi pi-refresh' : 'pi pi-trash'" 
-                  :class="`p-button-rounded p-button-text ${slotProps.data.is_deleted ? 'restore-btn' : 'delete-btn'}`"
-                  @click="toggleShoeStatus(slotProps.data)" 
-                />
-                <Button icon="pi pi-sitemap" class="p-button-rounded p-button-text branch-btn" 
-                        @click="manageBranches(slotProps.data)" />
               </div>
             </template>
           </Column>
+
+          <template #empty>
+            <div class="text-center py-8 text-gray-500">
+              <i class="pi pi-shoe text-4xl mb-4"></i>
+              <p>No shoes found</p>
+            </div>
+          </template>
+
+          <template #loading>
+            <div class="text-center py-8">
+              <i class="pi pi-spinner pi-spin text-2xl mr-2"></i>
+              Loading shoes...
+            </div>
+          </template>
         </DataTable>
       </div>
 
@@ -178,8 +110,8 @@
         <Card class="shadow-md border-t-4 border-charcoal">
           <template #content>
             <div class="text-center">
-              <div class="text-3xl font-bold text-charcoal">{{ stats.mostAvailable }}</div>
-              <p class="text-charcoal text-sm font-semibold">MOST BRANCHES</p>
+              <div class="text-3xl font-bold text-charcoal">{{ stats.archivedShoes }}</div>
+              <p class="text-charcoal text-sm font-semibold">ARCHIVED</p>
             </div>
           </template>
         </Card>
@@ -187,8 +119,8 @@
         <Card class="shadow-md border-t-4 border-gray">
           <template #content>
             <div class="text-center">
-              <div class="text-3xl font-bold text-gray">{{ stats.archivedShoes }}</div>
-              <p class="text-gray text-sm font-semibold">ARCHIVED</p>
+              <div class="text-3xl font-bold text-gray">₱{{ formatPrice(stats.averagePrice) }}</div>
+              <p class="text-gray text-sm font-semibold">AVG PRICE</p>
             </div>
           </template>
         </Card>
@@ -201,93 +133,42 @@
     </footer>
 
     <!-- ADD/EDIT SHOE DIALOG -->
-    <Dialog v-model:visible="showAddShoeDialog" header="Add New Shoe Model" :modal="true" class="w-3/4">
-      <div class="grid grid-cols-2 gap-6">
-        <!-- BASIC INFO -->
-        <div class="space-y-4">
-          <h3 class="font-semibold text-lg border-b pb-2 text-charcoal">Basic Information</h3>
-          
+    <Dialog v-model:visible="showAddShoeDialog" :header="isEditing ? 'Edit Shoe Model' : 'Add New Shoe Model'" :modal="true" class="w-1/2">
+      <div class="space-y-4">
+        <div class="field">
+          <label class="font-semibold text-charcoal">Shoe Name *</label>
+          <InputText v-model="currentShoe.name" class="w-full" placeholder="Enter shoe model name" 
+                     :class="{ 'p-invalid': !currentShoe.name }" />
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
           <div class="field">
-            <label class="font-semibold text-charcoal">Shoe Name *</label>
-            <InputText v-model="newShoe.name" class="w-full" placeholder="Enter shoe model name" />
-          </div>
-          
-          <div class="grid grid-cols-2 gap-4">
-            <div class="field">
-              <label class="font-semibold text-charcoal">Brand *</label>
-              <Dropdown v-model="newShoe.brand_id" :options="brands" optionLabel="name" 
-                        optionValue="id" placeholder="Select Brand" class="w-full" />
-            </div>
-            
-            <div class="field">
-              <label class="font-semibold text-charcoal">Category *</label>
-              <Dropdown v-model="newShoe.category_id" :options="categories" optionLabel="name" 
-                        optionValue="id" placeholder="Select Category" class="w-full" />
-            </div>
+            <label class="font-semibold text-charcoal">Brand *</label>
+            <Dropdown v-model="currentShoe.brand_id" :options="brands" optionLabel="brand_name" 
+                      optionValue="brand_id" placeholder="Select Brand" class="w-full" 
+                      :class="{ 'p-invalid': !currentShoe.brand_id }" 
+                      :loading="loadingBrands" />
           </div>
           
           <div class="field">
             <label class="font-semibold text-charcoal">Price *</label>
-            <InputNumber v-model="newShoe.price" mode="currency" currency="PHP" 
-                         :min="0" class="w-full" />
+            <InputNumber v-model="currentShoe.price" mode="decimal" 
+                         :min="0" class="w-full" 
+                         :class="{ 'p-invalid': !currentShoe.price }" />
           </div>
         </div>
 
-        <!-- SIZES & BRANCHES -->
-        <div class="space-y-4">
-          <h3 class="font-semibold text-lg border-b pb-2 text-charcoal">Configuration</h3>
-          
-          <div class="field">
-            <label class="font-semibold text-charcoal">Assign to Branches</label>
-            <div class="flex flex-wrap gap-2 mt-2">
-              <div v-for="branch in allBranches" :key="branch.id" class="flex items-center">
-                <Checkbox v-model="newShoe.branches" :value="branch.name" :binary="false" />
-                <label class="ml-2 text-charcoal">{{ branch.name }}</label>
-              </div>
-            </div>
-          </div>
-          
-          <div class="field">
-            <label class="font-semibold text-charcoal">Upload Images</label>
-            <FileUpload mode="basic" chooseLabel="Select Images" accept="image/*" 
-                        :multiple="true" class="w-full" />
-          </div>
-          
-          <div class="field flex items-center">
-            <Checkbox v-model="newShoe.is_deleted" :binary="true" />
-            <label class="ml-2 text-gray">Archive this product</label>
-          </div>
+        <div class="field flex items-center" v-if="isEditing">
+          <Checkbox v-model="currentShoe.is_deleted" :binary="true" inputId="isDeleted" />
+          <label for="isDeleted" class="ml-2 font-semibold text-charcoal">Archive this shoe</label>
         </div>
       </div>
       
       <template #footer>
-        <Button label="Cancel" icon="pi pi-times" class="p-button-text cancel-btn" @click="showAddShoeDialog = false" />
-        <Button label="Save" icon="pi pi-check" class="save-btn" @click="saveShoe" />
-      </template>
-    </Dialog>
-
-    <!-- MANAGE BRANCHES DIALOG -->
-    <Dialog v-model:visible="showManageBranchesDialog" header="Manage Branches for Shoe" :modal="true" class="w-1/2">
-      <div class="space-y-4">
-        <div class="field">
-          <label class="font-semibold text-charcoal">Shoe Model:</label>
-          <p class="text-lg font-semibold text-oxford-blue">{{ selectedShoe?.name }}</p>
-        </div>
-        
-        <div class="field">
-          <label class="font-semibold text-charcoal">Assign to Branches</label>
-          <div class="grid grid-cols-2 gap-4 mt-2">
-            <div v-for="branch in allBranches" :key="branch.id" class="flex items-center">
-              <Checkbox v-model="selectedShoeBranches" :value="branch.name" :binary="false" />
-              <label class="ml-2 text-charcoal">{{ branch.name }}</label>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <template #footer>
-        <Button label="Cancel" icon="pi pi-times" class="p-button-text cancel-btn" @click="showManageBranchesDialog = false" />
-        <Button label="Update Branches" icon="pi pi-check" class="save-btn" @click="updateShoeBranches" />
+        <Button label="Cancel" icon="pi pi-times" class="p-button-text cancel-btn" 
+                @click="cancelShoeDialog" :disabled="loadingSaveShoe" />
+        <Button :label="isEditing ? 'Update' : 'Save'" icon="pi pi-check" class="save-btn" 
+                @click="saveShoe" :loading="loadingSaveShoe" :disabled="!isValidShoe" />
       </template>
     </Dialog>
   </div>
@@ -295,6 +176,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import NavBarSA from '@/components/NavBarSA.vue'
 import Footer from '@/components/Footer.vue'
 import DataTable from 'primevue/datatable'
@@ -305,237 +187,194 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Dropdown from 'primevue/dropdown'
 import Checkbox from 'primevue/checkbox'
-import Textarea from 'primevue/textarea'
-import FileUpload from 'primevue/fileupload'
 import Dialog from 'primevue/dialog'
 import Card from 'primevue/card'
+import SAService from '@/services/SAService'
+
+const toast = useToast()
 
 // Data
 const searchQuery = ref('')
 const showAddShoeDialog = ref(false)
-const showManageBranchesDialog = ref(false)
+const showStatusDialog = ref(false)
 const shoes = ref([])
-const selectedBrand = ref({ label: 'All Brands', value: 'all' })
-const selectedCategory = ref({ label: 'All Categories', value: 'all' })
-const selectedStatus = ref({ label: 'All Status', value: 'all' })
-const selectedShoe = ref(null)
-const selectedShoeBranches = ref([])
+const brands = ref([])
+const loadingShoes = ref(false)
+const loadingBrands = ref(false)
+const loadingSaveShoe = ref(false)
+const isEditing = ref(false)
+const statusActionShoe = ref(null)
 
-const newShoe = ref({
+const currentShoe = ref({
+  shoe_id: null,
   name: '',
   brand_id: null,
-  category_id: null,
   price: 0,
-  availableSizes: [],
-  branches: [],
   is_deleted: false
 })
 
-// Options
-const brandOptions = [
-  { label: 'All Brands', value: 'all' },
-  { label: 'Nike', value: 'nike' },
-  { label: 'Adidas', value: 'adidas' },
-  { label: 'Jordan', value: 'jordan' },
-  { label: 'New Balance', value: 'newbalance' },
-  { label: 'Puma', value: 'puma' }
-]
-
-const categoryOptions = [
-  { label: 'All Categories', value: 'all' },
-  { label: 'Running', value: 'running' },
-  { label: 'Basketball', value: 'basketball' },
-  { label: 'Lifestyle', value: 'lifestyle' },
-  { label: 'Skateboarding', value: 'skateboarding' }
-]
-
-const statusOptions = [
-  { label: 'All Status', value: 'all' },
-  { label: 'Active', value: 'active' },
-  { label: 'Archived', value: 'archived' }
-]
-
-const availableSizes = ['6', '7', '8', '9', '10', '11', '12', '13']
-const brands = [
-  { id: 1, name: 'Nike' },
-  { id: 2, name: 'Adidas' },
-  { id: 3, name: 'Jordan' },
-  { id: 4, name: 'New Balance' },
-  { id: 5, name: 'Puma' }
-]
-
-const categories = [
-  { id: 1, name: 'Running' },
-  { id: 2, name: 'Basketball' },
-  { id: 3, name: 'Lifestyle' },
-  { id: 4, name: 'Skateboarding' }
-]
-
-const allBranches = [
-  { id: 1, name: 'Manila' },
-  { id: 2, name: 'Cebu' },
-  { id: 3, name: 'Davao' },
-  { id: 4, name: 'Cavite' },
-  { id: 5, name: 'Baguio' }
-]
-
-// TEMP data
-const sampleShoes = [
-  {
-    id: 1,
-    name: 'Nike Air Max 270',
-    brand: 'Nike',
-    category: 'Lifestyle',
-    price: 7995,
-    availableSizes: ['8', '9', '10', '11'],
-    branches: ['Manila', 'Cebu', 'Davao'],
-    images: ['/images/nike-airmax-270.jpg'],
-    is_deleted: false,
-    created_at: '2024-01-15',
-    updated_at: '2024-01-20'
-  },
-  {
-    id: 2,
-    name: 'Adidas Ultraboost 5.0',
-    brand: 'Adidas',
-    category: 'Running',
-    price: 8995,
-    availableSizes: ['7', '8', '9', '10'],
-    branches: ['Manila', 'Cavite'],
-    images: ['/images/adidas-ultraboost.jpg'],
-    is_deleted: false,
-    created_at: '2024-01-10',
-    updated_at: '2024-01-18'
-  },
-  {
-    id: 3,
-    name: 'Jordan 1 Retro High',
-    brand: 'Jordan',
-    category: 'Basketball',
-    price: 12995,
-    availableSizes: ['9', '10', '11', '12'],
-    branches: ['Manila', 'Cebu', 'Davao', 'Cavite', 'Baguio'],
-    images: ['/images/jordan-1-retro.jpg'],
-    is_deleted: false,
-    created_at: '2024-01-05',
-    updated_at: '2024-01-22'
-  },
-  {
-    id: 4,
-    name: 'New Balance 574',
-    brand: 'New Balance',
-    category: 'Lifestyle',
-    price: 4595,
-    availableSizes: ['8', '9', '10'],
-    branches: ['Cebu'],
-    images: ['/images/newbalance-574.jpg'],
-    is_deleted: true,
-    created_at: '2024-01-08',
-    updated_at: '2024-01-25'
-  }
-]
-
 // Computed properties
 const filteredShoes = computed(() => {
-  let filtered = shoes.value
+  if (!searchQuery.value) return shoes.value
+  
+  const query = searchQuery.value.toLowerCase()
+  return shoes.value.filter(shoe => 
+    shoe.name.toLowerCase().includes(query)
+  )
+})
 
-  // Filter by brand
-  if (selectedBrand.value.value !== 'all') {
-    filtered = filtered.filter(shoe => shoe.brand === selectedBrand.value.label)
-  }
-
-  // Filter by category
-  if (selectedCategory.value.value !== 'all') {
-    filtered = filtered.filter(shoe => shoe.category === selectedCategory.value.label)
-  }
-
-  // Filter by status
-  if (selectedStatus.value.value !== 'all') {
-    filtered = filtered.filter(shoe => 
-      selectedStatus.value.value === 'active' ? !shoe.is_deleted : shoe.is_deleted
-    )
-  }
-
-  // Filter by search query
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(shoe => 
-      shoe.name.toLowerCase().includes(query) ||
-      shoe.brand.toLowerCase().includes(query) ||
-      shoe.category.toLowerCase().includes(query)
-    )
-  }
-
-  return filtered
+const isValidShoe = computed(() => {
+  return currentShoe.value.name && 
+         currentShoe.value.brand_id && 
+         currentShoe.value.price > 0
 })
 
 const stats = computed(() => {
   const totalShoes = shoes.value.length
   const activeShoes = shoes.value.filter(s => !s.is_deleted).length
   const archivedShoes = shoes.value.filter(s => s.is_deleted).length
-  const mostAvailable = Math.max(...shoes.value.map(s => s.branches.length))
+  const averagePrice = shoes.value.length > 0 
+    ? shoes.value.reduce((sum, shoe) => sum + parseFloat(shoe.price), 0) / shoes.value.length 
+    : 0
 
-  return { totalShoes, activeShoes, archivedShoes, mostAvailable }
+  return { totalShoes, activeShoes, archivedShoes, averagePrice }
 })
 
 // Methods
+const formatPrice = (price) => {
+  return parseFloat(price).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
+
+const getBrandName = (brandId) => {
+  const brand = brands.value.find(b => b.brand_id === brandId)
+  return brand ? brand.brand_name : `Brand ${brandId}`
+}
+
+const fetchShoes = async () => {
+  loadingShoes.value = true
+  try {
+    const response = await SAService.getShoes()
+    shoes.value = response.data.shoes || []
+  } catch (error) {
+    console.error('Error fetching shoes:', error)
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: 'Failed to load shoes', 
+      life: 3000 
+    })
+    shoes.value = []
+  } finally {
+    loadingShoes.value = false
+  }
+}
+
+const fetchBrands = async () => {
+  loadingBrands.value = true
+  try {
+    const response = await SAService.getBrands()
+    brands.value = response.data.brands || []
+  } catch (error) {
+    console.error('Error fetching brands:', error)
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: 'Failed to load brands', 
+      life: 3000 
+    })
+    brands.value = []
+  } finally {
+    loadingBrands.value = false
+  }
+}
+
 const editShoe = (shoe) => {
-  console.log('Edit shoe:', shoe)
+  currentShoe.value = {
+    shoe_id: shoe.shoe_id,
+    name: shoe.name,
+    brand_id: shoe.brand_id,
+    price: parseFloat(shoe.price),
+    is_deleted: shoe.is_deleted
+  }
+  isEditing.value = true
   showAddShoeDialog.value = true
 }
 
-const manageBranches = (shoe) => {
-  selectedShoe.value = shoe
-  selectedShoeBranches.value = [...shoe.branches]
-  showManageBranchesDialog.value = true
-}
-
-const updateShoeBranches = () => {
-  if (selectedShoe.value) {
-    selectedShoe.value.branches = [...selectedShoeBranches.value]
-    showManageBranchesDialog.value = false
-  }
-}
-
 const toggleShoeStatus = (shoe) => {
-  shoe.is_deleted = !shoe.is_deleted
-  console.log(`Shoe ${shoe.id} ${shoe.is_deleted ? 'archived' : 'activated'}`)
+  statusActionShoe.value = shoe
+  showStatusDialog.value = true
 }
 
-const saveShoe = () => {
-  if (newShoe.value.name && newShoe.value.brand_id && newShoe.value.category_id && newShoe.value.price > 0) {
-    const shoe = {
-      id: shoes.value.length + 1,
-      ...newShoe.value,
-      brand: brands.find(b => b.id === newShoe.value.brand_id)?.name,
-      category: categories.find(c => c.id === newShoe.value.category_id)?.name,
-      images: [],
-      created_at: new Date().toISOString().split('T')[0],
-      updated_at: new Date().toISOString().split('T')[0]
+const saveShoe = async () => {
+  loadingSaveShoe.value = true
+  try {
+    const shoeData = {
+      name: currentShoe.value.name,
+      brand_id: currentShoe.value.brand_id,
+      price: Number(currentShoe.value.price)
     }
 
-    // Temp stack adding stuff
-    shoes.value.push(shoe)
+    if (isEditing.value) {
+      // For update, include is_deleted and use shoe_id
+      shoeData.is_deleted = Boolean(currentShoe.value.is_deleted)
+      await SAService.updateShoe(currentShoe.value.shoe_id, shoeData)
+      toast.add({ 
+        severity: 'success', 
+        summary: 'Success', 
+        detail: 'Shoe updated successfully', 
+        life: 3000 
+      })
+    } else {
+      // For add, don't include is_deleted
+      await SAService.addShoe(shoeData)
+      toast.add({ 
+        severity: 'success', 
+        summary: 'Success', 
+        detail: 'Shoe added successfully', 
+        life: 3000 
+      })
+    }
+    
     showAddShoeDialog.value = false
-    resetNewShoe()
+    resetCurrentShoe()
+    await fetchShoes()
+    
+  } catch (error) {
+    console.error('Error saving shoe:', error)
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: error.response?.data?.message || `Failed to ${isEditing.value ? 'update' : 'add'} shoe`, 
+      life: 3000 
+    })
+  } finally {
+    loadingSaveShoe.value = false
   }
 }
 
-const resetNewShoe = () => {
-  newShoe.value = {
+const cancelShoeDialog = () => {
+  showAddShoeDialog.value = false
+  resetCurrentShoe()
+}
+
+const resetCurrentShoe = () => {
+  currentShoe.value = {
+    shoe_id: null,
     name: '',
     brand_id: null,
-    category_id: null,
     price: 0,
-    availableSizes: [],
-    branches: [],
     is_deleted: false
   }
+  isEditing.value = false
 }
 
 // Initialize data
 onMounted(() => {
-  shoes.value = sampleShoes
+  fetchShoes()
+  fetchBrands()
 })
 </script>
 
@@ -598,14 +437,6 @@ onMounted(() => {
 
 .restore-btn.p-button:hover {
   background-color: rgba(22, 163, 74, 0.1) !important;
-}
-
-.branch-btn.p-button {
-  color: var(--color-oxford-blue) !important;
-}
-
-.branch-btn.p-button:hover {
-  background-color: rgba(16, 37, 64, 0.1) !important;
 }
 
 .cancel-btn.p-button {

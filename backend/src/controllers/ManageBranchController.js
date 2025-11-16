@@ -46,7 +46,6 @@ export const getUsers = async (req, res) => {
 
         res.status(200).json({ users: formattedUsers });
     } catch (error) {
-        console.error("Database error:", error);
         res.status(500).json({ message: "Server error", error: error.message });
     }
 }
@@ -116,8 +115,8 @@ export const addBranch = async (req, res) => {
             city_id 
         } = req.body;
 
+        // Use the stored procedure
         const knex = Branch.knex();
-        
         await knex.raw('CALL add_branch(?, ?, ?, ?)', [
             branch_name,
             addressline1 || '',
@@ -125,11 +124,12 @@ export const addBranch = async (req, res) => {
             city_id
         ]);
 
+        const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         await logEvent({
           user_id: res.user?.user_id || null,
           role_id: res.user?.role_id || null,
-          action: 'BRANCH INSERT SUCCESS',
+          action: 'BRANCH_INSERT_SUCCESS',
           description: `Branch ${branch_name} was successfully inserted`,
           ip
         })
@@ -137,12 +137,14 @@ export const addBranch = async (req, res) => {
         res.status(201).json({ message: "Branch added successfully" });
 
     } catch (error) {
-      await logEvent({
-          user_id: res.user?.user_id || null,
-          role_id: res.user?.role_id || null,
-          action: 'BRANCH INSERT FAILURE',
-          description: `Branch ${branch_name} was insertion failed: ${error.message}`,
-          ip
+        const forwarded = req.get("x-forwarded-for");
+        const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
+        await logEvent({
+            user_id: res.user?.user_id || null,
+            role_id: res.user?.role_id || null,
+            action: 'BRANCH_INSERT_FAILURE',
+            description: `Branch ${branch_name} was insertion failed: ${error.message}`,
+            ip
         })
 
         res.status(500).json({ message: "Server error", error: error.message });
@@ -161,6 +163,7 @@ export const addUser = async (req, res) => {
             role_id = 2
         } = req.body;
 
+        // Hash password ofc
         hashPassword(pw_hash);
 
         // Check if email already exists
@@ -183,12 +186,12 @@ export const addUser = async (req, res) => {
                 is_deleted: 0
             })
 
-        // Log the event
-        const ip = req.ip || (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(",")[0].trim() : null);
+        const forwarded = req.get("x-forwarded-for");
+        const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'USER INSERT SUCCESS',
+            action: 'USER_INSERT_SUCCESS',
             description: `User ${fname} ${lname} (${email}) with ID ${userId} was successfully inserted`,
             ip
         });
@@ -196,11 +199,12 @@ export const addUser = async (req, res) => {
         res.status(201).json({ message: "User added successfully", });
 
     } catch (error) {
-        const ip = req.ip || (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(",")[0].trim() : null);
+        const forwarded = req.get("x-forwarded-for");
+        const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'USER INSERT FAILURE',
+            action: 'USER_INSERT_FAILURE',
             description: `User ${req.body.fname} ${req.body.lname} insertion failed: ${error.message}`,
             ip
         });
@@ -220,7 +224,7 @@ export const updateBranch = async (req, res) => {
             is_deleted 
         } = req.body;
 
-        // Convert is_deleted to proper
+        // Convert is_deleted to proper tinyInt for DB
         const isDeletedValue = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null;
 
         const knex = Branch.knex();
@@ -235,12 +239,13 @@ export const updateBranch = async (req, res) => {
             isDeletedValue
         ]);
 
+        const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         // Maybe make this more detailed later?
         await logEvent({
           user_id: res.user?.user_id || null,
           role_id: res.user?.role_id || null,
-          action: 'BRANCH UPDATE SUCCESS',
+          action: 'BRANCH_UPDATE_SUCCESS',
           description: `Branch ${branch_name} was successfully updated`,
           ip
         })
@@ -248,12 +253,14 @@ export const updateBranch = async (req, res) => {
         res.status(200).json({ message: "Branch updated successfully" });
 
     } catch (error) {
-      await logEvent({
-          user_id: res.user?.user_id || null,
-          role_id: res.user?.role_id || null,
-          action: 'BRANCH UPDATE FAILED',
-          description: `Branch ${branch_name} updating failed: ${error.message}`,
-          ip
+        const forwarded = req.get("x-forwarded-for");
+        const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
+        await logEvent({
+            user_id: res.user?.user_id || null,
+            role_id: res.user?.role_id || null,
+            action: 'BRANCH_UPDATE_FAILED',
+            description: `Branch ${branch_name} updating failed: ${error.message}`,
+            ip
         })
 
         res.status(500).json({ message: "Server error", error: error.message });
@@ -274,12 +281,12 @@ export const updateUser = async (req, res) => {
             is_deleted
         } = req.body;
 
-        // Convert is_deleted to proper MySQL boolean
+        // Convert is_deleted to proper tinyInt for DB
         const isDeletedValue = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null;
 
         const knex = User.knex();
         
-        // Call the stored procedure with correct parameter order
+        // Call the stored procedure
         await knex.raw('CALL update_user(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             userId,
             email || null,
@@ -297,17 +304,19 @@ export const updateUser = async (req, res) => {
         await logEvent({
           user_id: res.user?.user_id || null,
           role_id: res.user?.role_id || null,
-          action: 'USER UPDATE SUCCESS',
+          action: 'USER_UPDATE_SUCCESS',
           description: `User ${fname, mname, lname} was successfully updated`,
           ip
         })
 
         res.status(200).json({ message: "User updated successfully" });
     } catch (error) {
+        const forwarded = req.get("x-forwarded-for");
+        const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         await logEvent({
           user_id: res.user?.user_id || null,
           role_id: res.user?.role_id || null,
-          action: 'USER UPDATE FAILED',
+          action: 'USER_UPDATE_FAILED',
           description: `User ${fname, mname, lname} updating failed: ${error.message}`,
           ip
         })
