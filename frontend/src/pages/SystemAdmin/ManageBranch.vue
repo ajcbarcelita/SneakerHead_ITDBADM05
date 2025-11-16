@@ -512,9 +512,11 @@ const userRoleOptionsForEdit = ref([
 
 // Available branches for assignment
 const availableBranchesForEdit = computed(() => {
+  const activeBranches = branches.value.filter(branch => !branch.is_deleted);
+  
   return [
     { label: 'Unassigned', value: null },
-    ...(branches.value.map(branch => ({
+    ...(activeBranches.map(branch => ({
       label: branch.branch_name,
       value: branch.address_id
     })) || [])
