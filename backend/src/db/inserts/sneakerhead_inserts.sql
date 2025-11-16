@@ -107,7 +107,7 @@ INSERT INTO `sneakerhead`.`shoe_categories`
 (3, 6),
 (3, 9),
 (4, 1),
-(4, 3)
+(4, 3),
 (5, 1),
 (5, 3),
 (5, 5),
