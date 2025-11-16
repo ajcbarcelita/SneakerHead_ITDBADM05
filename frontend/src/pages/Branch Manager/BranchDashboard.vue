@@ -93,6 +93,7 @@ import Dropdown from 'primevue/dropdown'
 import Chart from 'primevue/chart'
 import { ref, watch, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
+import BMService from '@/services/BMService.js'
 
 // Auth store for branch_id
 const auth = useAuthStore()
@@ -131,11 +132,12 @@ async function fetchMetrics() {
       branch: auth.user?.branch_id || 1  
     }
 
-    const response = await fetch(`http://localhost:3000/BMmetrics?${new URLSearchParams(params)}`)
-    if (!response.ok) throw new Error('Failed to fetch metrics')
-    
-    const data = await response.json()
+    // Replaced direct fetch with BMService call
+    const response = await BMService.getMetrics(params)
+
+    const data = response.data
     metrics.value = data
+  
     updateChart()
   } catch (error) {
     console.error('Failed to fetch metrics:', error)
