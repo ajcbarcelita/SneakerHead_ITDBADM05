@@ -52,8 +52,8 @@
         <Card class="shadow-md">
           <template #title>Highest-Selling Product ({{ rangeLabel }})</template>
           <template #content>
-            <p class="text-2xl font-semibold text-giants-orange">{{ metrics.topProduct?.name || 'N/A' }}</p>
-            <p class="text-gray-600 text-sm mt-2">₱{{ (metrics.topProduct?.sales || 0).toLocaleString() }} total sales
+            <p class="text-2xl font-semibold text-giants-orange">{{ metrics.topProduct?.product_name || 'N/A' }}</p>
+            <p class="text-gray-600 text-sm mt-2">{{ (metrics.topProduct?.total_sold || 0).toLocaleString() }} total sales
             </p>
           </template>
         </Card>
@@ -61,8 +61,8 @@
         <Card class="shadow-md">
           <template #title>Top Customer ({{ rangeLabel }})</template>
           <template #content>
-            <p class="text-2xl font-semibold text-giants-orange">{{ metrics.topCustomer?.name || 'N/A' }}</p>
-            <p class="text-gray-600 text-sm mt-2">₱{{ (metrics.topCustomer?.spent || 0).toLocaleString() }} spent</p>
+            <p class="text-2xl font-semibold text-giants-orange">{{ metrics.topCustomer?.full_name  || 'N/A' }}</p>
+            <p class="text-gray-600 text-sm mt-2">{{ formattedTopCust }} spent</p>
           </template>
         </Card>
       </div>
@@ -120,6 +120,8 @@ const chartOptions = ref()
 
 const rangeLabel = computed(() => selectedRange.value?.label || 'Daily')
 const formattedTotalSales = computed(() => `₱${metrics.value.totalSales.toLocaleString()}`)
+const formattedTopCust = computed(() => `₱${Number(metrics.value.topCustomer?.total_spent || 0).toLocaleString()}`)
+
 
 // Fetch metrics from DB for the logged-in branch
 async function fetchMetrics() {
@@ -127,7 +129,7 @@ async function fetchMetrics() {
   try {
     const response = await BMService.getMetrics(
       selectedRange.value.value,
-      branchName.value
+      branchName.value,
     )
     const data = await response.data
 
