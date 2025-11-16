@@ -1,12 +1,13 @@
 import express from "express";
 import { metrics } from "../controllers/DashboardController.js";
-import { getUsers, 
-        getBranches, 
-        updateUser, 
-        getCities,
-        addBranch,
-        updateBranch,
-        addUser
+import {
+  getUsers,
+  getBranches,
+  updateUser,
+  getCities,
+  addBranch,
+  updateBranch,
+  addUser,
 } from "../controllers/BranchManagementController.js";
 import { authenticateUser } from "../middlewares/authMiddleware.js";
 

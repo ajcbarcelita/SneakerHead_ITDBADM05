@@ -1,12 +1,11 @@
 import { ValidationError } from "objection";
 
-import  User from "../models/User.js";
+import User from "../models/User.js";
 import { validateRegisterData } from "../services/validateRegister.js";
 import { registerUserService } from "../services/registerUserService.js";
 import { loginUserService } from "../services/loginUserService.js";
-import { createAccessToken }from "../utils/jwt.js";
+import { createAccessToken } from "../utils/jwt.js";
 import { logEvent } from "../services/logEventService.js";
-
 
 export const registerUser = async (req, res) => {
   try {
@@ -57,15 +56,15 @@ export const loginUser = async (req, res) => {
         await logEvent({
           user_id: result.user?.user_id || null,
           role_id: result.user?.role_id || null,
-          action: 'LOGIN_FAILED',
+          action: "LOGIN_FAILED",
           description: `Failed login attempt for email: ${email}`,
-          ip
-        })
+          ip,
+        });
       } catch (logErr) {
         console.error("logEvent failed:", logErr?.message ?? logErr);
       }
       return res.status(401).json({ message: result.message });
-    } 
+    }
 
     const user = result.user;
     const payload = {
@@ -79,12 +78,12 @@ export const loginUser = async (req, res) => {
 
     try {
       await logEvent({
-      user_id: user.user_id,
-      role_id: user.role_id,
-      action: 'LOGIN_SUCCESS',
-      description: `Successful login for email: ${email}`,
-      ip
-    })
+        user_id: user.user_id,
+        role_id: user.role_id,
+        action: "LOGIN_SUCCESS",
+        description: `Successful login for email: ${email}`,
+        ip,
+      });
     } catch (logErr) {
       console.error("logEvent failed:", logErr?.message ?? logErr);
     }
