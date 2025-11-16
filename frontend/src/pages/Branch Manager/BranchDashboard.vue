@@ -9,7 +9,7 @@
     <main class="flex-1 container mx-auto px-6 py-6 space-y-8">
       <!-- FILTERS -->
       <div class="flex flex-col md:flex-row justify-between items-center">
-        <h1 class="text-2xl font-bold text-charcoal uppercase">Dashboard Overview</h1>
+        <h1 class="text-2xl font-bold text-charcoal uppercase">Dashboard Overview - {{ branchName }}</h1>
 
         <div class="flex items-center space-x-3">
           <span class="font-semibold text-charcoal">Filter by:</span>
@@ -53,7 +53,8 @@
           <template #title>Highest-Selling Product ({{ rangeLabel }})</template>
           <template #content>
             <p class="text-2xl font-semibold text-giants-orange">{{ metrics.topProduct?.name || 'N/A' }}</p>
-            <p class="text-gray-600 text-sm mt-2">₱{{ (metrics.topProduct?.sales || 0).toLocaleString() }} total sales</p>
+            <p class="text-gray-600 text-sm mt-2">₱{{ (metrics.topProduct?.sales || 0).toLocaleString() }} total sales
+            </p>
           </template>
         </Card>
 
@@ -92,13 +93,11 @@ import Card from 'primevue/card'
 import Dropdown from 'primevue/dropdown'
 import Chart from 'primevue/chart'
 import { ref, watch, onMounted, computed } from 'vue'
-import { useAuthStore } from '@/stores/authStore'
 import BMService from '@/services/BMService.js'
 
-// Auth store for branch_id
-const auth = useAuthStore()
+const managerBranchId = ref(null)
+const branchName = ref('')
 
-// Reactive data
 const selectedRange = ref({ label: 'Daily', value: 'daily' })
 const metrics = ref({
   totalSales: 0,
@@ -119,7 +118,6 @@ const timeRanges = [
 const chartData = ref()
 const chartOptions = ref()
 
-// Computed properties
 const rangeLabel = computed(() => selectedRange.value?.label || 'Daily')
 const formattedTotalSales = computed(() => `₱${metrics.value.totalSales.toLocaleString()}`)
 
@@ -127,24 +125,33 @@ const formattedTotalSales = computed(() => `₱${metrics.value.totalSales.toLoca
 async function fetchMetrics() {
   loading.value = true
   try {
-    const params = {
-      period: selectedRange.value.value,
-      branch: auth.user?.branch_id || 1  
-    }
+    const response = await BMService.getMetrics(
+      selectedRange.value.value,
+      branchName.value
+    )
+    const data = await response.data
 
-    // Replaced direct fetch with BMService call
-    const response = await BMService.getMetrics(params)
-
-    const data = response.data
     metrics.value = data
-  
-    updateChart()
+
+    console.log('Fetched metrics:', data)
+    updateChart();
   } catch (error) {
     console.error('Failed to fetch metrics:', error)
     // Reset metrics on error
     metrics.value = { totalSales: 0, newOrders: 0, topProduct: {}, topCustomer: {}, lowStockItems: 0, chartData: [] }
   } finally {
     loading.value = false
+  }
+}
+
+// Load manager's branch assignment
+const loadBranchAssignment = async () => {
+  try {
+    const res = await BMService.getBranchAssignment()
+    managerBranchId.value = res?.data?.branchId ?? null
+    branchName.value = res?.data?.branchName ?? ''
+  } catch (err) {
+    console.warn('Failed to load branch assignment:', err)
   }
 }
 
@@ -156,10 +163,10 @@ function updateChart() {
   const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color')
 
   const backendData = metrics.value.chartData || []
-  
+
   // Extract labels for x axis from backend data
   const labels = backendData.map(item => item.period)
-  
+
   // Create datasets for Sales and Orders
   const salesData = backendData.map(item => item.sales)
   const ordersData = backendData.map(item => item.orders)
@@ -191,13 +198,13 @@ function updateChart() {
     maintainAspectRatio: false,
     aspectRatio: 0.6,
     plugins: {
-      legend: { 
+      legend: {
         labels: { color: textColor },
         position: 'top'
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             let label = context.dataset.label || '';
             if (label === 'Sales') {
               return `Sales: ₱${context.parsed.y.toLocaleString()}`
@@ -211,7 +218,7 @@ function updateChart() {
     },
     scales: {
       x: {
-        ticks: { 
+        ticks: {
           color: textColorSecondary,
           maxTicksLimit: 10
         },
@@ -221,9 +228,9 @@ function updateChart() {
         type: 'linear',
         display: true,
         position: 'left',
-        ticks: { 
+        ticks: {
           color: textColorSecondary,
-          callback: function(value) {
+          callback: function (value) {
             return '₱' + value.toLocaleString()
           }
         },
@@ -250,9 +257,9 @@ function updateChart() {
   }
 }
 
-// Initialize data on mount
-onMounted(() => {
-  fetchMetrics()
+onMounted(async () => {
+  await loadBranchAssignment()
+  await fetchMetrics()
 })
 
 // Watchers to refetch data on filter change

@@ -23,9 +23,11 @@ const BMService = {
   },
 
   // Get Branch Dashboard Metrics
-  async getMetrics(params) {
+  async getMetrics(period, branchName) {
     try {
-      const response = await api.get('/BMmetrics', { params });
+      const response = await api.get('/BMmetrics', {
+        params: { period, branchName }
+      });
       return response;
     } catch (error) {
       throw error;
@@ -46,14 +48,14 @@ const BMService = {
 
   // Update sizes for a shoe
   async updateStock(shoeId, payload) {
-  try {
-    if (!shoeId) throw new Error('Missing shoeId!')
-    const response = await api.put(`/ManageStock/${shoeId}`, payload)
-    return response.data
-  } catch (error) {
-    throw error
+    try {
+      if (!shoeId) throw new Error('Missing shoeId!')
+      const response = await api.put(`/ManageStock/${shoeId}`, payload)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
-}
 
 
 }
