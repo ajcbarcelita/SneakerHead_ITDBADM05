@@ -129,7 +129,7 @@ export const addBranch = async (req, res) => {
         await logEvent({
           user_id: res.user?.user_id || null,
           role_id: res.user?.role_id || null,
-          action: 'BRANCH INSERT SUCCESS',
+          action: 'BRANCH_INSERT_SUCCESS',
           description: `Branch ${branch_name} was successfully inserted`,
           ip
         })
@@ -142,7 +142,7 @@ export const addBranch = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'BRANCH INSERT FAILURE',
+            action: 'BRANCH_INSERT_FAILURE',
             description: `Branch ${branch_name} was insertion failed: ${error.message}`,
             ip
         })
@@ -191,7 +191,7 @@ export const addUser = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'USER INSERT SUCCESS',
+            action: 'USER_INSERT_SUCCESS',
             description: `User ${fname} ${lname} (${email}) with ID ${userId} was successfully inserted`,
             ip
         });
@@ -204,7 +204,7 @@ export const addUser = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'USER INSERT FAILURE',
+            action: 'USER_INSERT_FAILURE',
             description: `User ${req.body.fname} ${req.body.lname} insertion failed: ${error.message}`,
             ip
         });
@@ -245,7 +245,7 @@ export const updateBranch = async (req, res) => {
         await logEvent({
           user_id: res.user?.user_id || null,
           role_id: res.user?.role_id || null,
-          action: 'BRANCH UPDATE SUCCESS',
+          action: 'BRANCH_UPDATE_SUCCESS',
           description: `Branch ${branch_name} was successfully updated`,
           ip
         })
@@ -258,7 +258,7 @@ export const updateBranch = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'BRANCH UPDATE FAILED',
+            action: 'BRANCH_UPDATE_FAILED',
             description: `Branch ${branch_name} updating failed: ${error.message}`,
             ip
         })
@@ -304,7 +304,7 @@ export const updateUser = async (req, res) => {
         await logEvent({
           user_id: res.user?.user_id || null,
           role_id: res.user?.role_id || null,
-          action: 'USER UPDATE SUCCESS',
+          action: 'USER_UPDATE_SUCCESS',
           description: `User ${fname, mname, lname} was successfully updated`,
           ip
         })
@@ -316,7 +316,7 @@ export const updateUser = async (req, res) => {
         await logEvent({
           user_id: res.user?.user_id || null,
           role_id: res.user?.role_id || null,
-          action: 'USER UPDATE FAILED',
+          action: 'USER_UPDATE_FAILED',
           description: `User ${fname, mname, lname} updating failed: ${error.message}`,
           ip
         })

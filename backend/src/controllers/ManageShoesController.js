@@ -78,7 +78,7 @@ export const addShoe = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'SHOE INSERT SUCCESS',
+            action: 'SHOE_INSERT_SUCCESS',
             description: `Added shoe: ${name}`,
             ip
         });
@@ -91,7 +91,7 @@ export const addShoe = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'SHOE INSERT FAILED',
+            action: 'SHOE_INSERT_FAILED',
             description: `Failed to add: ${req.body.name}`,
             ip
         });
@@ -132,7 +132,7 @@ export const updateShoe = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'SHOE UPDATE SUCCESS',
+            action: 'SHOE_UPDATE_SUCCESS',
             description: `Updated shoe: ${shoeId}`,
             ip
         });
@@ -144,7 +144,7 @@ export const updateShoe = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'SHOE UPDATE FAILED',
+            action: 'SHOE_UPDATE_FAILED',
             description: `Failed to update: ${req.params.shoeId}`,
             ip
         });

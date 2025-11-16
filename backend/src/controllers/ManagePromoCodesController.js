@@ -89,7 +89,7 @@ export const addPromoCode = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'PROMO_CODE INSERT SUCCESS',
+            action: 'PROMO_CODE_INSERT_SUCCESS',
             description: `Added promo: ${promo_code}`,
             ip
         });
@@ -101,7 +101,7 @@ export const addPromoCode = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'PROMO_CODE INSERT FAILED',
+            action: 'PROMO_CODE_INSERT_FAILED',
             description: `Failed to add: ${req.body.promo_code}`,
             ip
         });
@@ -166,7 +166,7 @@ export const updatePromoCode = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'PROMO_CODE UPDATE SUCCESS',
+            action: 'PROMO_CODE_UPDATE_SUCCESS',
             description: `Updated promo: ${promoCode}`,
             ip
         });
@@ -179,7 +179,7 @@ export const updatePromoCode = async (req, res) => {
         await logEvent({
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
-            action: 'PROMO_CODE UPDATE FAILED',
+            action: 'PROMO_CODE_UPDATE_FAILED',
             description: `Failed to update: ${req.params.promoCode}`,
             ip
         });

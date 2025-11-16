@@ -137,6 +137,15 @@ const SAService = {
             throw error;
         }
     },
+
+    async getLogs() {
+        try {
+            const response = await api.get('/logs');
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export default SAService;

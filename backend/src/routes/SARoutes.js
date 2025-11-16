@@ -7,7 +7,7 @@ import { getUsers,
         addBranch,
         updateBranch,
         addUser
-} from "../controllers/BranchManagementController.js";
+} from "../controllers/ManageBranchController.js";
 import { getPromoCodes,
          addPromoCode,
          updatePromoCode
@@ -17,6 +17,7 @@ import { getShoes,
         updateShoe,
         getBrands
 } from "../controllers/ManageShoesController.js";
+import { getLogs } from "../controllers/ViewLogsController.js";
 import { authenticateUser } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -43,6 +44,9 @@ router.get("/shoes", authenticateUser(role), getShoes);
 
 // Fetch all brands
 router.get("/brands", authenticateUser(role), getBrands);
+
+// Fetch all logs
+router.get("/logs", authenticateUser(role), getLogs);
 
 // Add a new user
 router.post("/users", authenticateUser(role), addUser);
