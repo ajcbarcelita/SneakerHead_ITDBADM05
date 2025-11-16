@@ -21,7 +21,7 @@
 
             <!-- STOCK TABLE -->
             <div class="card">
-                <DataTable :value="filteredShoes" tableStyle="min-width: 75rem" :paginator="true" :rows="10"
+                <DataTable :value="filteredShoes" :loading="loading" tableStyle="min-width: 75rem" :paginator="true" :rows="10" 
                     :rowsPerPageOptions="[5, 10, 20, 50]">
                     <!-- IMAGE -->
                     <Column header="Image">
@@ -118,7 +118,7 @@
                     <div class="space-y-3">
                         <div v-for="size in selectedShoe.sizes" :key="size.size" class="flex items-center gap-8">
                             <span class="font-medium underline w-45">Size {{ size.size }}</span>
-                            <InputNumber v-model="size.quantity" :min="0" :max="67" class="w-24" :useGrouping="false" />
+                            <InputNumber v-model="size.quantity" :min="0" :max="67" class="w-24" :useGrouping="false"/>
                         </div>
                     </div>
                 </div>
@@ -164,11 +164,8 @@ const availableCount = computed(() => shoes.value.reduce((count, s) => { return 
 const filteredShoes = computed(() => {
     if (!searchQuery.value) return shoes.value
     const q = searchQuery.value.toLowerCase()
-    return shoes.value.filter(
-        shoe => shoe.name.toLowerCase().includes(q) || shoe.category.toLowerCase().includes(q)
-    )
+    return shoes.value.filter( shoe => shoe.name.toLowerCase().includes(q) )
 })
-
 
 const openDialog = (shoe) => {
     selectedShoe.value = JSON.parse(JSON.stringify(shoe))
@@ -227,6 +224,8 @@ const loadShoes = async () => {
             sizes: (s.sizes || []).map(sz => ({ ...sz, quantity: Number(sz.quantity) || 0 })),
             totalStock: s.totalStock ?? (s.sizes ? s.sizes.reduce((sum, sz) => sum + Number(sz.quantity || 0), 0) : 0)
         }))
+
+        console.log('Loaded shoes:', shoes.value)
     } catch (err) {
         console.error('Failed to load shoes:', err)
     }
