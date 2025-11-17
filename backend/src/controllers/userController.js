@@ -55,6 +55,7 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user.user_id
+    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip || null
     const { fname, mname, lname, email, addressline1, addressline2, province_id, city_id } = req.body
 
     // Validate required fields
@@ -65,7 +66,7 @@ export const updateUserProfile = async (req, res) => {
     const knex = User.knex();
 
     // Call the stored procedure
-    await knex.raw('CALL update_user_details(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    await knex.raw('CALL update_user_details(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
       userId,
       fname || null,
       mname || null,
@@ -75,6 +76,7 @@ export const updateUserProfile = async (req, res) => {
       addressline2 || null,
       province_id || null,
       city_id || null,
+      ip
     ])
     // Use transaction for atomicity
     const result = await knex.transaction(async (trx) => {
