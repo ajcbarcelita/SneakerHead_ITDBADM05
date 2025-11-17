@@ -73,7 +73,7 @@
           <template #title>Branch with Most Orders (Today)</template>
           <template #content>
             <p class="text-2xl font-semibold text-giants-orange">{{ metrics.dailyLeader}}</p>
-            <p class="text-gray-600 text-sm mt-2">{{ metrics.dailyLeaderOrders }} orders today</p>
+            <p class="text-gray-600 text-sm mt-2">{{ metrics.dailyLeaderOrders }}</p>
           </template>
         </Card>
       </div>
