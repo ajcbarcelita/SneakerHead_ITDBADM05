@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-white-smoke font-Montserrat">
+  <div class="min-h-screen flex flex-col bg-white-smoke font-Montserrat">
     <!-- Navigation Bar -->
     <NavBar />
 
     <!-- Main Content -->
-    <main class="container mx-auto px-6 py-8">
+    <main class="container mx-auto px-6 py-8 flex-1">
       <!-- Page Title -->
       <div class="mb-6">
         <h1 class="text-3xl font-bold text-oxford-blue mb-2">My Profile</h1>
@@ -45,7 +45,9 @@
     </main>
 
     <!-- Footer -->
-    <Footer />
+    <footer>
+      <Footer />
+    </footer>
   </div>
 </template>
 
