@@ -15,6 +15,7 @@ import BMRoutes from "./routes/BMRoutes.js";
 import SARoutes from "./routes/SARoutes.js";
 import shoeRoutes from "./routes/shoeRoutes.js";
 import branchRoutes from "./routes/branchRoutes.js";
+import currencyRoutes from "./routes/currencyRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/branches", branchRoutes);
+app.use("/currencies", currencyRoutes);
+
 
 // attach db to req for easy access in routes
 app.locals.db = db;
@@ -44,7 +49,6 @@ app.use("/", userRoutes);
 app.use("/", BMRoutes);
 app.use("/", SARoutes);
 app.use("/shoes", shoeRoutes);
-app.use("/branches", branchRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

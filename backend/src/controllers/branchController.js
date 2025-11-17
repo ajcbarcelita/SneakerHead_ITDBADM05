@@ -11,3 +11,12 @@ export async function getBranchById(req, res) {
   }
 }
 
+export async function getAllBranches(req, res) {
+  try {
+    const branches = await Branch.query(); // Objection/Knex query
+    res.json(branches);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}

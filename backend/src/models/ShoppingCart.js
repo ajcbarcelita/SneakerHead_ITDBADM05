@@ -2,6 +2,7 @@ import { Model } from "objection";
 import User from "./User.js";
 import Branch from "./Branch.js";
 import ShoppingCartItem from "./ShoppingCartItem.js";
+import RefCurrency from "./RefCurrency.js";
 
 export default class ShoppingCart extends Model {
   static tableName = "shopping_cart";
@@ -14,6 +15,8 @@ export default class ShoppingCart extends Model {
       cart_id: { type: "integer" },
       user_id: { type: "integer" },
       branch_id: { type: "integer" },
+      currency_code: { type: "string", maxLength: 3, default: "PHP" },
+      currency_rate_to_peso: { type: "number", default: 1.00 },
     },
   };
 
@@ -33,6 +36,14 @@ export default class ShoppingCart extends Model {
         join: {
           from: "shopping_cart.branch_id",
           to: "branches.branch_id",
+        },
+      },
+      currency: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: RefCurrency,
+        join: {
+          from: "shopping_cart.currency_code",
+          to: "ref_currencies.currency_code",
         },
       },
       items: {

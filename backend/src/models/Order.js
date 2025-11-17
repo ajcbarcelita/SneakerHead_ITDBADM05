@@ -3,6 +3,7 @@ import User from "./User.js";
 import Branch from "./Branch.js";
 import PromoCode from "./PromoCode.js";
 import OrderItem from "./OrderItem.js";
+import RefCurrency from "./RefCurrency.js";
 
 export default class Order extends Model {
   static tableName = "orders";
@@ -10,13 +11,16 @@ export default class Order extends Model {
 
   static jsonSchema = {
     type: "object",
-    required: ["user_id", "branch_id", "total_price"],
+    required: ["user_id", "branch_id", "total_price", "total_price_conversion"],
     properties: {
       order_id: { type: "integer" },
       user_id: { type: "integer" },
       branch_id: { type: "integer" },
-      total_price: { type: "number" },
       promo_code: { type: ["string", "null"], maxLength: 12 },
+      total_price: { type: "number" },
+      currency_code: { type: "string", maxLength: 3, default: "PHP" },
+      currency_rate_to_peso: { type: "number", default: 1.00 },
+      total_price_conversion: { type: "number" },
       created_at: { type: "string", format: "date-time" },
     },
   };
@@ -44,6 +48,14 @@ export default class Order extends Model {
       join: {
         from: "orders.promo_code",
         to: "promo_codes.promo_code",
+      },
+    },
+    currency: {
+      relation: Model.BelongsToOneRelation,
+      modelClass: RefCurrency,
+      join: {
+        from: "orders.currency_code",
+        to: "ref_currencies.currency_code",
       },
     },
     orderItems: {

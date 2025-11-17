@@ -8,6 +8,13 @@
     - shopping_cart (for each user, make a shopping cart for all branches)
 */
 
+-- ref_currencies inserts
+INSERT INTO `sneakerhead`.`ref_currencies` (`currency_code`, `currency_name`) VALUES
+('PHP', 'Philippine Peso'),
+('USD', 'United States Dollar'),
+('EUR', 'Euro'),
+('CNY', 'Chinese Yuan');
+
 -- address inserts (first for customers), branches will follow
 INSERT INTO addresses (addressline1, addressline2, city_id) VALUES
 ('2401 Taft Ave.', 'Malate', 1616),
