@@ -14,6 +14,7 @@ import userRoutes from "./routes/userRoutes.js";
 import BMRoutes from "./routes/BMRoutes.js";
 import SARoutes from "./routes/SARoutes.js";
 import shoeRoutes from "./routes/shoeRoutes.js";
+import branchRoutes from "./routes/branchRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -43,7 +44,7 @@ app.use("/", userRoutes);
 app.use("/", BMRoutes);
 app.use("/", SARoutes);
 app.use("/shoes", shoeRoutes);
-
+app.use("/branches", branchRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

@@ -88,7 +88,7 @@ export async function getOrders(req, res) {
 
 export async function getStocks(req, res) {
     try {
-        const branch_id = parseInt(req.query.branch_id);
+        const branch_id = req.query.branch_id;
         const knex = Shoe.knex();
 
         const results = await transaction(knex, async (trx) => {
@@ -96,7 +96,6 @@ export async function getStocks(req, res) {
             return rows[0];
         });
 
-        // Parse the sizes_json string into actual objects
         const formatted = results.map((shoe) => ({
             id: shoe.id,
             name: shoe.name,

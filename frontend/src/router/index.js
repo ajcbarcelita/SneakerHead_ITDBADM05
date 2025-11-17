@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore'
 import LandingPage from '@/pages/LandingPage.vue'
 import LoginPage from '@/pages/LoginPage.vue'
 import RegisterPage from '@/pages/RegisterPage.vue'
+import FullShoeInfo from '@/pages/ShoeInfoPage.vue'
 import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
 import CheckoutPage from '@/pages/CheckoutPage.vue'
 
@@ -45,6 +46,11 @@ const router = createRouter({
       path: '/',
       name: 'Landing',
       component: LandingPage
+    },
+    {
+      path: '/shoes/:shoe_id/branch/:branch_id',
+      name: 'FullShoeInfo',
+      component: FullShoeInfo
     },
     // Auth Routes
     {
