@@ -206,7 +206,7 @@ DROP TABLE IF EXISTS `sneakerhead`.`branch_admin_assignments` ;
 
 SHOW WARNINGS;
 CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_admin_assignments` (
-  `branch_assignment` INT UNSIGNED NOT NULL,
+  `branch_assignment` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `staff_id` INT UNSIGNED NOT NULL,
   `branch_id` INT UNSIGNED NOT NULL,
   `role_at_branch` INT UNSIGNED NOT NULL,
@@ -345,6 +345,20 @@ AUTO_INCREMENT = 1;
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
+-- Table `sneakerhead`.`ref_currencies`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`ref_currencies` ;
+
+SHOW WARNINGS;
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`ref_currencies` (
+  `currency_code` CHAR(3) NOT NULL,
+  `currency_name` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`currency_code`))
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
 -- Table `sneakerhead`.`shopping_cart`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `sneakerhead`.`shopping_cart` ;
@@ -354,9 +368,12 @@ CREATE TABLE IF NOT EXISTS `sneakerhead`.`shopping_cart` (
   `cart_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` INT UNSIGNED NOT NULL,
   `branch_id` INT UNSIGNED NOT NULL,
+  `currency_code` CHAR(3) NOT NULL DEFAULT 'PHP',
+  `currency_rate_to_peso` DECIMAL(12,6) NOT NULL DEFAULT 1.00,
   PRIMARY KEY (`cart_id`),
   INDEX `scFK_users_idx` (`user_id` ASC) VISIBLE,
   INDEX `scFK_branches_idx` (`branch_id` ASC) VISIBLE,
+  INDEX `scFK_refcurrencies_idx` (`currency_code` ASC) VISIBLE,
   CONSTRAINT `scFK_users`
     FOREIGN KEY (`user_id`)
     REFERENCES `sneakerhead`.`users` (`user_id`)
@@ -365,6 +382,11 @@ CREATE TABLE IF NOT EXISTS `sneakerhead`.`shopping_cart` (
   CONSTRAINT `scFK_branches`
     FOREIGN KEY (`branch_id`)
     REFERENCES `sneakerhead`.`branches` (`branch_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `scFK_refcurrencies`
+    FOREIGN KEY (`currency_code`)
+    REFERENCES `sneakerhead`.`ref_currencies` (`currency_code`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
@@ -437,13 +459,17 @@ CREATE TABLE IF NOT EXISTS `sneakerhead`.`orders` (
   `order_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` INT UNSIGNED NOT NULL,
   `branch_id` INT UNSIGNED NOT NULL COMMENT 'Note that, in the frontend, we will allow ordering from multiple branches, however, orders must only be one branch, so need ihiwalay',
-  `total_price` DECIMAL(12,2) NOT NULL,
   `promo_code` VARCHAR(12) NULL,
+  `total_price` DECIMAL(12,2) NOT NULL,
+  `currency_code` CHAR(3) NOT NULL DEFAULT 'PHP',
+  `currency_rate_to_peso` DECIMAL(12,6) NOT NULL DEFAULT 1.00,
+  `total_price_conversion` DECIMAL(12,2) NOT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`order_id`),
   INDEX `ordersFK_branches_idx` (`branch_id` ASC) VISIBLE,
   INDEX `ordersFK_users_idx` (`user_id` ASC) VISIBLE,
   INDEX `ordersFK_promocodes_idx` (`promo_code` ASC) VISIBLE,
+  INDEX `ordersFK_refcurrencies_idx` (`currency_code` ASC) VISIBLE,
   CONSTRAINT `ordersFK_users`
     FOREIGN KEY (`user_id`)
     REFERENCES `sneakerhead`.`users` (`user_id`)
@@ -457,6 +483,11 @@ CREATE TABLE IF NOT EXISTS `sneakerhead`.`orders` (
   CONSTRAINT `ordersFK_promocodes`
     FOREIGN KEY (`promo_code`)
     REFERENCES `sneakerhead`.`promo_codes` (`promo_code`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `ordersFK_refcurrencies`
+    FOREIGN KEY (`currency_code`)
+    REFERENCES `sneakerhead`.`ref_currencies` (`currency_code`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
@@ -529,48 +560,186 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 1;
 
 SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `sneakerhead`.`exchange_rates`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`exchange_rates` ;
+
+SHOW WARNINGS;
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`exchange_rates` (
+  `currency_code` CHAR(3) NOT NULL,
+  `rate_to_php` DECIMAL(12,6) NOT NULL,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`currency_code`),
+  CONSTRAINT `erFK_refcurrencies`
+    FOREIGN KEY (`currency_code`)
+    REFERENCES `sneakerhead`.`ref_currencies` (`currency_code`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
 USE `sneakerhead` ;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`user_details_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`user_details_view` (`user_id` INT, `email` INT, `fname` INT, `mname` INT, `lname` INT, `role_id` INT, `role_name` INT, `address_id` INT, `addressline1` INT, `addressline2` INT, `city_id` INT, `city_name` INT, `province_id` INT, `province_name` INT, `created_at` INT, `updated_at` INT, `is_deleted` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`order_history_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`order_history_view` (`order_item_id` INT, `order_id` INT, `user_id` INT, `branch_id` INT, `branch_name` INT, `shoe_id` INT, `shoe_name` INT, `brand_name` INT, `size` INT, `quantity` INT, `price_at_purchase` INT, `subtotal` INT, `total_price` INT, `promo_code` INT, `image_path` INT, `order_created_at` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`orders_per_day`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`orders_per_day` (`day` INT, `month` INT, `year` INT, `sale_date` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT, `orders_with_promo` INT, `promo_usage_rate` INT, `active_promo_codes` INT);
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Placeholder table for view `sneakerhead`.`branch_daily_sales_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_daily_sales_view` (`sale_date` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_daily_sales_view` (`day` INT, `month` INT, `year` INT, `sale_date` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT, `orders_with_promo` INT, `promo_usage_rate` INT, `active_promo_codes` INT);
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
--- Placeholder table for view `sneakerhead`.`daily_sales_view`
+-- Placeholder table for view `sneakerhead`.`orders_per_month`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sneakerhead`.`daily_sales_view` (`sale_date` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`orders_per_month` (`month` INT, `year` INT, `period_start` INT, `period_end` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT, `orders_with_promo` INT, `promo_usage_rate` INT, `active_promo_codes` INT);
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Placeholder table for view `sneakerhead`.`branch_monthly_sales_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_monthly_sales_view` (`year` INT, `month` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_monthly_sales_view` (`month` INT, `year` INT, `period_start` INT, `period_end` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT, `orders_with_promo` INT, `promo_usage_rate` INT, `active_promo_codes` INT);
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
--- Placeholder table for view `sneakerhead`.`monthly_sales_view`
+-- Placeholder table for view `sneakerhead`.`orders_per_year`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sneakerhead`.`monthly_sales_view` (`year` INT, `month` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`orders_per_year` (`year` INT, `period_start` INT, `period_end` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT, `orders_with_promo` INT, `promo_usage_rate` INT, `active_promo_codes` INT);
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Placeholder table for view `sneakerhead`.`branch_yearly_sales_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_yearly_sales_view` (`year` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_yearly_sales_view` (`year` INT, `period_start` INT, `period_end` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT, `orders_with_promo` INT, `promo_usage_rate` INT, `active_promo_codes` INT);
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
--- Placeholder table for view `sneakerhead`.`yearly_sales_view`
+-- View `sneakerhead`.`user_details_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sneakerhead`.`yearly_sales_view` (`year` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT);
+DROP TABLE IF EXISTS `sneakerhead`.`user_details_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`user_details_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE OR REPLACE VIEW user_details_view AS
+SELECT
+    u.user_id,
+    u.email,
+    u.fname,
+    u.mname,
+    u.lname,
+    u.role_id,
+    r.role_name,
+    a.address_id,
+    a.addressline1,
+    a.addressline2,
+    c.city_id,
+    c.city_name,
+    p.province_id,
+    p.province_name,
+    u.created_at,
+    u.updated_at,
+    u.is_deleted
+FROM users u
+LEFT JOIN addresses a
+    ON u.address_id = a.address_id
+LEFT JOIN ref_ph_cities_municipalities c
+    ON a.city_id = c.city_id
+LEFT JOIN ref_ph_provinces p
+    ON c.province_id = p.province_id
+LEFT JOIN ref_roles r
+    ON u.role_id = r.role_id;
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
--- Placeholder table for view `sneakerhead`.`count_branch_low_stock`
+-- View `sneakerhead`.`order_history_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sneakerhead`.`count_branch_low_stock` (`low_stock` INT);
+DROP TABLE IF EXISTS `sneakerhead`.`order_history_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`order_history_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE OR REPLACE VIEW order_history_view AS
+SELECT
+    oi.order_item_id,
+    oi.order_id,
+    o.user_id,
+    o.branch_id,
+    b.branch_name,
+    s.shoe_id,
+    s.name AS shoe_name,
+    sb.brand_name,
+    oi.shoe_size AS size,
+    oi.quantity,
+    oi.price_at_purchase,
+    oi.subtotal,
+    o.total_price,
+    o.promo_code, 
+    si.main_image_path AS image_path,
+    o.created_at AS order_created_at
+FROM order_items oi
+JOIN orders o 
+    ON oi.order_id = o.order_id
+JOIN branches b 
+    ON o.branch_id = b.branch_id
+JOIN shoes s 
+    ON oi.shoe_id = s.shoe_id
+JOIN ref_shoe_brands sb 
+    ON s.brand_id = sb.brand_id
+LEFT JOIN (
+    SELECT 
+        shoe_id,
+        MIN(img_path) AS main_image_path
+    FROM shoe_images
+    GROUP BY shoe_id
+) AS si 
+    ON s.shoe_id = si.shoe_id;
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`orders_per_day`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`orders_per_day`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`orders_per_day` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW orders_per_day AS
+SELECT 
+    DAY(o.created_at) AS day,
+    MONTH(o.created_at) AS month,
+    YEAR(o.created_at) AS year,
+    DATE(o.created_at) as sale_date,
+    SUM(o.total_price) as total_sales,
+    COUNT(*) as order_count,
+    AVG(o.total_price) as avg_order_value,
+    COUNT(o.promo_code) as orders_with_promo,
+    ROUND((COUNT(o.promo_code) / COUNT(*)) * 100, 2) as promo_usage_rate,
+    (SELECT COUNT(*) 
+     FROM promo_codes pc 
+     WHERE pc.start_date <= sale_date
+       AND (pc.end_date IS NULL OR pc.end_date >= sale_date)
+    ) as active_promo_codes
+FROM orders o
+GROUP BY YEAR(o.created_at), MONTH(o.created_at), DAY(o.created_at), DATE(o.created_at)
+ORDER BY year DESC, month DESC, day DESC;
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
@@ -583,35 +752,55 @@ SHOW WARNINGS;
 USE `sneakerhead`;
 CREATE  OR REPLACE VIEW branch_daily_sales_view AS
 SELECT 
+    DAY(o.created_at) AS day,
+    MONTH(o.created_at) AS month,
+    YEAR(o.created_at) AS year,
     DATE(o.created_at) as sale_date,
     b.branch_id,
     b.branch_name,
     SUM(o.total_price) as total_sales,
     COUNT(*) as order_count,
-    AVG(o.total_price) as avg_order_value
+    AVG(o.total_price) as avg_order_value,
+    COUNT(o.promo_code) as orders_with_promo,
+    ROUND((COUNT(o.promo_code) / COUNT(*)) * 100, 2) as promo_usage_rate,
+    (SELECT COUNT(*) 
+     FROM promo_codes pc 
+     WHERE pc.start_date <= sale_date
+       AND (pc.end_date IS NULL OR pc.end_date >= sale_date)
+    ) as active_promo_codes
 FROM orders o
 JOIN branches b ON o.branch_id = b.branch_id
-GROUP BY DATE(o.created_at), b.branch_id, b.branch_name
-ORDER BY sale_date DESC, total_sales DESC;
+GROUP BY YEAR(o.created_at), MONTH(o.created_at), DAY(o.created_at), DATE(o.created_at), b.branch_id, b.branch_name
+ORDER BY year DESC, month DESC, day DESC, b.branch_name;
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
--- View `sneakerhead`.`daily_sales_view`
+-- View `sneakerhead`.`orders_per_month`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `sneakerhead`.`daily_sales_view`;
+DROP TABLE IF EXISTS `sneakerhead`.`orders_per_month`;
 SHOW WARNINGS;
-DROP VIEW IF EXISTS `sneakerhead`.`daily_sales_view` ;
+DROP VIEW IF EXISTS `sneakerhead`.`orders_per_month` ;
 SHOW WARNINGS;
 USE `sneakerhead`;
-CREATE  OR REPLACE VIEW daily_sales_view AS
+CREATE  OR REPLACE VIEW orders_per_month AS
 SELECT 
-    DATE(o.created_at) as sale_date,
+    MONTH(o.created_at) AS month,
+    YEAR(o.created_at) AS year,
+    DATE_FORMAT(MIN(o.created_at), '%Y-%m-01') as period_start,
+    LAST_DAY(DATE_FORMAT(MIN(o.created_at), '%Y-%m-01')) as period_end,
     SUM(o.total_price) as total_sales,
     COUNT(*) as order_count,
-    AVG(o.total_price) as avg_order_value
+    AVG(o.total_price) as avg_order_value,
+    COUNT(o.promo_code) as orders_with_promo,
+    ROUND((COUNT(o.promo_code) / COUNT(*)) * 100, 2) as promo_usage_rate,
+    (SELECT COUNT(*) 
+     FROM promo_codes pc 
+     WHERE pc.start_date <= LAST_DAY(DATE_FORMAT(MIN(o.created_at), '%Y-%m-01'))
+       AND (pc.end_date IS NULL OR pc.end_date >= DATE_FORMAT(MIN(o.created_at), '%Y-%m-01'))
+    ) as active_promo_codes
 FROM orders o
-GROUP BY DATE(o.created_at)
-ORDER BY sale_date DESC, order_count DESC, total_sales DESC;
+GROUP BY YEAR(o.created_at), MONTH(o.created_at)
+ORDER BY year DESC, month DESC;
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
@@ -624,37 +813,54 @@ SHOW WARNINGS;
 USE `sneakerhead`;
 CREATE  OR REPLACE VIEW branch_monthly_sales_view AS
 SELECT 
-    YEAR(o.created_at) as year,
-    MONTH(o.created_at) as month,
+    MONTH(o.created_at) AS month,
+    YEAR(o.created_at) AS year,
+    DATE_FORMAT(MIN(o.created_at), '%Y-%m-01') as period_start,
+    LAST_DAY(DATE_FORMAT(MIN(o.created_at), '%Y-%m-01')) as period_end,
     b.branch_id,
     b.branch_name,
     SUM(o.total_price) as total_sales,
     COUNT(*) as order_count,
-    AVG(o.total_price) as avg_order_value
+    AVG(o.total_price) as avg_order_value,
+    COUNT(o.promo_code) as orders_with_promo,
+    ROUND((COUNT(o.promo_code) / COUNT(*)) * 100, 2) as promo_usage_rate,
+    (SELECT COUNT(*) 
+     FROM promo_codes pc 
+     WHERE pc.start_date <= LAST_DAY(DATE_FORMAT(MIN(o.created_at), '%Y-%m-01'))
+       AND (pc.end_date IS NULL OR pc.end_date >= DATE_FORMAT(MIN(o.created_at), '%Y-%m-01'))
+    ) as active_promo_codes
 FROM orders o
 JOIN branches b ON o.branch_id = b.branch_id
 GROUP BY YEAR(o.created_at), MONTH(o.created_at), b.branch_id, b.branch_name
-ORDER BY year DESC, month DESC;
+ORDER BY year DESC, month DESC, b.branch_name;
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
--- View `sneakerhead`.`monthly_sales_view`
+-- View `sneakerhead`.`orders_per_year`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `sneakerhead`.`monthly_sales_view`;
+DROP TABLE IF EXISTS `sneakerhead`.`orders_per_year`;
 SHOW WARNINGS;
-DROP VIEW IF EXISTS `sneakerhead`.`monthly_sales_view` ;
+DROP VIEW IF EXISTS `sneakerhead`.`orders_per_year` ;
 SHOW WARNINGS;
 USE `sneakerhead`;
-CREATE  OR REPLACE VIEW monthly_sales_view AS
+CREATE  OR REPLACE VIEW orders_per_year AS
 SELECT 
-    YEAR(o.created_at) as year,
-    MONTH(o.created_at) as month,
+    YEAR(o.created_at) AS year,
+    DATE_FORMAT(MIN(o.created_at), '%Y-01-01') as period_start,
+    DATE_FORMAT(MIN(o.created_at), '%Y-12-31') as period_end,
     SUM(o.total_price) as total_sales,
     COUNT(*) as order_count,
-    AVG(o.total_price) as avg_order_value
+    AVG(o.total_price) as avg_order_value,
+    COUNT(o.promo_code) as orders_with_promo,
+    ROUND((COUNT(o.promo_code) / COUNT(*)) * 100, 2) as promo_usage_rate,
+    (SELECT COUNT(*) 
+     FROM promo_codes pc 
+     WHERE pc.start_date <= DATE_FORMAT(MIN(o.created_at), '%Y-12-31')
+       AND (pc.end_date IS NULL OR pc.end_date >= DATE_FORMAT(MIN(o.created_at), '%Y-01-01'))
+    ) as active_promo_codes
 FROM orders o
-GROUP BY YEAR(o.created_at), MONTH(o.created_at)
-ORDER BY year DESC, month DESC;
+GROUP BY YEAR(o.created_at)
+ORDER BY year DESC;
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
@@ -667,49 +873,25 @@ SHOW WARNINGS;
 USE `sneakerhead`;
 CREATE  OR REPLACE VIEW branch_yearly_sales_view AS
 SELECT 
-    YEAR(o.created_at) as year,
+    YEAR(o.created_at) AS year,
+    DATE_FORMAT(MIN(o.created_at), '%Y-01-01') as period_start,
+    DATE_FORMAT(MIN(o.created_at), '%Y-12-31') as period_end,
     b.branch_id,
     b.branch_name,
     SUM(o.total_price) as total_sales,
     COUNT(*) as order_count,
-    AVG(o.total_price) as avg_order_value
+    AVG(o.total_price) as avg_order_value,
+    COUNT(o.promo_code) as orders_with_promo,
+    ROUND((COUNT(o.promo_code) / COUNT(*)) * 100, 2) as promo_usage_rate,
+    (SELECT COUNT(*) 
+     FROM promo_codes pc 
+     WHERE pc.start_date <= DATE_FORMAT(MIN(o.created_at), '%Y-12-31')
+       AND (pc.end_date IS NULL OR pc.end_date >= DATE_FORMAT(MIN(o.created_at), '%Y-01-01'))
+    ) as active_promo_codes
 FROM orders o
 JOIN branches b ON o.branch_id = b.branch_id
 GROUP BY YEAR(o.created_at), b.branch_id, b.branch_name
-ORDER BY year DESC, total_sales DESC;
-SHOW WARNINGS;
-
--- -----------------------------------------------------
--- View `sneakerhead`.`yearly_sales_view`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `sneakerhead`.`yearly_sales_view`;
-SHOW WARNINGS;
-DROP VIEW IF EXISTS `sneakerhead`.`yearly_sales_view` ;
-SHOW WARNINGS;
-USE `sneakerhead`;
-CREATE  OR REPLACE VIEW yearly_sales_view AS
-SELECT 
-    YEAR(o.created_at) as year,
-    SUM(o.total_price) as total_sales,
-    COUNT(*) as order_count,
-    AVG(o.total_price) as avg_order_value
-FROM orders o
-GROUP BY YEAR(o.created_at)
-ORDER BY year DESC, total_sales DESC;
-SHOW WARNINGS;
-
--- -----------------------------------------------------
--- View `sneakerhead`.`count_branch_low_stock`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `sneakerhead`.`count_branch_low_stock`;
-SHOW WARNINGS;
-DROP VIEW IF EXISTS `sneakerhead`.`count_branch_low_stock` ;
-SHOW WARNINGS;
-USE `sneakerhead`;
-CREATE  OR REPLACE VIEW count_branch_low_stock AS
-SELECT COUNT(stock) AS low_stock
-FROM shoe_size_inventory
-WHERE stock <= 5;
+ORDER BY year DESC, b.branch_name;
 SHOW WARNINGS;
 USE `sneakerhead`;
 
@@ -734,105 +916,3 @@ DELIMITER ;
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
--- begin attached script 'script'
-DELIMITER $$
-
-CREATE PROCEDURE `sp_log_event`(
-    IN p_user_id INT,
-    IN p_role_id INT,
-    IN p_action VARCHAR(50),
-    IN p_description VARCHAR(255),
-    IN p_ip_address VARCHAR(45)
-)
-BEGIN
-    INSERT INTO sneakerhead.user_logs (
-        user_id,
-        role_id,
-        action,
-        description,
-        ip_address,
-        created_at
-    )
-    VALUES (
-        p_user_id,
-        p_role_id,
-        p_action,
-        p_description,
-        p_ip_address,
-        NOW()
-    );
-END $$
-
-DELIMITER ;
-
--- end attached script 'script'
--- begin attached script 'script1'
--- SP to get shoe info
-DELIMITER $$
-CREATE PROCEDURE getBasicShoeInfo(IN p_shoe_id INT)
-BEGIN
-    SELECT s.shoe_id, s.brand_id, b.brand_name, s.name, s.price
-    FROM shoes s
-    JOIN ref_shoe_brands b ON s.brand_id = b.brand_id
-    WHERE s.shoe_id = p_shoe_id AND s.is_deleted = 0;
-END$$
-
--- SP to get categories a shoe belongs to
-DELIMITER $$
-CREATE PROCEDURE getShoeCategories(IN p_shoe_id INT)
-BEGIN
-    SELECT c.category_name
-    FROM shoe_categories sc
-    JOIN ref_shoe_categories c ON sc.shoe_category_id = c.category_id
-    WHERE sc.shoe_id = p_shoe_id;
-END$$
-
--- Get all images for a shoe
-DELIMITER $$
-CREATE PROCEDURE getShoeImages(IN p_shoe_id INT)
-BEGIN
-    SELECT img_path
-    FROM shoe_images
-    WHERE shoe_id = p_shoe_id;
-END$$
-
-DELIMITER $$
-CREATE PROCEDURE getShoeSizes(IN p_shoe_id INT, IN p_branch_id INT)
-BEGIN
-    SELECT r.shoe_size AS size, IFNULL(ssi.stock, 0) AS stock
-    FROM ref_us_sizes r
-    LEFT JOIN shoe_size_inventory ssi 
-        ON r.shoe_size = ssi.shoe_us_size 
-       AND ssi.shoe_id = p_shoe_id 
-       AND ssi.branch_id = p_branch_id
-    ORDER BY r.shoe_size ASC;
-END$$
-
--- not sure if I should use this SP for the cataogue page where we list all shoes available in a branch using cards which link to their product page
-DELIMITER $$
-CREATE PROCEDURE getShoesByBranch(IN p_branch_id INT)
-BEGIN
-    SELECT 
-        s.shoe_id,
-        s.name,
-        b.brand_name,
-        s.price,
-        -- Optional: first image only
-        (SELECT img_path 
-         FROM shoe_images 
-         WHERE shoe_id = s.shoe_id 
-         LIMIT 1) AS thumbnail
-    FROM shoes s
-    JOIN ref_shoe_brands b 
-        ON s.brand_id = b.brand_id
-    WHERE s.is_deleted = 0
-      AND EXISTS (
-            SELECT 1 
-            FROM shoe_size_inventory ssi
-            WHERE ssi.shoe_id = s.shoe_id
-              AND ssi.branch_id = p_branch_id
-              AND ssi.stock > 0
-      );
-END$$
-
--- end attached script 'script1'
