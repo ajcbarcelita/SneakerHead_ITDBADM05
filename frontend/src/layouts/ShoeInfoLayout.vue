@@ -7,23 +7,12 @@
           <!-- LEFT: IMAGE GALLERY -->
           <div class="md:w-2/5 w-full flex justify-center items-start">
             <div class="w-full max-w-[500px] max-h-[500px] rounded bg-gray-100 overflow-hidden min-h[500px]">
-              <Galleria
-                v-show="images.length"
-                :value="images"
-                :showThumbnails="false"       
-                :showIndicators="true"        
-                :showItemNavigators="false"   
-                :autoPlay="true"
-                :circular="true"
-                :transitionInterval="3000"    
-                class="w-full h-[400px]"      
-              >
+              <Galleria v-show="images.length" :value="images" :showThumbnails="false" :showIndicators="true"
+                :showItemNavigators="false" :autoPlay="true" :circular="true" :transitionInterval="3000"
+                class="w-full h-[400px]">
                 <template #item="{ item }">
                   <div class="w-full h-full flex justify-center items-center bg-gray-100 rounded">
-                    <img
-                      :src="item"
-                      class="max-w-full max-h-full object-contain rounded"
-                    />
+                    <img :src="item" class="max-w-full max-h-full object-contain rounded" />
                   </div>
                 </template>
               </Galleria>
@@ -38,8 +27,8 @@
               <h2 class="text-3xl font-bold leading-tight">{{ shoe.name }}</h2>
               <p class="text-gray-600 text-lg mt-1">{{ shoe.brand_name }}</p>
               <p class="text-gray-900 font-medium mt-1">
-  Branch: {{ branch.branch_name }}
-</p>
+                Branch: {{ branch.branch_name }}
+              </p>
 
 
 
@@ -54,12 +43,7 @@
             <div>
               <label class="block mb-2 font-medium">Categories:</label>
               <div class="flex flex-wrap gap-2">
-                <Chip 
-                  v-for="cat in categories" 
-                  :key="cat" 
-                  :label="cat" 
-                  class="bg-gray-200 text-gray-800"
-                />
+                <Chip v-for="cat in categories" :key="cat" :label="cat" class="bg-gray-200 text-gray-800" />
               </div>
             </div>
 
@@ -67,23 +51,18 @@
             <div>
               <label class="block mb-2 font-medium">Select Size:</label>
               <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="size in sizes"
-                  :key="size.size"
-                  @click="selectedSize = size"
-                  :disabled="size.stock === 0"
+                <button v-for="size in sizes" :key="size.size" @click="selectedSize = size" :disabled="size.stock === 0"
                   :class="[
                     'px-4 py-2 rounded border',
                     size.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'
                   ]"
-                  :style="selectedSize?.size === size.size ? { backgroundColor: 'var(--color-oxford-blue)', color: 'white' } : {}"
-                >
+                  :style="selectedSize?.size === size.size ? { backgroundColor: 'var(--color-oxford-blue)', color: 'white' } : {}">
                   {{ size.size }}
                 </button>
               </div>
 
               <p v-if="selectedSize" class="text-sm mt-1">
-                Stock left: 
+                Stock left:
                 <span :class="selectedSize.stock === 0 ? 'text-red-500' : 'text-green-600'">
                   {{ selectedSize.stock }}
                 </span>
@@ -94,15 +73,8 @@
             <!-- Quantity -->
             <div>
               <label class="block mb-2 font-medium">Quantity:</label>
-              <InputNumber
-                v-model="quantity"
-                :min="1"
-                :max="selectedSize ? selectedSize.stock : 1"
-                showButtons
-                :step="1"
-                buttonLayout="horizontal"
-                input-class="w-16 text-center"
-              >
+              <InputNumber v-model="quantity" :min="1" :max="selectedSize ? selectedSize.stock : 1" showButtons
+                :step="1" buttonLayout="horizontal" input-class="w-16 text-center">
                 <template #incrementicon>
                   <i class="pi pi-plus"></i>
                 </template>
@@ -114,13 +86,8 @@
 
 
             <!-- Add to Cart -->
-            <Button
-              label="Add to Cart"
-              icon="pi pi-shopping-cart"
-              class="mt-4 w-full md:w-auto"
-              :disabled="!selectedSize || selectedSize.stock === 0"
-              @click="addToCart"
-            />
+            <Button label="Add to Cart" icon="pi pi-shopping-cart" class="mt-4 w-full md:w-auto"
+              :disabled="!selectedSize || selectedSize.stock === 0" @click="addToCart" />
           </div>
         </div>
       </template>
@@ -129,37 +96,37 @@
 </template>
 
 <script setup>
-  import { ref, watchEffect, toRefs } from 'vue'
-  import Card from 'primevue/card'
-  import Galleria from 'primevue/galleria'
-  import Chip from 'primevue/chip'
-  import InputNumber from 'primevue/inputnumber'
-  import Button from 'primevue/button'
+import { ref, watchEffect, toRefs } from 'vue'
+import Card from 'primevue/card'
+import Galleria from 'primevue/galleria'
+import Chip from 'primevue/chip'
+import InputNumber from 'primevue/inputnumber'
+import Button from 'primevue/button'
 
-  const props = defineProps({
-    shoe: { type: Object, required: true },
-    images: { type: Array, default: () => [] },
-    sizes: { type: Array, default: () => [] },
-    categories: { type: Array, default: () => [] },
-    branch: { type: Object, default: () => ({ branch_name: 'Unknown Branch' }) }
-  })
+const props = defineProps({
+  shoe: { type: Object, required: true },
+  images: { type: Array, default: () => [] },
+  sizes: { type: Array, default: () => [] },
+  categories: { type: Array, default: () => [] },
+  branch: { type: Object, default: () => ({ branch_name: 'Unknown Branch' }) }
+})
 
-  const quantity = ref(1)
-  const selectedSize = ref(null)
-  const shoe = props.shoe
-  const images = props.images
-  const sizes = ref(props.sizes)
-  const categories = props.categories
+const quantity = ref(1)
+const selectedSize = ref(null)
+const shoe = props.shoe
+const images = props.images
+const sizes = ref(props.sizes)
+const categories = props.categories
 
-  function addToCart() {
-    if (!selectedSize || selectedSize.stock === 0) return
-    console.log(`[Cart] Added ${quantity.value} of size ${selectedSize.size} to cart at ${branchName}`)
-  }
+function addToCart() {
+  if (!selectedSize || selectedSize.stock === 0) return
+  console.log(`[Cart] Added ${quantity.value} of size ${selectedSize.size} to cart at ${branchName}`)
+}
 
-  watchEffect(() => {
-    console.log('Shoe:', shoe)
-    console.log('Selected Size:', selectedSize)
-  })
+watchEffect(() => {
+  console.log('Shoe:', shoe)
+  console.log('Selected Size:', selectedSize)
+})
 
 
 </script>

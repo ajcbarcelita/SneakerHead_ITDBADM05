@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-white-smoke font-Montserrat">
+  <div class="min-h-screen flex flex-col bg-white-smoke font-Montserrat">
     <!-- Navigation Bar -->
     <NavBar />
 
     <!-- Main Content -->
-    <main class="container mx-auto px-6 py-8">
+    <main class="container mx-auto px-6 py-8 flex-1">
       <!-- Page Title -->
       <div class="mb-6">
         <h1 class="text-3xl font-bold text-oxford-blue mb-2">Your Shopping Cart</h1>
@@ -19,19 +19,17 @@
       <!-- Continue Shopping Button -->
       <div class="flex justify-center mb-8">
         <router-link to="/products">
-          <Button
-            label="Continue Shopping"
-            icon="pi pi-arrow-left"
-            outlined
-            class="text-oxford-blue border-oxford-blue hover:bg-oxford-blue hover:text-white font-semibold px-6 py-3"
-          />
+          <Button label="Continue Shopping" icon="pi pi-arrow-left" outlined
+            class="text-oxford-blue border-oxford-blue hover:bg-oxford-blue hover:text-white font-semibold px-6 py-3" />
         </router-link>
       </div>
     </main>
 
 
     <!-- Footer -->
-    <Footer />
+    <footer>
+      <Footer />
+    </footer>
   </div>
 </template>
 

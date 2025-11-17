@@ -229,7 +229,7 @@ const applyFilters = async () => {
 const clearFilters = async () => {
   searchValue.value = "";
   dateRange.value = null;
-  await fetchOrders(); // Re-fetch all orders
+  await fetchOrders(); 
 };
 
 // Utils

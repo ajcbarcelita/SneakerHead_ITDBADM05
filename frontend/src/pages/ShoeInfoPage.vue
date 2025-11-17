@@ -1,23 +1,24 @@
 <template>
-  <div>
-    <NavBar />
+  <div class="min-h-screen flex flex-col bg-white-smoke font-Montserrat">
+    <header>
+      <NavBar />
+    </header>
 
-    <!-- Pass props to layout only when data is loaded -->
-    <ShoeInfoLayout 
-      v-if="shoeStore.selectedShoe"
-      :shoe="shoeStore.selectedShoe"
-      :images="shoeStore.selectedShoe.images"
-      :categories="shoeStore.selectedShoe.categories"
-      :sizes="shoeStore.selectedShoe.sizes"
-      :branch="shoeStore.selectedShoe.branch"
-    />
+    <main class="container mx-auto px-6 py-8 flex-1">
+      <!-- Pass props to layout only when data is loaded -->
+      <ShoeInfoLayout v-if="shoeStore.selectedShoe" :shoe="shoeStore.selectedShoe"
+        :images="shoeStore.selectedShoe.images" :categories="shoeStore.selectedShoe.categories"
+        :sizes="shoeStore.selectedShoe.sizes" :branch="shoeStore.selectedShoe.branch" />
 
-    <!-- Loading / fallback -->
-    <div v-else class="text-center py-20 text-gray-500">
-      Loading shoe details...
-    </div>
+      <!-- Loading / fallback -->
+      <div v-else class="text-center py-20 text-gray-500">
+        Loading shoe details...
+      </div>
+    </main>
 
-    <Footer />
+    <footer>
+      <Footer />
+    </footer>
   </div>
 </template>
 
@@ -42,4 +43,3 @@ onMounted(async () => {
   console.log('[Page] After fetching shoe details:', shoeStore.selectedShoe)
 })
 </script>
-
