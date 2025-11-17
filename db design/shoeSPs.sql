@@ -31,7 +31,7 @@ BEGIN
     LEFT JOIN shoe_size_inventory ssi 
         ON r.shoe_size = ssi.shoe_us_size 
        AND ssi.shoe_id = p_shoe_id 
-       AND ssi.branch_id = p_branch_id;
+       AND ssi.branch_id = p_branch_id
     ORDER BY r.shoe_size;
 END;
 
