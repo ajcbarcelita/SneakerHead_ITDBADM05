@@ -4,7 +4,7 @@
       <div class="grid grid-cols-3 items-center py-2">
         <!-- Home & Products -->
         <div class="flex items-center">
-          <div class="space-x-6 uppercase text-lg">
+          <div class="space-x-6 text-base">
             <router-link to="/" class="nav-link">Home</router-link>
             <router-link to="/products" class="nav-link">Sneaker Catalog</router-link>
           </div>
@@ -19,6 +19,17 @@
 
         <!-- Right Side -->
         <div class="flex items-center justify-end space-x-4 text-base">
+           <!-- Branch & Currency button -->
+          <button
+            @click="showModal = true"
+            class="px-3 py-1 rounded-md bg-oxford-blue text-antiflash-white font-Montserrat font-bold
+                  hover:bg-white hover:text-giants-orange transition-colors duration-200 flex items-center"
+          >
+            <img src="@/assets/pin.svg" alt="Pin" class="h-5 w-5 mr-1"/>
+            Pick Branch / Currency
+          </button>
+
+
           <!-- Cart (only for logged-in customers) -->
           <router-link
             v-if="auth.isLoggedIn && auth.isCustomer"
@@ -31,13 +42,13 @@
               <circle cx="9" cy="20" r="1" />
               <circle cx="19" cy="20" r="1" />
             </svg>
-            <span>CART</span>
+            <span>Cart</span>
           </router-link>
 
           <!-- Register / Sign-in (only if not logged in) -->
           <div v-if="!auth.isLoggedIn" class="flex space-x-2">
-            <router-link to="/register" class="nav-link">REGISTER</router-link>
-            <router-link to="/login" class="nav-link">SIGN IN</router-link>
+            <router-link to="/register" class="nav-link">Register</router-link>
+            <router-link to="/login" class="nav-link">Sign In</router-link>
           </div>
 
           <!-- Profile & Logout (only if logged in) -->
@@ -49,20 +60,24 @@
             >
               <img src="@/assets/Profile.png" alt="Profile" class="h-8 w-8 rounded-full invert" />
             </router-link>
-            <button @click="logout" class="nav-link">LOGOUT</button>
+            <button @click="logout" class="nav-link">Log Out</button>
           </div>
         </div>
       </div>
     </div>
   </nav>
+  <UserContextModal v-model:visible="showModal" @close="showModal = false" />
 </template>
 
 <script setup>
-import { useAuthStore } from "@/stores/authStore";
+  import { ref } from 'vue';
+  import { useAuthStore } from "@/stores/authStore";
+  import UserContextModal from './UserContextModal.vue';
+  
+  const auth = useAuthStore();
+  const showModal = ref(false);
 
-const auth = useAuthStore();
-
-function logout() {
-  auth.logout();
-}
+  function logout() {
+    auth.logout();
+  }
 </script>
