@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import Branch from "../models/Branch.js";
 import City_Municipality from "../models/City_Municipality.js";
 import { logEvent } from "../services/logEventService.js";
-import { hashPassword } from "../utils/password.js";
+import { hashPassword, validatePassword } from "../utils/password.js";
 
 export const getUsers = async (req, res) => {
     try {
@@ -162,6 +162,7 @@ export const addUser = async (req, res) => {
             address_id,
             role_id = 2
         } = req.body;
+
 
         // Hash password ofc
         hashPassword(pw_hash);

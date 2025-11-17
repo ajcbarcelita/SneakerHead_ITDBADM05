@@ -10,60 +10,60 @@
       <TabView>
         <!-- USERS TAB -->
         <TabPanel header="Manage Users">
-          <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
             <h1 class="text-2xl font-bold text-charcoal uppercase">Manage Users</h1>
             
-            <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 w-full lg:w-auto">
               <!-- SEARCH BAR -->
-              <div class="flex items-center space-x-2 w-auto">
+              <div class="flex items-center gap-2 w-full lg:w-80">
                 <InputText 
                   v-model="userSearchQuery" 
                   placeholder="Search users by name or email..." 
-                  class="w-80"
+                  class="w-full"
                 />
-                <Button icon="pi pi-search" class="search-btn" />
+                <Button icon="pi pi-search" class="search-btn h-12 w-12 flex-shrink-0" />
               </div>
 
               <!-- FILTERS ROW -->
-              <div class="flex items-center space-x-4">
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <!-- FILTER BY BRANCH -->
-                <div class="flex items-center space-x-3">
-                  <span class="font-semibold text-charcoal">Branch:</span>
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="font-semibold text-charcoal whitespace-nowrap">Branch:</span>
                   <Dropdown
                     v-model="selectedUserBranch"
                     :options="userBranchOptions"
                     optionLabel="label"
                     placeholder="All Branches"
-                    class="w-48"
+                    class="w-32 sm:w-36"
                   />
                 </div>
 
                 <!-- FILTER BY ROLE -->
-                <div class="flex items-center space-x-3">
-                  <span class="font-semibold text-charcoal">Role:</span>
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="font-semibold text-charcoal whitespace-nowrap">Role:</span>
                   <Dropdown
                     v-model="selectedUserRole"
                     :options="userRoleOptions"
                     optionLabel="label"
                     placeholder="All Roles"
-                    class="w-48"
+                    class="w-32 sm:w-36"
                   />
                 </div>
 
                 <!-- FILTER BY STATUS -->
-                <div class="flex items-center space-x-3">
-                  <span class="font-semibold text-charcoal">Status:</span>
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="font-semibold text-charcoal whitespace-nowrap">Status:</span>
                   <Dropdown
                     v-model="selectedUserStatus"
                     :options="userStatusOptions"
                     optionLabel="label"
                     placeholder="All Status"
-                    class="w-48"
+                    class="w-32 sm:w-36"
                   />
                 </div>
               </div>
 
-              <Button label="Add User" icon="pi pi-plus" class="add-btn" 
+              <Button label="Add Branch Manager" icon="pi pi-plus" class="add-btn h-12 whitespace-nowrap" 
                       @click="showAddUserDialog = true" />
             </div>
           </div>
@@ -109,7 +109,9 @@
                     <Button 
                       icon="pi pi-pencil" 
                       class="p-button-rounded p-button-text edit-btn" 
-                      @click="editUser(slotProps.data)" 
+                      @click="editUser(slotProps.data)"
+                      :disabled="!canEditUser(slotProps.data)"
+                      v-tooltip="getEditButtonTooltip(slotProps.data)"
                     />
                   </div>
                 </template>
@@ -130,22 +132,22 @@
 
         <!-- BRANCHES TAB -->
         <TabPanel header="Manage Branches">
-          <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
             <h1 class="text-2xl font-bold text-charcoal uppercase">Manage Branches</h1>
             
-            <div class="flex items-center space-x-4">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
               <!-- SEARCH BAR -->
-              <div class="flex items-center space-x-2 w-auto">
+              <div class="flex items-center gap-2 w-full sm:w-80">
                 <InputText 
                   v-model="branchSearchQuery" 
                   placeholder="Search branches by name or city..." 
-                  class="w-80"
+                  class="w-full"
                 />
-                <Button icon="pi pi-search" class="search-btn" />
+                <Button icon="pi pi-search" class="search-btn h-12 w-12 flex-shrink-0" />
               </div>
 
               <!-- ADD BRANCH BUTTON -->
-              <Button label="Add Branch" icon="pi pi-plus" class="add-btn" 
+              <Button label="Add Branch" icon="pi pi-plus" class="add-btn h-12 whitespace-nowrap" 
                       @click="showAddBranchDialog = true" />
             </div>
           </div>
@@ -220,11 +222,18 @@
     </footer>
 
     <!-- ADD USER DIALOG -->
-    <Dialog v-model:visible="showAddUserDialog" header="Add New User" :modal="true" class="w-1/3">
+    <Dialog v-model:visible="showAddUserDialog" header="Add New User" :modal="true" class="w-11/12 md:w-1/2 lg:w-1/3">
       <div class="space-y-4">
         <div class="field">
           <label class="font-semibold text-charcoal">First Name <span class="text-red-500">*</span></label>
-          <InputText v-model="newUser.fname" class="w-full" placeholder="Enter first name" />
+          <InputText 
+            v-model="newUser.fname" 
+            class="w-full" 
+            placeholder="Enter first name" 
+            :class="{ 'p-invalid': validationErrors.fname }"
+            @blur="validateField('fname', newUser.fname)"
+          />
+          <small v-if="validationErrors.fname" class="p-error">{{ validationErrors.fname }}</small>
         </div>
         <div class="field">
           <label class="font-semibold text-charcoal">Middle Name</label>
@@ -232,11 +241,25 @@
         </div>
         <div class="field">
           <label class="font-semibold text-charcoal">Last Name <span class="text-red-500">*</span></label>
-          <InputText v-model="newUser.lname" class="w-full" placeholder="Enter last name" />
+          <InputText 
+            v-model="newUser.lname" 
+            class="w-full" 
+            placeholder="Enter last name" 
+            :class="{ 'p-invalid': validationErrors.lname }"
+            @blur="validateField('lname', newUser.lname)"
+          />
+          <small v-if="validationErrors.lname" class="p-error">{{ validationErrors.lname }}</small>
         </div>
         <div class="field">
           <label class="font-semibold text-charcoal">Email <span class="text-red-500">*</span></label>
-          <InputText v-model="newUser.email" class="w-full" placeholder="Enter email address" />
+          <InputText 
+            v-model="newUser.email" 
+            class="w-full" 
+            placeholder="Enter email address" 
+            :class="{ 'p-invalid': validationErrors.email }"
+            @blur="validateEmailField(newUser.email)"
+          />
+          <small v-if="validationErrors.email" class="p-error">{{ validationErrors.email }}</small>
         </div>
         <div class="field">
           <label class="font-semibold text-charcoal">Password <span class="text-red-500">*</span></label>
@@ -246,7 +269,14 @@
             placeholder="Enter password"
             :feedback="false"
             toggleMask
+            :class="{ 'p-invalid': validationErrors.password }"
+            @blur="validatePasswordField(newUser.pw_hash)"
+            @input="validatePasswordField(newUser.pw_hash)"
           />
+          <small v-if="validationErrors.password" class="p-error">{{ validationErrors.password }}</small>
+          <small v-else class="text-gray-500 mt-1 block">
+            Password must contain: at least 8 characters, one lowercase letter, one uppercase letter, one number, and one special character
+          </small>
         </div>
         <div class="field">
           <label class="font-semibold text-charcoal">Branch Assignment</label>
@@ -268,7 +298,7 @@
     </Dialog>
 
     <!-- EDIT USER DIALOG -->
-    <Dialog v-model:visible="showEditUserDialog" :header="editUserDialogHeader" :modal="true" class="w-1/3">
+    <Dialog v-model:visible="showEditUserDialog" :header="editUserDialogHeader" :modal="true" class="w-11/12 md:w-1/2 lg:w-1/3">
       <div class="space-y-6">
         <!-- Read-only Personal Information Section -->
         <div class="border-b pb-4">
@@ -336,7 +366,7 @@
     </Dialog>
 
     <!-- ADD BRANCH DIALOG -->
-    <Dialog v-model:visible="showAddBranchDialog" header="Add New Branch" :modal="true" class="w-1/3">
+    <Dialog v-model:visible="showAddBranchDialog" header="Add New Branch" :modal="true" class="w-11/12 md:w-1/2 lg:w-1/3">
       <div class="space-y-4">
         <div class="field">
           <label class="font-semibold text-charcoal">Branch Name <span class="text-red-500">*</span></label>
@@ -385,7 +415,7 @@
     </Dialog>
 
     <!-- EDIT BRANCH DIALOG -->
-    <Dialog v-model:visible="showEditBranchDialog" :header="editBranchDialogHeader" :modal="true" class="w-1/3">
+    <Dialog v-model:visible="showEditBranchDialog" :header="editBranchDialogHeader" :modal="true" class="w-11/12 md:w-1/2 lg:w-1/3">
       <div class="space-y-4">
         <div class="field">
           <label class="font-semibold text-charcoal">Branch Name <span class="text-red-500">*</span></label>
@@ -468,8 +498,16 @@ import Dialog from 'primevue/dialog'
 import Checkbox from 'primevue/checkbox'
 import Password from 'primevue/password'
 import SAService from '@/services/SAService'
+import { useValidation } from '@/composables/useValidation'
 
 const toast = useToast()
+const { 
+  errors: validationErrors, 
+  validateRequired, 
+  validateEmail, 
+  validatePassword, 
+  clearErrors 
+} = useValidation()
 
 // USERS DATA
 const selectedUserRole = ref({ label: 'All Roles', value: 'all' })
@@ -666,6 +704,41 @@ const editBranchDialogHeader = computed(() => {
   return `Edit Branch: ${editingBranch.value.branch_name}`
 })
 
+// Check if user can be edited (only Branch Managers)
+const canEditUser = (user) => {
+  return user.role === 'Branch Manager'
+}
+
+// Get tooltip for edit button
+const getEditButtonTooltip = (user) => {
+  if (!canEditUser(user)) {
+    return 'Only Branch Managers can be edited'
+  }
+  return 'Edit User'
+}
+
+// Validation methods
+const validateField = (fieldName, value) => {
+  validateRequired(fieldName, value)
+}
+
+const validateEmailField = (email) => {
+  validateEmail(email)
+}
+
+const validatePasswordField = (password) => {
+  validatePassword(password)
+}
+
+const validateAllFields = () => {
+  validateRequired('fname', newUser.value.fname)
+  validateRequired('lname', newUser.value.lname)
+  validateEmail(newUser.value.email)
+  validatePassword(newUser.value.pw_hash)
+  
+  return Object.keys(validationErrors.value).length === 0
+}
+
 // Methods
 const getRoleSeverity = (role) => {
   switch (role?.toLowerCase()) {
@@ -734,21 +807,14 @@ const fetchCities = async () => {
 
 // ADD USER METHODS
 const saveUser = async () => {
+  // Validate all fields before proceeding
+  if (!validateAllFields()) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Please fix all validation errors before saving', life: 3000 })
+    return
+  }
+
   loadingAddUser.value = true
   try {
-    // Validate required fields
-    if (!newUser.value.fname || !newUser.value.lname || !newUser.value.email || !newUser.value.pw_hash) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill in all required fields', life: 3000 })
-      return
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(newUser.value.email)) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Please enter a valid email address', life: 3000 })
-      return
-    }
-
     const userData = {
       fname: newUser.value.fname,
       lname: newUser.value.lname,
@@ -768,7 +834,7 @@ const saveUser = async () => {
     if (error.response?.data?.message?.includes('Email already in use')) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Email address is already in use', life: 3000 })
     } else {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add user: ' + error.message, life: 3000 })
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add branch manager: ' + error.message, life: 3000 })
     }
   } finally {
     loadingAddUser.value = false
@@ -778,6 +844,7 @@ const saveUser = async () => {
 const cancelAddUser = () => {
   showAddUserDialog.value = false
   resetNewUser()
+  clearErrors()
 }
 
 const resetNewUser = () => {
@@ -793,6 +860,16 @@ const resetNewUser = () => {
 
 // EDIT USER METHODS
 const editUser = (user) => {
+  if (!canEditUser(user)) {
+    toast.add({ 
+      severity: 'warn', 
+      summary: 'Cannot Edit User', 
+      detail: 'Only Branch Managers can be edited', 
+      life: 3000 
+    })
+    return
+  }
+
   editingUser.value = {
     id: user.id,
     fname: user.fname,
@@ -846,7 +923,7 @@ const resetEditingUser = () => {
   }
 }
 
-// BRANCH METHODS (unchanged)
+// BRANCH METHODS
 const editBranch = (branch) => {
   editingBranch.value = {
     branch_id: branch.branch_id,
@@ -1022,5 +1099,12 @@ onMounted(() => {
 
 .cancel-btn.p-button:hover {
   background-color: rgba(119, 123, 126, 0.1) !important;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 </style>
