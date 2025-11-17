@@ -17,7 +17,9 @@
       Loading shoe details...
     </div>
 
-    <Footer />
+    <footer>
+      <Footer />
+    </footer>
   </div>
 </template>
 
