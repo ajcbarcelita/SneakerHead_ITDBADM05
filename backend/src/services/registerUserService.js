@@ -68,29 +68,27 @@ export async function registerUserService(data) {
     });
 
     if (user.role_id === 3) {
-      // fetch all branches first
       const branches = await Branch.query(trx);
 
-      const cartsToInsert = branches.map (b => ({
-        user_id: user.user_id, 
-        branch_id: b.branch_id,
-        currency_code: 'PHP',
-        currency_rate_to_peso: 1.00
-      }));
-
-      // perform a bulk insert of shopping carts for the new user
-      await ShoppingCart.query(trx).insert(cartsToInsert);
-
-      try {
-        await logEvent({
+      for (const b of branches) {
+        await ShoppingCart.query(trx).insert({
           user_id: user.user_id,
-          role_id: user.role_id,
-          action: 'CREATE_CARTS',
-          description: `Created shopping carts for user ${user.user_id} across all branches (${branches.length} branches)) for new customer.`,
-          ip: null
-        })
-      } catch (logErr) {
-        console.error("Failed to log event for creating shopping carts:", logErr);
+          branch_id: b.branch_id,
+          currency_code: 'PHP',
+          currency_rate_to_peso: 1.00
+        });
+
+        try {
+          await logEvent({
+            user_id: user.user_id,
+            role_id: user.role_id,
+            action: 'CREATE_CART',
+            description: `Created shopping cart for user ${user.user_id} at branch ${b.branch_id}`,
+            ip: null
+          });
+        } catch (logErr) {
+          console.error(`Failed to log cart creation for branch ${b.branch_id}:`, logErr);
+        }
       }
     }
 
