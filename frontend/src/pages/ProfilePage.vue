@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen flex flex-col bg-white-smoke font-Montserrat">
-    <!-- Navigation Bar -->
-    <NavBar />
+    <!-- Navigation Bar - Dynamic based on role -->
+    <NavBar v-if="auth.user?.role_name === 'Customer'" />
+    <NavBarBM v-else-if="auth.user?.role_name === 'Branch Manager'" />
+    <NavBarSA v-else-if="auth.user?.role_name === 'Admin'" />
 
     <!-- Main Content -->
     <main class="container mx-auto px-6 py-8 flex-1">
@@ -54,14 +56,20 @@
 <script setup>
 import { ref } from 'vue'
 import NavBar from '@/components/NavBar.vue'
+import NavBarBM from '@/components/NavBarBM.vue'
+import NavBarSA from '@/components/NavBarSA.vue'
 import Footer from '@/components/Footer.vue'
 import ProfileCard from '@/components/ProfileCard.vue'
 import OrdersTable from '@/components/OrdersTable.vue'
+import { useAuthStore } from '@/stores/authStore'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
+
+// Auth store
+const auth = useAuthStore()
 
 // Active tab state
 const activeTab = ref('profile')

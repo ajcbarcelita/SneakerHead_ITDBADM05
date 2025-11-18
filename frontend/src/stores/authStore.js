@@ -65,7 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
       errors.value = {}
       try {
         const data = await authService.login(payload)
-       
+
         user.value = data.user ?? null
 
         if (payload.rememberMe) {
