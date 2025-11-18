@@ -24,7 +24,6 @@
           </p>
         </div>
 
-
         <Stepper v-model:value="activeStep" class="mt-6">
           <StepList class="flex w-full justify-between items-center gap-3 overflow-hidden">
             <Step :value="1">Personal Details</Step>
@@ -169,6 +168,27 @@
                   </div>
                 </div>
 
+                <!-- Terms and Conditions Checkbox -->
+                <div class="flex items-center gap-2 mt-2">
+                  <Checkbox 
+                    v-model="acceptedTerms" 
+                    :binary="true" 
+                    inputId="terms"
+                    :class="{'p-invalid': errors.terms}"
+                  />
+                  <label for="terms" class="text-sm text-gray-700">
+                    I agree to the 
+                    <a 
+                      @click="showTermsDialog = true" 
+                      class="text-oxford-blue hover:underline cursor-pointer font-medium"
+                    >
+                      Terms and Conditions
+                    </a>
+                    <span class="text-red-400">*</span>
+                  </label>
+                </div>
+                <p v-if="errors.terms" class="text-red-400 text-xs mt-0.5">{{ errors.terms }}</p>
+
                 <div class="flex gap-4">
                   <Button
                     label="Previous"
@@ -199,6 +219,83 @@
       />
     </div>
   </div>
+
+  <!-- Terms and Conditions Dialog -->
+  <Dialog 
+    v-model:visible="showTermsDialog" 
+    modal 
+    header="SneakerHead - Terms and Conditions"
+    :style="{ width: '50rem' }"
+    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+  >
+    <div class="max-h-96 overflow-y-auto pr-4">
+      <div class="space-y-4 text-sm text-gray-700">
+        <p><strong>Project for:</strong> ITDBADM | De La Salle University</p>
+        <p><strong>Last Updated:</strong> 18/11/2025</p>
+
+        <p><strong>Welcome to SneakerHead!</strong></p>
+        
+        <p>This website, SneakerHead, is a student project created for the course ITDBADM (Database Management) at De La Salle University. This is not a real e-commerce platform, and no real transactions or sales will occur.</p>
+        
+        <p>By accessing and using this website, you agree to the following terms, which are designed to explain how we, as students, will handle your data for the purposes of this academic project.</p>
+
+        <div>
+          <h3 class="font-semibold text-oxford-blue mt-4 mb-2">1. Your Information & Our Academic Purpose</h3>
+          <p>To demonstrate the functionality of our database, we collect the following information when you register:</p>
+          <ul class="list-disc list-inside ml-4 mt-2">
+            <li>Full Name</li>
+            <li>Full Address</li>
+            <li>Email Address</li>
+            <li>Password</li>
+          </ul>
+          <p class="mt-2"><strong>How we use your data:</strong></p>
+          <ul class="list-disc list-inside ml-4">
+            <li>Your data will be used strictly for academic and demonstration purposes within the context of the ITDBADM course.</li>
+            <li>Your password is securely hashed in our database and is not visible to us in plain text.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-oxford-blue mt-4 mb-2">2. Data Security (Our Commitment as Students)</h3>
+          <p>We are implementing standard database security practices learned in ITDBADM to protect your information within our project environment. This includes:</p>
+          <ul class="list-disc list-inside ml-4">
+            <li>Hashing passwords before storing them.</li>
+            <li>Using prepared SQL statements to prevent injection attacks.</li>
+            <li>Restricting database access to the project team members only.</li>
+          </ul>
+          <p class="mt-2">However, please be aware that this is a student project and not a professionally secured commercial system. Do not use a password that you use for other important accounts (like your social media, banking, or DLSU email).</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-oxford-blue mt-4 mb-2">3. What You Agree To (User Responsibilities)</h3>
+          <ul class="list-disc list-inside ml-4">
+            <li>You agree that the information you provide is for the purpose of testing this system and is not necessarily your real, personal data. You may use fictional or "dummy" data to populate the fields.</li>
+            <li>You understand that this is a non-commercial, academic project.</li>
+            <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-oxford-blue mt-4 mb-2">4. Limitation of Liability</h3>
+          <p>Since this is a student project, we cannot guarantee 100% uptime or the complete security of the system. The project group and DLSU are not liable for any incidental or hypothetical issues arising from the use of this demonstration website.</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-oxford-blue mt-4 mb-2">5. Data Retention & Project End</h3>
+          <p>All data collected in our project database will be permanently deleted at the conclusion of the ITDBADM course or as required by our professor. No personal information will be retained after the project's completion.</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-oxford-blue mt-4 mb-2">Contact Us</h3>
+          <p>If you have any questions about this project or your data, please contact our project team at: joshua_nicolai_gonzales@dlsu.edu.ph.</p>
+        </div>
+      </div>
+    </div>
+    <template #footer>
+      <Button label="Close" icon="pi pi-times" @click="showTermsDialog = false" text />
+      <Button label="I Agree" icon="pi pi-check" @click="acceptTermsAndClose" autofocus />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
@@ -218,6 +315,8 @@
   import Password from 'primevue/password'
   import Button from 'primevue/button'
   import Select from 'primevue/select'
+  import Checkbox from 'primevue/checkbox'
+  import Dialog from 'primevue/dialog'
 
   // Animated Stepper Components
   import Stepper from 'primevue/stepper'
@@ -233,6 +332,8 @@
   const image = brandImage
   const activeStep = ref(1)
   const loadingRegister = ref(false)
+  const showTermsDialog = ref(false)
+  const acceptedTerms = ref(false)
 
   const provinces = ref(phJSONData.provinces)
   const cities = ref([])
@@ -249,6 +350,11 @@
     province: '',
     city: ''
   })
+
+  const acceptTermsAndClose = () => {
+    acceptedTerms.value = true
+    showTermsDialog.value = false
+  }
 
   const onProvinceChange = (eventOrValue) => {
     // PrimeVue @change often emits an event object with .value, while v-model updates pass raw
@@ -311,6 +417,13 @@
     validateRequired('city', value == null ? '' : String(value))
   })
 
+  // Watch for terms acceptance
+  watch(acceptedTerms, (value) => {
+    if (value) {
+      delete errors.value.terms
+    }
+  })
+
   const goToStep2 = () => {
     clearErrors()
     validateRequired('firstName', formData.firstName)
@@ -329,6 +442,31 @@
   async function goToRegister() {
     clearErrors()
     
+    // Validate all fields including terms
+    validateRequired('firstName', formData.firstName)
+    validateRequired('lastName', formData.lastName)
+    validateEmail(formData.email)
+    validatePassword(formData.password)
+    validateConfirmPassword(formData.password, formData.confirmPassword)
+    validateRequired('addressLine1', formData.addressLine1)
+    validateRequired('province', formData.province == null ? '' : String(formData.province))
+    validateRequired('city', formData.city == null ? '' : String(formData.city))
+    
+    // Validate terms acceptance
+    if (!acceptedTerms.value) {
+      errors.value.terms = 'You must accept the Terms and Conditions to register.'
+    }
+
+    if (Object.keys(errors.value).length > 0) {
+      toast.add({
+        severity: 'error',
+        summary: 'Validation Error',
+        detail: 'Please fill in all required fields and accept the Terms and Conditions.',
+        life: 5000
+      })
+      return
+    }
+
     const payload = {
       email: formData.email,
       password: formData.password,
