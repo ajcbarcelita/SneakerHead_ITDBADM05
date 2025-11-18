@@ -103,17 +103,17 @@ async function applyPreferences() {
         return;
     }
 
-    // Always update local storage
+    // Fetch selected currency rate to PHP
+    const currencyObj = currencies.value.find(c => c.currency_code === selectedCurrency.value);
+    const rateToPeso = Number(currencyObj?.exchangeRates?.[0]?.rate_to_php ?? 1);
+
+    // Always update local storage with both currency and rate
     userContextStore.setBranch(Number(selectedBranch.value));
-    userContextStore.setCurrency(selectedCurrency.value);
+    userContextStore.setCurrency(selectedCurrency.value, rateToPeso);
 
     // Check if user is logged in and is a Customer, if yes, only do cart operations
     if (authStore.isLoggedIn && authStore.isCustomer) {
         try {
-            // Fetch selected currency rate to PHP
-            const currencyObj = currencies.value.find(c => c.currency_code === selectedCurrency.value);
-            const rateToPeso = Number(currencyObj?.exchangeRates?.[0]?.rate_to_php ?? 1);
-
             // Try fetching existing cart
             let cart;
             try {

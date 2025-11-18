@@ -6,10 +6,10 @@ import Shoe from "../models/Shoe.js";
 import Branch from "../models/Branch.js";
 import { transaction } from "objection";
 import { updateCartCurrency } from "../services/updateCartCurrency.js";
-import { getCartForUser, createCartForUser } from "../services/cartService.js";
+import { getCartForUser, createCartForUser, validateCartItemStock } from "../services/cartService.js";
 
 /**
- * Get the current user's shopping cart, NO ITEMS (in another endpoint)
+ * Get the current user's shopping cart with items and totals
  */
 export async function getCartHandler(req, res) {
   try {
@@ -17,24 +17,63 @@ export async function getCartHandler(req, res) {
     const { branch_id } = req.params;
 
     if (!branch_id) {
-      return res.status(400).json({ error: "branch_id query parameter is required" });
+      return res.status(400).json({ error: "branch_id parameter is required" });
     }
 
-    const cart = await getCartForUser(userId, branch_id);
+    // Get cart with branch info
+    const cart = await ShoppingCart.query()
+      .findOne({ user_id: userId, branch_id })
+      .withGraphFetched("branch");
 
     if (!cart) {
       return res.status(404).json({ error: "Shopping cart not found for the specified branch" });
     }
 
-    return res.json({ 
+    // Get cart items with shoe details and inventory
+    const cartItems = await ShoppingCartItem.query()
+      .where("cart_id", cart.cart_id)
+      .withGraphFetched("shoe.[brand, images]")
+      .withGraphFetched("inventory");
+
+    // Format items for response (prices are already in cart's currency)
+    const items = cartItems.map((item) => ({
+      cart_item_id: item.cart_item_id,
+      shoe_id: item.shoe_id,
+      shoe_name: item.shoe?.name || "Unknown",
+      brand_name: item.shoe?.brand?.brand_name || "Unknown",
+      shoe_image: item.shoe?.images?.[0]?.img_path || null,
+      size: item.shoe_us_size,
+      quantity: item.quantity,
+      price: parseFloat(item.price_at_addition),
+      subtotal: item.quantity * parseFloat(item.price_at_addition),
+      available_stock: item.inventory?.stock || 0,
+      is_in_stock: item.inventory && item.inventory.stock > 0,
+    }));
+
+    const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+
+    return res.json({
       cart_id: cart.cart_id,
       branch_id: cart.branch_id,
+      branch_name: cart.branch?.branch_name || null,
       currency_code: cart.currency_code,
       currency_rate_to_peso: cart.currency_rate_to_peso,
+      items,
+      subtotal: parseFloat(subtotal.toFixed(2)),
+      total_items: totalItems,
     });
   } catch (error) {
     console.error("Get cart error:", error);
-    return res.status(500).json({ error: "Failed to get shopping cart" });
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
+    return res.status(500).json({ 
+      error: "Failed to get shopping cart",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
 
@@ -119,7 +158,7 @@ export async function updateCartCurrencyHandler(req, res) {
 export const addToCart = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const { shoe_id, shoe_us_size, branch_id, quantity = 1 } = req.body;
+    const { shoe_id, shoe_us_size, branch_id, quantity = 1, currency_code = 'PHP', currency_rate_to_peso = 1 } = req.body;
 
     // Validate input
     if (!shoe_id || !shoe_us_size || !branch_id) {
@@ -136,25 +175,20 @@ export const addToCart = async (req, res) => {
 
     try {
       const result = await transaction(knex, async (trx) => {
-        // Check if shoe exists and get current price
+        // Check if shoe exists and get current price (in PHP)
         const shoe = await Shoe.query(trx).findById(shoe_id).where("is_deleted", false);
 
         if (!shoe) {
           throw { statusCode: 404, message: "Shoe not found" };
         }
 
-        // Check inventory availability
-        const inventory = await ShoeSizeInventory.query(trx).findOne({
-          shoe_id,
-          shoe_us_size,
-          branch_id,
-        });
-
-        if (!inventory || inventory.stock < quantity) {
+        // Check inventory availability using cartService helper
+        const stockValidation = await validateCartItemStock(shoe_id, shoe_us_size, branch_id, quantity);
+        if (!stockValidation.valid) {
           throw {
             statusCode: 400,
-            message: "Insufficient stock",
-            available_stock: inventory?.stock || 0,
+            message: stockValidation.error,
+            available_stock: stockValidation.availableStock,
           };
         }
 
@@ -162,11 +196,25 @@ export const addToCart = async (req, res) => {
         let cart = await ShoppingCart.query(trx).findOne({ user_id: userId, branch_id });
 
         if (!cart) {
+          // Create new cart with currency initialization
           cart = await ShoppingCart.query(trx).insert({
             user_id: userId,
             branch_id: branch_id,
+            currency_code: currency_code || 'PHP',
+            currency_rate_to_peso: currency_rate_to_peso || 1
           });
-        } 
+        }
+
+        // Get cart with currency info
+        const cartWithCurrency = await ShoppingCart.query(trx).findById(cart.cart_id);
+        
+        // Store the ORIGINAL PHP price (don't convert yet)
+        // Conversion will happen on frontend based on selected currency
+        const phpPrice = parseFloat(shoe.price);
+        const cartCurrencyCode = cartWithCurrency.currency_code || 'PHP';
+        
+        // Always store the original PHP price
+        const convertedPrice = phpPrice;
 
         // Check if item already exists in cart
         const existingItem = await ShoppingCartItem.query(trx).findOne({
@@ -177,17 +225,22 @@ export const addToCart = async (req, res) => {
         });
 
         let cartItem;
+        const inventory = await ShoeSizeInventory.query(trx).findOne({
+          shoe_id,
+          shoe_us_size,
+          branch_id,
+        });
 
         if (existingItem) {
           // Update quantity if item exists
           const newQuantity = existingItem.quantity + quantity;
 
           // Check stock again for new quantity
-          if (inventory.stock < newQuantity) {
+          if (!inventory || inventory.stock < newQuantity) {
             throw {
               statusCode: 400,
               message: "Insufficient stock for requested quantity",
-              available_stock: inventory.stock,
+              available_stock: inventory?.stock || 0,
               current_cart_quantity: existingItem.quantity,
             };
           }
@@ -196,7 +249,7 @@ export const addToCart = async (req, res) => {
             existingItem.cart_item_id,
             {
               quantity: newQuantity,
-              price_at_addition: parseFloat(shoe.price), // Update to current price
+              price_at_addition: convertedPrice,
             },
           );
         } else {
@@ -206,7 +259,7 @@ export const addToCart = async (req, res) => {
             shoe_id,
             shoe_us_size,
             shoe_branch_id: branch_id,
-            price_at_addition: parseFloat(shoe.price),
+            price_at_addition: convertedPrice,
             quantity,
           });
         }
@@ -342,16 +395,27 @@ export const removeFromCart = async (req, res) => {
 export const clearCart = async (req, res) => {
   try {
     const userId = req.user.user_id;
+    const { cart_id } = req.params;
 
-    // Find user's cart
-    const cart = await ShoppingCart.query().findOne({ user_id: userId });
+    let cartToUse = cart_id;
 
-    if (!cart) {
-      return res.json({ message: "Cart is already empty" });
+    // If no cart_id provided, find user's cart
+    if (!cartToUse) {
+      const cart = await ShoppingCart.query().findOne({ user_id: userId });
+      if (!cart) {
+        return res.json({ message: "Cart is already empty" });
+      }
+      cartToUse = cart.cart_id;
+    } else {
+      // Verify cart belongs to user
+      const cart = await ShoppingCart.query().findById(cartToUse);
+      if (!cart || cart.user_id !== userId) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
     }
 
     // Delete all items from cart
-    await ShoppingCartItem.query().delete().where("cart_id", cart.cart_id);
+    await ShoppingCartItem.query().delete().where("cart_id", cartToUse);
 
     return res.json({ message: "Cart cleared successfully" });
   } catch (error) {

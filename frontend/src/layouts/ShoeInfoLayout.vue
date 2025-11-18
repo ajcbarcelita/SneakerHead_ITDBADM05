@@ -35,8 +35,8 @@
 
             <!-- Price -->
             <p class="text-2xl font-semibold text-orange-500">
-              {{ currency === 'PHP' 
-                  ? `₱${convertedPrice?.toLocaleString('en-US', { minimumFractionDigits: 2 })}` 
+              {{ currency === 'PHP'
+                  ? `₱${convertedPrice?.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
                   : new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2 }).format(convertedPrice) }}
             </p>
 
@@ -53,10 +53,10 @@
               <label class="block mb-2 font-medium">Select Size:</label>
 
               <div class="flex flex-wrap gap-2">
-                <button 
-                  v-for="size in sizes" 
-                  :key="size.size" 
-                  @click="selectedSize = size" 
+                <button
+                  v-for="size in sizes"
+                  :key="size.size"
+                  @click="selectedSize = size"
                   :disabled="size.stock === 0"
                   :class="[ 'px-4 py-2 rounded border', size.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300' ]"
                   :style="selectedSize?.size === size.size ? { backgroundColor: 'var(--color-oxford-blue)', color: 'white' } : {}"
@@ -108,6 +108,7 @@
   import { useToast } from 'primevue/usetoast';
 
   import cartService from '@/services/cartService'
+  import { useUserContextStore } from '@/stores/userContextStore'
 
   const props = defineProps({
     shoe: { type: Object, required: true },
@@ -119,6 +120,7 @@
     currency: { type: String, default: 'PHP' }
   })
 
+  const userContextStore = useUserContextStore()
   const toast = useToast();
   const quantity = ref(1)
   const selectedSize = ref(null)
@@ -133,28 +135,30 @@
       shoe_id: props.shoe.shoe_id || props.shoe.id,
       shoe_us_size: selectedSize.value.size,
       branch_id: props.branch.branch_id || props.branch.id,
-      quantity: quantity.value
+      quantity: quantity.value,
+      currency_code: userContextStore.chosenCurrency,
+      currency_rate_to_peso: userContextStore.currencyRate
     }
 
     try {
       const result = await cartService.addToCart(itemData)
       console.log('Added to cart:', result)
-      
-      toast.add({ 
-        severity: 'success', 
-        summary: 'Added to Cart', 
-        detail: `${quantity.value} x size ${selectedSize.value.size} added`, 
-        life: 3000 
+
+      toast.add({
+        severity: 'success',
+        summary: 'Added to Cart',
+        detail: `${quantity.value} x size ${selectedSize.value.size} added`,
+        life: 3000
       })
 
       quantity.value = 1
     } catch (err) {
       console.error('Failed to add to cart:', err)
-      toast.add({ 
-        severity: 'error', 
-        summary: 'Failed to Add', 
-        detail: err?.response?.data?.error || 'Something went wrong', 
-        life: 3000 
+      toast.add({
+        severity: 'error',
+        summary: 'Failed to Add',
+        detail: err?.response?.data?.error || 'Something went wrong',
+        life: 3000
       })
     } finally {
       isAdding.value = false

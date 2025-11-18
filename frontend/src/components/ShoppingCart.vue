@@ -101,7 +101,7 @@
                         <div class="text-right">
                             <div class="text-sm text-gray">Total Amount:</div>
                             <div class="text-2xl font-bold text-oxford-blue">
-                                {{ formatCurrency(totalAmount) }}
+                                {{ formatTotalAmount }}
                             </div>
                         </div>
                     </div>
@@ -155,6 +155,13 @@ watch(branchId, async (newId, oldId) => {
  */
 const fetchCart = async () => {
     try {
+        if (!branchId.value) {
+            console.warn('No branch selected');
+            cartItems.value = []
+            cartData.value = null
+            return
+        }
+
         loading.value = true
         let data = await cartService.getCart(branchId.value)
 
@@ -177,14 +184,51 @@ const fetchCart = async () => {
 }
 
 const totalAmount = computed(() => {
-    return cartData.value?.subtotal || 0
+    const subtotal = cartData.value?.subtotal || 0
+    const currencyCode = cartData.value?.currency_code || 'PHP'
+    const currencyRate = parseFloat(cartData.value?.currency_rate_to_peso) || 1
+
+    // Convert from PHP to selected currency
+    return currencyCode === 'PHP'
+        ? subtotal
+        : subtotal * currencyRate
+})
+
+const formatTotalAmount = computed(() => {
+    const currencyCode = cartData.value?.currency_code || 'PHP'
+    const amount = totalAmount.value
+
+    if (currencyCode === 'PHP') {
+        return `₱${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+    } else {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currencyCode,
+            minimumFractionDigits: 2
+        }).format(parseFloat(amount))
+    }
 })
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-PH', {
-        style: 'currency',
-        currency: 'PHP'
-    }).format(value)
+    const currencyCode = cartData.value?.currency_code || 'PHP'
+    const currencyRate = parseFloat(cartData.value?.currency_rate_to_peso) || 1
+    const numericValue = parseFloat(value)
+
+    // Convert from PHP to selected currency
+    const convertedValue = currencyCode === 'PHP'
+        ? numericValue
+        : numericValue * currencyRate
+
+    // Format based on currency type
+    if (currencyCode === 'PHP') {
+        return `₱${convertedValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+    } else {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currencyCode,
+            minimumFractionDigits: 2
+        }).format(convertedValue)
+    }
 }
 
 const increaseQuantity = async (item) => {
@@ -298,7 +342,7 @@ const clearCart = () => {
         acceptClass: 'p-button-danger',
         accept: async () => {
             try {
-                await cartService.clearCart()
+                await cartService.clearCart(cartData.value.cart_id)
                 await fetchCart() // Refresh cart
 
                 toast.add({

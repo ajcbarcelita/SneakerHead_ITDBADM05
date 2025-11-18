@@ -5,7 +5,7 @@ const cartService = {
    * Get the user's cart for a specific branch
    */
   async getCart(branchId) {
-    try { 
+    try {
       const response = await apiClient.get(`/cart/${branchId}`)
       return response.data
     } catch (error) {
@@ -115,9 +115,16 @@ const cartService = {
   /**
    * Clear all cart items
    */
-  async clearCart(cartId) {
+  async clearCart(cartId = null) {
     try {
-      const response = await apiClient.delete(`/cart/${cartId}/items`)
+      let url = '/cart'
+      if (cartId) {
+        url = `/cart/${cartId}/items`
+      } else {
+        // Fallback: use a special marker that backend can handle
+        url = '/cart/0/items'
+      }
+      const response = await apiClient.delete(url)
       return response.data
     } catch (error) {
       console.error('Error clearing cart:', error)

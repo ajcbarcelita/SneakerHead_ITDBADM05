@@ -17,20 +17,12 @@ const router = express.Router();
 // All cart routes require authentication
 router.use(authenticate);
 
-// Get user's cart from a specific branch
-router.get("/:branch_id", getCartHandler);
-
-// Create cart for user at a specific EXISTING branch
-router.post("/", createCartForUserHandler);
-
-// Update cart currency, and/or conversion rate
-router.put("/:cart_id/currency", updateCartCurrencyHandler);
-
+// Specific routes first to avoid wildcard conflicts
 // Get cart item count
 router.get("/count", getCartCount);
 
-// Get all items in cart - not implemented yet
-router.get("/cart", getCartItems);
+// Create cart for user at a specific EXISTING branch
+router.post("/", createCartForUserHandler);
 
 // Add item to cart
 router.post("/items", addToCart);
@@ -41,7 +33,16 @@ router.put("/items/:itemId", updateCartItem);
 // Remove item from cart
 router.delete("/items/:itemId", removeFromCart);
 
+// Get all items in cart - not implemented yet
+router.get("/cart", getCartItems);
+
+// Update cart currency, and/or conversion rate
+router.put("/:cart_id/currency", updateCartCurrencyHandler);
+
 // Clear entire cart
 router.delete("/:cart_id/items", clearCart);
+
+// Get user's cart from a specific branch (wildcard - must be last)
+router.get("/:branch_id", getCartHandler);
 
 export default router;
