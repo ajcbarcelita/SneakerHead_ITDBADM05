@@ -187,3 +187,12 @@ VALUES
 ('kasane_teto@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$2Qz9521WNaiabskpksgq0A$82clm13kaMOZWYIljBRf5b+QFp8NOhT1YwWqaV+YoWI', 'Kasane', 'Teto', NULL, 1, 3),
 ('akita_neru@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$yCFPWHrGWNIe4WqYYnBYRw$zN7esMqcwcCGWelrcX0WwxGGJQbOpSGDcETxl7cVlbU', 'Akita', 'Neru', NULL, 1, 3),
 ('hatsune_miku@gmail.com', '$argon2id$v=19$m=65536,t=5,p=1$HAniNVgySRDOINOYvheGGQ$FZ1HzfEDKecxa0ggpmHdxoqenuFdj+Ddd+muUVR0A2A', 'Hatsune', 'Miku', NULL,1, 3);
+
+
+-- branch_admin_assignments inserts
+INSERT INTO branch_admin_assignments 
+(branch_assignment, staff_id, branch_id, role_at_branch, assigned_at, unassigned_at)
+VALUES
+(1, 2, 1, 2, NOW(), NULL),
+(2, 3, 2, 2, NOW(), NULL),
+(3, 4, 3, 2, NOW(), NULL);
