@@ -20,6 +20,7 @@ export const useShoeStore = defineStore('shoes', {
     },
 
     async loadShoeDetails(shoe_id, branch_id) {
+      this.selectedShoe = null
       this.loading = true
       console.log('[Store] Fetching shoe details:', { shoe_id, branch_id })
       const res = await getFullShoeDetails(shoe_id, branch_id)
@@ -27,14 +28,14 @@ export const useShoeStore = defineStore('shoes', {
     
       const data = res.data
 
-    let branchName = 'Unknown Branch'
-    let branchObj = null
-    try {
-    branchObj = await getBranch(branch_id)
-    branchName = branchObj?.branch_name || 'Unknown Branch'
-    } catch (err) {
-    console.error('Error fetching branch:', err)
-    }
+      let branchName = 'Unknown Branch'
+      let branchObj = null
+      try {
+      branchObj = await getBranch(branch_id)
+      branchName = branchObj?.branch_name || 'Unknown Branch'
+      } catch (err) {
+      console.error('Error fetching branch:', err)
+      }
 
       this.selectedShoe = {
         ...data["0"],           // basic shoe info
