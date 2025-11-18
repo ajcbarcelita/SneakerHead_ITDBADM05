@@ -19,7 +19,7 @@
       </div>
 
       <!-- METRICS -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card class="shadow-md border-t-4 border-green-500">
           <template #title>Total Sales</template>
           <template #content>
@@ -45,6 +45,14 @@
             <p class="text-blue-500 text-sm font-semibold">{{ rangeLabel.toUpperCase() }}</p>
           </template>
         </Card>
+
+        <Card class="shadow-md border-t-4 border-purple-500">
+          <template #title>Promo Orders</template>
+          <template #content>
+            <div class="text-4xl font-bold text-purple-600">{{ currentPromoOrders }}</div>
+            <p class="text-purple-500 text-sm font-semibold">{{ rangeLabel.toUpperCase() }}</p>
+          </template>
+        </Card>
       </div>
 
       <!-- OTHER DETAILS -->
@@ -67,7 +75,7 @@
         </Card>
       </div>
 
-      <!-- LINE CHART FOR SALES -->
+      <!-- LINE CHART FOR SALES, ORDERS, AND PROMO ORDERS -->
       <Card class="shadow-md">
         <template #title>Sales Performance</template>
         <template #content>
@@ -122,6 +130,15 @@ const rangeLabel = computed(() => selectedRange.value?.label || 'Daily')
 const formattedTotalSales = computed(() => `₱${metrics.value.totalSales.toLocaleString()}`)
 const formattedTopCust = computed(() => `₱${Number(metrics.value.topCustomer?.total_spent || 0).toLocaleString()}`)
 
+// Get current period's promo orders count
+const currentPromoOrders = computed(() => {
+  const chartData = metrics.value.chartData || []
+  if (chartData.length === 0) return 0
+  
+  // Get the last entry (current period)
+  const currentPeriod = chartData[chartData.length - 1]
+  return currentPeriod?.promoOrders || 0
+})
 
 // Fetch metrics from DB for the logged-in branch
 async function fetchMetrics() {
@@ -158,6 +175,7 @@ const loadBranchAssignment = async () => {
 }
 
 // Update Chart with data from DB
+// Update Chart with data from DB
 function updateChart() {
   const documentStyle = getComputedStyle(document.documentElement)
   const textColor = documentStyle.getPropertyValue('--p-text-color')
@@ -166,30 +184,46 @@ function updateChart() {
 
   const backendData = metrics.value.chartData || []
 
-  // Extract labels for x axis from backend data
-  const labels = backendData.map(item => item.period)
+  if (backendData.length === 0) {
+    chartData.value = null;
+    return;
+  }
 
-  // Create datasets for Sales and Orders
-  const salesData = backendData.map(item => item.sales)
-  const ordersData = backendData.map(item => item.orders)
+  const labels = backendData.map(item => item.period || 'Unknown')
 
-  // Create chart lines for Sales and Orders
+  // Create datasets for Sales, Orders, and Promo Orders
+  const salesData = backendData.map(item => Number(item.sales) || 0)
+  const ordersData = backendData.map(item => Number(item.orders) || 0)
+  const promoOrdersData = backendData.map(item => Number(item.promoOrders) || 0)
+
+  // Create chart lines for Sales, Orders, and Promo Orders
   chartData.value = {
     labels: labels,
     datasets: [
       {
-        label: 'Sales',
+        label: 'Sales (₱)',
         data: salesData,
         fill: false,
-        borderColor: documentStyle.getPropertyValue('--p-green-500'),
+        borderColor: documentStyle.getPropertyValue('--p-green-500') || '#22c55e',
+        backgroundColor: documentStyle.getPropertyValue('--p-green-500') || '#22c55e',
         tension: 0.4,
         yAxisID: 'y'
       },
       {
-        label: 'Orders',
+        label: 'Total Orders',
         data: ordersData,
         fill: false,
-        borderColor: documentStyle.getPropertyValue('--p-blue-500'),
+        borderColor: documentStyle.getPropertyValue('--p-blue-500') || '#3b82f6',
+        backgroundColor: documentStyle.getPropertyValue('--p-blue-500') || '#3b82f6',
+        tension: 0.4,
+        yAxisID: 'y1'
+      },
+      {
+        label: 'Promo Orders',
+        data: promoOrdersData,
+        fill: false,
+        borderColor: documentStyle.getPropertyValue('--p-purple-500') || '#a855f7',
+        backgroundColor: documentStyle.getPropertyValue('--p-purple-500') || '#a855f7',
         tension: 0.4,
         yAxisID: 'y1'
       }
@@ -199,24 +233,36 @@ function updateChart() {
   chartOptions.value = {
     maintainAspectRatio: false,
     aspectRatio: 0.6,
+    responsive: true,
     plugins: {
       legend: {
         labels: { color: textColor },
         position: 'top'
       },
       tooltip: {
+        mode: 'index',
+        intersect: false,
         callbacks: {
           label: function (context) {
             let label = context.dataset.label || '';
-            if (label === 'Sales') {
-              return `Sales: ₱${context.parsed.y.toLocaleString()}`
-            } else if (label === 'Orders') {
-              return `Orders: ${context.parsed.y}`
+            const value = context.parsed.y;
+            
+            if (label.includes('Sales')) {
+              return `Sales: ₱${value.toLocaleString()}`
+            } else if (label.includes('Total Orders')) {
+              return `Total Orders: ${value}`
+            } else if (label.includes('Promo Orders')) {
+              return `Promo Orders: ${value}`
             }
-            return label + ': ' + context.parsed.y;
+            return label + ': ' + value;
           }
         }
       }
+    },
+    interaction: {
+      mode: 'nearest',
+      axis: 'x',
+      intersect: false
     },
     scales: {
       x: {
@@ -224,7 +270,10 @@ function updateChart() {
           color: textColorSecondary,
           maxTicksLimit: 10
         },
-        grid: { color: surfaceBorder },
+        grid: { 
+          color: surfaceBorder,
+          drawBorder: true 
+        },
       },
       y: {
         type: 'linear',
@@ -236,7 +285,10 @@ function updateChart() {
             return '₱' + value.toLocaleString()
           }
         },
-        grid: { color: surfaceBorder },
+        grid: { 
+          color: surfaceBorder,
+          drawBorder: true 
+        },
         title: {
           display: true,
           text: 'Sales (₱)',
@@ -248,7 +300,10 @@ function updateChart() {
         display: true,
         position: 'right',
         ticks: { color: textColorSecondary },
-        grid: { drawOnChartArea: false },
+        grid: { 
+          drawOnChartArea: false,
+          drawBorder: true 
+        },
         title: {
           display: true,
           text: 'Number of Orders',
@@ -256,6 +311,12 @@ function updateChart() {
         }
       },
     },
+    elements: {
+      point: {
+        radius: 3,
+        hoverRadius: 6
+      }
+    }
   }
 }
 

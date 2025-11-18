@@ -228,7 +228,6 @@ export async function getMetrics(req, res) {
 
                 const year = d.getFullYear();
                 const month = d.getMonth() + 1;
-
                 const key = `${year}-${String(month).padStart(2, "0")}`;
 
                 ranges.push({
@@ -267,18 +266,19 @@ export async function getMetrics(req, res) {
             dataMap.set(key, {
                 sales: Number(row.total_sales || 0),
                 orders: Number(row.order_count || 0),
+                promoOrders: Number(row.orders_with_promo || 0),
                 branch: row.branch_name,
             });
         }
 
         // Chart Data
         const filledChartData = ranges.map(r => {
-            const data = dataMap.get(r.key) || { sales: 0, orders: 0 };
-
+            const data = dataMap.get(r.key) || { sales: 0, orders: 0, promoOrders: 0 };
             return {
                 period: r.label,
                 sales: data.sales,
                 orders: data.orders,
+                promoOrders: data.promoOrders,
                 branch: data.branch,
             };
         });
