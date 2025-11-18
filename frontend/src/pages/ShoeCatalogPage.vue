@@ -24,17 +24,19 @@
         </div>
 
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          <ShoeCard
-            v-for="shoe in filteredShoes"
-            :key="shoe.shoe_id"
-            :shoe="shoe"
-            :branch-id="managerBranchId"
-            :branch-name="branchName"
-            :show-branch="false"
-            :currency="selectedCurrency"
-            :currency-rate="currencyRate"
-            @click="onSelectShoe(shoe)"
-          />
+          <div v-for="shoe in filteredShoes" :key="shoe.shoe_id">
+            <ShoeCard
+              v-if="shoe && shoe.shoe_id"
+              :key ="shoe_id"
+              :shoe="shoe"
+              :branch-id="managerBranchId"
+              :branch-name="branchName"
+              :show-branch="false"
+              :currency="selectedCurrency"
+              :currency-rate="currencyRate"
+              @click="onSelectShoe(shoe)"
+            />
+          </div>
         </div>
       </div>
     </main>
@@ -82,8 +84,8 @@ const filteredShoes = computed(() => {
   
   const query = searchQuery.value.toLowerCase()
   return shoes.value.filter(shoe => 
-    shoe.name?.toLowerCase().includes(query) ||
-    shoe.brand?.toLowerCase().includes(query)
+    shoe?.name?.toLowerCase().includes(query) ||
+    shoe?.brand_name?.toLowerCase().includes(query)
   )
 })
 
@@ -189,14 +191,12 @@ watch(() => userContextStore.chosenCurrency, () => {
 })
 
 onMounted(async () => {
-  // Load from storage first
   userContextStore.loadFromStorage()
   
-  // Fetch currencies with rates once
   await fetchCurrencies()
   
-  // If no branch selected, show modal
   if (!userContextStore.branchId) {
+    console.log('📍 No branch selected, showing modal')
     showContextModal.value = true
   } else {
     initializeFromContext()
