@@ -30,10 +30,10 @@ router.put("/:cart_id/currency", updateCartCurrencyHandler);
 router.get("/count", getCartCount);
 
 // Get all items in cart - not implemented yet
-router.get("/:cart_id/items", getCartItems);
+router.get("/items", getCartItems);
 
 // Add item to cart
-router.post("/:cart_id/items", addToCart);
+router.post("/items", addToCart);
 
 // Update cart item quantity
 router.put("/items/:itemId", updateCartItem);

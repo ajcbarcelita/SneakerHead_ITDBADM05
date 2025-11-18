@@ -76,9 +76,9 @@ const cartService = {
   /**
    * Add to cart
    */
-  async addToCart(cartId, itemData) {
+  async addToCart(itemData) {
     try {
-      const response = await apiClient.post(`/cart/${cartId}/items`, itemData)
+      const response = await apiClient.post(`/cart/items`, itemData)
       return response.data
     } catch (error) {
       console.error('Error adding to cart:', error)

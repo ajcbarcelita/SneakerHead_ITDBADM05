@@ -22,6 +22,8 @@
           <!-- RIGHT: SHOE DETAILS -->
           <div class="md:w-3/5 w-full flex flex-col gap-5">
 
+            <Toast />
+
             <!-- Name, Brand & Branch -->
             <div>
               <h2 class="text-3xl font-bold leading-tight">{{ shoe.name }}</h2>
@@ -37,7 +39,7 @@
                   ? `₱${convertedPrice?.toLocaleString('en-US', { minimumFractionDigits: 2 })}` 
                   : new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2 }).format(convertedPrice) }}
             </p>
-            
+
             <!-- Categories -->
             <div>
               <label class="block mb-2 font-medium">Categories:</label>
@@ -49,10 +51,16 @@
             <!-- SIZE SELECTOR -->
             <div>
               <label class="block mb-2 font-medium">Select Size:</label>
+
               <div class="flex flex-wrap gap-2">
-                <button v-for="size in sizes" :key="size.size" @click="selectedSize = size" :disabled="size.stock === 0"
+                <button 
+                  v-for="size in sizes" 
+                  :key="size.size" 
+                  @click="selectedSize = size" 
+                  :disabled="size.stock === 0"
                   :class="[ 'px-4 py-2 rounded border', size.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300' ]"
-                  :style="selectedSize?.size === size.size ? { backgroundColor: 'var(--color-oxford-blue)', color: 'white' } : {}">
+                  :style="selectedSize?.size === size.size ? { backgroundColor: 'var(--color-oxford-blue)', color: 'white' } : {}"
+                >
                   {{ size.size }}
                 </button>
               </div>
@@ -81,7 +89,7 @@
 
             <!-- Add to Cart -->
             <Button label="Add to Cart" icon="pi pi-shopping-cart" class="mt-4 w-full md:w-auto"
-              :disabled="!selectedSize || selectedSize.stock === 0" @click="addToCart" />
+              :disabled="!selectedSize || selectedSize.stock === 0 || isAdding" @click="addToCart" />
           </div>
         </div>
       </template>
@@ -90,12 +98,16 @@
 </template>
 
 <script setup>
-  import { ref, computed } from 'vue'
+  import { ref } from 'vue'
   import Card from 'primevue/card'
   import Galleria from 'primevue/galleria'
   import Chip from 'primevue/chip'
   import InputNumber from 'primevue/inputnumber'
   import Button from 'primevue/button'
+  import Toast from 'primevue/toast';
+  import { useToast } from 'primevue/usetoast';
+
+  import cartService from '@/services/cartService'
 
   const props = defineProps({
     shoe: { type: Object, required: true },
@@ -107,12 +119,46 @@
     currency: { type: String, default: 'PHP' }
   })
 
+  const toast = useToast();
   const quantity = ref(1)
   const selectedSize = ref(null)
+  const isAdding = ref(false)
 
-  function addToCart() {
-    if (!selectedSize || selectedSize.stock === 0) return
-    console.log(`[Cart] Added ${quantity.value} of size ${selectedSize.size} to cart at ${props.branch.branch_name}`)
+  async function addToCart() {
+    if (!selectedSize.value || selectedSize.value.stock === 0) return
+    if (isAdding.value) return
+
+    isAdding.value = true
+    const itemData = {
+      shoe_id: props.shoe.shoe_id || props.shoe.id,
+      shoe_us_size: selectedSize.value.size,
+      branch_id: props.branch.branch_id || props.branch.id,
+      quantity: quantity.value
+    }
+
+    try {
+      const result = await cartService.addToCart(itemData)
+      console.log('Added to cart:', result)
+      
+      toast.add({ 
+        severity: 'success', 
+        summary: 'Added to Cart', 
+        detail: `${quantity.value} x size ${selectedSize.value.size} added`, 
+        life: 3000 
+      })
+
+      quantity.value = 1
+    } catch (err) {
+      console.error('Failed to add to cart:', err)
+      toast.add({ 
+        severity: 'error', 
+        summary: 'Failed to Add', 
+        detail: err?.response?.data?.error || 'Something went wrong', 
+        life: 3000 
+      })
+    } finally {
+      isAdding.value = false
+    }
   }
 </script>
 

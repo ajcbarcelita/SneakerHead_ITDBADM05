@@ -411,7 +411,8 @@ CREATE TABLE IF NOT EXISTS `sneakerhead`.`shopping_cart_items` (
   `added_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`cart_item_id`),
   INDEX `sciFK_cart_idx` (`cart_id` ASC) VISIBLE,
-  INDEX `sciFK_shoesizeinventory_idx` (`shoe_id` ASC, `shoe_us_size` ASC, `shoe_branch_id` ASC) VISIBLE,
+  INDEX `sciFK_shoesizeinventory_idx` (`shoe_id` ASC, `shoe_us_size` ASC, `shoe_branch_id` ASC) INVISIBLE,
+  UNIQUE INDEX `idx_noDuplicates` (`cart_id` ASC, `shoe_id` ASC, `shoe_branch_id` ASC, `shoe_us_size` ASC) VISIBLE,
   CONSTRAINT `sciFK_cart`
     FOREIGN KEY (`cart_id`)
     REFERENCES `sneakerhead`.`shopping_cart` (`cart_id`)
@@ -628,6 +629,18 @@ SHOW WARNINGS;
 -- Placeholder table for view `sneakerhead`.`branch_yearly_sales_view`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_yearly_sales_view` (`year` INT, `period_start` INT, `period_end` INT, `branch_id` INT, `branch_name` INT, `total_sales` INT, `order_count` INT, `avg_order_value` INT, `orders_with_promo` INT, `promo_usage_rate` INT, `active_promo_codes` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`user_details_with_branch`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`user_details_with_branch` (`id` INT, `fname` INT, `mname` INT, `lname` INT, `email` INT, `role_id` INT, `role` INT, `branch_id` INT, `branch_name` INT, `created_at` INT, `updated_at` INT, `is_deleted` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`branch_details`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_details` (`branch_id` INT, `branch_name` INT, `address_id` INT, `addressline1` INT, `addressline2` INT, `city_id` INT, `city_name` INT, `is_deleted` INT);
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
@@ -893,6 +906,59 @@ JOIN branches b ON o.branch_id = b.branch_id
 GROUP BY YEAR(o.created_at), b.branch_id, b.branch_name
 ORDER BY year DESC, b.branch_name;
 SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`user_details_with_branch`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`user_details_with_branch`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`user_details_with_branch` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW user_details_with_branch AS
+SELECT 
+    users.user_id as id,
+    users.fname,
+    users.mname, 
+    users.lname,
+    users.email, 
+    users.role_id,
+    ref_roles.role_name as role,
+    branches.branch_id,
+    branches.branch_name,
+    users.created_at,
+    users.updated_at,
+    users.is_deleted
+FROM users
+LEFT JOIN ref_roles ON users.role_id = ref_roles.role_id
+LEFT JOIN addresses ON users.address_id = addresses.address_id
+LEFT JOIN branches ON addresses.address_id = branches.address_id
+ORDER BY branches.branch_id ASC;
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`branch_details`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`branch_details`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`branch_details` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW branch_details AS
+SELECT 
+    branches.branch_id,
+    branches.branch_name, 
+    branches.address_id,
+    addresses.addressline1,
+    addresses.addressline2, 
+    addresses.city_id,
+    ref_ph_cities_municipalities.city_name,
+    branches.is_deleted
+FROM branches
+LEFT JOIN addresses ON branches.address_id = addresses.address_id
+LEFT JOIN ref_ph_cities_municipalities ON addresses.city_id = ref_ph_cities_municipalities.city_id
+ORDER BY branches.branch_id ASC;
+SHOW WARNINGS;
 USE `sneakerhead`;
 
 DELIMITER $$
@@ -912,7 +978,6 @@ END$$
 SHOW WARNINGS$$
 
 DELIMITER ;
-
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
