@@ -26,20 +26,26 @@
 import NavBar from '@/components/NavBar.vue'
 import Footer from '@/components/Footer.vue'
 import ShoeInfoLayout from '@/layouts/ShoeInfoLayout.vue'
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useShoeStore } from '@/stores/shoeStore'
 
 const route = useRoute()
 const shoeStore = useShoeStore()
 
-onMounted(async () => {
+async function loadShoe() {
   const shoe_id = parseInt(route.params.shoe_id)
   const branch_id = parseInt(route.params.branch_id)
-  console.log('[Page] Route params:', { shoe_id, branch_id })
 
-  console.log('[Page] Before fetching shoe details:', shoeStore.selectedShoe)
   await shoeStore.loadShoeDetails(shoe_id, branch_id)
-  console.log('[Page] After fetching shoe details:', shoeStore.selectedShoe)
+}
+
+// Watch for route param changes
+watch(
+  () => [route.params.shoe_id, route.params.branch_id],
+  () => { loadShoe()})
+
+onMounted(() => {
+  loadShoe()
 })
 </script>

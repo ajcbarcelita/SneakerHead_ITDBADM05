@@ -15,6 +15,7 @@
   import UserContextModal from './components/UserContextModal.vue';
   import { useUserContextStore } from './stores/userContextStore';
 
+  
   const userContextStore = useUserContextStore();
   const showModal = ref(false);
 
