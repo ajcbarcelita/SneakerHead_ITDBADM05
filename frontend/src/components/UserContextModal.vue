@@ -54,57 +54,57 @@
 </template>
 
 <script setup>
-    import Dialog from 'primevue/dialog';
-    import Button from 'primevue/button';
-    import Dropdown from 'primevue/dropdown';
-    import { ref, onMounted, computed } from 'vue';
-    import { useUserContextStore } from '@/stores/userContextStore';
-    import { getAllBranches } from '@/services/branchService';
-    import { getCurrencies } from '@/services/currencyService';
+  import Dialog from 'primevue/dialog';
+  import Button from 'primevue/button';
+  import Dropdown from 'primevue/dropdown';
+  import { ref, onMounted, computed } from 'vue';
+  import { useUserContextStore } from '@/stores/userContextStore';
+  import { getAllBranches } from '@/services/branchService';
+  import { getCurrencies } from '@/services/currencyService';
 
-    const emit = defineEmits(['close']);
-    const userContextStore = useUserContextStore();
+  const emit = defineEmits(['close']);
+  const userContextStore = useUserContextStore();
 
-    // Load localStorage into store
-    userContextStore.loadFromStorage();
+  // Load localStorage
+  userContextStore.loadFromStorage();
 
-    const visible = ref(true);
-    const branches = ref([]);
-    const currencies = ref([]);
+  const visible = ref(true);
+  const branches = ref([]);
+  const currencies = ref([]);
 
-    const selectedBranch = ref(userContextStore.chosenBranch?.branch_id || null);
-    const selectedCurrency = ref(userContextStore.chosenCurrency || 'PHP');
+  const selectedBranch = ref(userContextStore.branchId || null);
+  const selectedCurrency = ref(userContextStore.chosenCurrency || 'PHP');
 
-    // Disable cancel if nothing is already saved in localStorage / store
-    const canCancel = computed(() => !!userContextStore.chosenBranch || !!userContextStore.chosenCurrency);
+  const canCancel = computed(() =>
+      !!userContextStore.branchId || !!userContextStore.chosenCurrency
+  );
 
-    onMounted(async () => {
-    try {
-        branches.value = await getAllBranches(); // returns array
-        currencies.value = await getCurrencies(); // returns array
-    } catch (err) {
-        console.error('Error fetching branches or currencies', err);
-    }
-    });
+  onMounted(async () => {
+      try {
+          branches.value = await getAllBranches();
+          currencies.value = await getCurrencies();
+      } catch (err) {
+          console.error('Error fetching branches or currencies', err);
+      }
+  });
 
-    function applyPreferences() {
-    const branchObj = branches.value.find(b => b.branch_id === Number(selectedBranch.value));
-    if (!branchObj) {
-        alert('Please select a valid branch.');
-        return;
-    }
+  function applyPreferences() {
+      if (!selectedBranch.value) {
+          alert('Please select a valid branch.');
+          return;
+      }
 
-    userContextStore.setBranch(branchObj);
-    userContextStore.setCurrency(selectedCurrency.value);
+      userContextStore.setBranch(Number(selectedBranch.value));
+      userContextStore.setCurrency(selectedCurrency.value);
 
-    visible.value = false;
-    emit('close');
-    }
+      visible.value = false;
+      emit('close');
+  }
 
-    function cancel() {
-    if (canCancel.value) {
-        visible.value = false;
-        emit('close');
-    }
-    }
+  function cancel() {
+      if (canCancel.value) {
+          visible.value = false;
+          emit('close');
+      }
+  }
 </script>

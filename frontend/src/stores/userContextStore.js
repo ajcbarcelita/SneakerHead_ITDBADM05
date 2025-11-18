@@ -2,18 +2,19 @@ import { defineStore } from 'pinia';
 
 export const useUserContextStore = defineStore('userContext', {
     state: () => ({
-        chosenBranch: null,
+        branchId: null,
         chosenCurrency: 'PHP'
     }),
 
     getters: {
-        hasBranchSelected: (state) => !!state.chosenBranch,
+        hasBranchSelected: (state) => !!state.branchId,
         hasCurrencySelected: (state) => !!state.chosenCurrency
     },
+
     actions: {
-        setBranch(chosenBranch) {
-            this.chosenBranch = chosenBranch;
-            localStorage.setItem('chosenBranch', JSON.stringify(chosenBranch));
+        setBranch(branchId) {
+            this.branchId = branchId;
+            localStorage.setItem('branchId', branchId);
         },
 
         setCurrency(chosenCurrency) {
@@ -22,22 +23,18 @@ export const useUserContextStore = defineStore('userContext', {
         },
 
         loadFromStorage() {
-            const storedBranch = localStorage.getItem('chosenBranch');
+            const storedBranchId = localStorage.getItem('branchId');
             const storedCurrency = localStorage.getItem('chosenCurrency');
-            if (storedBranch) this.chosenBranch = JSON.parse(storedBranch);
-            if (storedCurrency) this.chosenCurrency = storedCurrency;   
 
-        },
-
-        init() {
-            this.loadFromStorage();
+            if (storedBranchId) this.branchId = Number(storedBranchId);
+            if (storedCurrency) this.chosenCurrency = storedCurrency;
         },
 
         clear() {
-            this.chosenBranch = null;
+            this.branchId = null;
             this.chosenCurrency = 'PHP';
-            localStorage.removeItem('chosenBranch');
+            localStorage.removeItem('branchId');
             localStorage.removeItem('chosenCurrency');
         }
     }
-})
+});

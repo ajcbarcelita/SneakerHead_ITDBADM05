@@ -1,65 +1,116 @@
 import ShoppingCart from "../models/ShoppingCart.js";
 import ShoppingCartItem from "../models/ShoppingCartItem.js";
 import ShoeSizeInventory from "../models/ShoeSizeInventory.js";
+import RefCurrency from "../models/RefCurrency.js";
 import Shoe from "../models/Shoe.js";
 import { transaction } from "objection";
+import { updateCartCurrency } from "../services/updateCartCurrency.js";
+import { getCartForUser, createCartForUser } from "../services/cartService.js";
 
 /**
- * Get the current user's shopping cart with all items
+ * Get the current user's shopping cart, NO ITEMS (in another endpoint)
  */
-export const getCart = async (req, res) => {
+export async function getCartHandler(req, res) {
   try {
     const userId = req.user.user_id;
+    const { branch_id } = req.query;
 
-    // Find cart for user with all related data
-    let cart = await ShoppingCart.query()
-      .findOne({ user_id: userId })
-      .withGraphFetched("[items.[shoe.[brand, images], inventory], branch]");
-
-    // If no cart exists, return empty cart structure
-    if (!cart) {
-      return res.json({
-        cart_id: null,
-        branch_id: null,
-        branch_name: null,
-        items: [],
-        subtotal: 0,
-        total_items: 0,
-      });
+    if (!branch_id) {
+      return res.status(400).json({ error: "branch_id query parameter is required" });
     }
 
-    // Process cart items and calculate totals
-    const processedItems = cart.items.map((item) => ({
-      cart_item_id: item.cart_item_id,
-      shoe_id: item.shoe_id,
-      shoe_name: item.shoe.name,
-      brand_name: item.shoe.brand.brand_name,
-      shoe_image: item.shoe.images?.[0]?.img_path || null,
-      size: item.shoe_us_size,
-      quantity: item.quantity,
-      price: item.price_at_addition,
-      current_price: item.shoe.price,
-      subtotal: item.quantity * item.price_at_addition,
-      available_stock: item.inventory?.stock || 0,
-      is_in_stock: (item.inventory?.stock || 0) >= item.quantity,
-      branch_id: item.shoe_branch_id,
-    }));
+    const cart = await getCartForUser(userId, branch_id);
 
-    const cartData = {
+    if (!cart) {
+      return res.status(404).json({ error: "Shopping cart not found for the specified branch" });
+    }
+
+    return res.json({ 
       cart_id: cart.cart_id,
       branch_id: cart.branch_id,
-      branch_name: cart.branch?.branch_name || null,
-      items: processedItems,
-      subtotal: processedItems.reduce((sum, item) => sum + item.subtotal, 0),
-      total_items: processedItems.reduce((sum, item) => sum + item.quantity, 0),
-    };
-
-    return res.json(cartData);
+      currency_code: cart.currency_code,
+      currency_rate_to_peso: cart.currency_rate_to_peso,
+    });
   } catch (error) {
     console.error("Get cart error:", error);
-    return res.status(500).json({ error: "Failed to fetch cart" });
+    return res.status(500).json({ error: "Failed to get shopping cart" });
   }
-};
+}
+
+/**
+ * Get the current user's items in the CHOSEN shopping cart: TO DO LATER
+ */
+export const  getCartItems = async (req, res) => {
+  return res.status(501).json({ error: "Not implemented yet" });
+}
+
+/**
+ * Create a new shopping cart for the user for a specific branch
+ */
+export async function createCartForUserHandler(req, res) {
+  try {
+    const userId = req.user.user_id;
+    const { branch_id, currency_code, currency_rate_to_peso } = req.body;
+
+    // If branch_id is missing, return error
+    if (!branch_id) {
+      return res.status(400).json({ error: "branch_id is required" });
+    }
+
+    // Validate branch existence
+    const branch = await Branch.query().findById(branch_id);
+    if (!branch) {
+      return res.status(404).json({ error: "Branch not found" });
+    }
+
+    // Validate currency if provided
+    if (currency_code) {
+      const currency = await RefCurrency.query().findById(currency_code);
+      if (!currency) {
+        return res.status(404).json({ error: "Currency not found" });
+      }
+    }
+
+    // Check if cart already exists for this user and branch
+    const existingCart = await getCartForUser(userId, branch_id);
+    if (existingCart) {
+      return res.status(400).json({ error: "Cart already exists for this branch" });
+    }
+
+    // Create the cart
+    const newCart = await createCartForUser(userId, branch_id, currency_code, currency_rate_to_peso);
+    return res.status(201).json({
+      message: "Shopping cart created successfully",
+      cart_id: newCart.cart_id,
+      branch_id: newCart.branch_id,
+      currency_code: newCart.currency_code,
+      currency_rate_to_peso: newCart.currency_rate_to_peso,
+    });
+  } catch (error) {
+    console.error("Create cart error:", error);
+    return res.status(500).json({ error: "Failed to create shopping cart" });
+  }
+}
+
+export async function updateCartCurrencyHandler(req, res) {
+  try {
+    const user_id = req.user.user_id;
+    const { cart_id } = req.params;
+    const { currency_code, currency_rate_to_peso } = req.body;
+
+    const updatedCart = await updateCartCurrency(user_id, cart_id, currency_code, currency_rate_to_peso);
+    
+    return res.json({
+      message: "Cart currency updated successfully",
+      cart_id: updatedCart.cart_id,
+      currency_code: updatedCart.currency_code,
+      currency_rate_to_peso: updatedCart.currency_rate_to_peso,
+    });
+  } catch (error) {
+    console.error("Update cart currency error:", error);
+    return res.status(error.statusCode || 500).json({ error: error.message || "Failed to update cart currency" });
+  }
+} 
 
 /**
  * Add an item to the shopping cart

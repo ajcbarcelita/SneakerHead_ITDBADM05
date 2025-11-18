@@ -74,21 +74,23 @@ export async function validateCartStock(cartId) {
 }
 
 /**
- * Get or create cart for user
+ * Gets specific user's cart for a branch
  */
-export async function getOrCreateCart(userId, branchId, trx = null) {
+export async function getCartForUser(userId, branchId) {
+  return await ShoppingCart.query().findOne({ user_id: userId, branch_id: branchId });
+}
+
+/**
+ * Create a new specific cart for user for a branch
+ */
+export async function createCartForUser(userId, branchId, currency_code = "PHP", currency_rate_to_peso = 1.00, trx = null) {
   const query = trx ? ShoppingCart.query(trx) : ShoppingCart.query();
-
-  let cart = await query.findOne({ user_id: userId });
-
-  if (!cart) {
-    cart = await query.insert({
-      user_id: userId,
-      branch_id: branchId,
-    });
-  }
-
-  return cart;
+  return await query.insert({
+    user_id: userId,
+    branch_id: branchId,
+    currency_code,
+    currency_rate_to_peso
+  });
 }
 
 /**
@@ -116,3 +118,4 @@ export async function canSwitchBranch(userId, newBranchId) {
 
   return { canSwitch: true };
 }
+

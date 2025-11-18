@@ -43,7 +43,7 @@ app.use((req, _res, next) => {
 
 // Define and list routes here from imported route files later.
 app.use("/", authRoutes);
-app.use("/", cartRoutes);
+app.use("/cart", cartRoutes);
 app.use("/", orderRoutes);
 app.use("/", userRoutes);
 app.use("/", BMRoutes);

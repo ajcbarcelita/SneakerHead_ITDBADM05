@@ -19,7 +19,7 @@
   const showModal = ref(false);
 
   onMounted(() => {
-      userContextStore.init();
+      userContextStore.loadFromStorage();
 
       if (!userContextStore.chosenBranch || !userContextStore.chosenCurrency) {
           showModal.value = true;

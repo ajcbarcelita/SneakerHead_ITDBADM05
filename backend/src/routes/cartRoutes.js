@@ -1,36 +1,46 @@
 import express from "express";
 import {
-  getCart,
+  getCartHandler,
+  createCartForUserHandler,
+  getCartItems,
   addToCart,
   updateCartItem,
   removeFromCart,
   clearCart,
   getCartCount,
+  updateCartCurrencyHandler
 } from "../controllers/cartController.js";
-// import { isAuthenticated } from "../middlewares/authMiddleware.js";
-// import { authenticateUser } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 // All cart routes require authentication
 // router.use(isAuthenticated);
 
-// Get user's cart
-router.get("/cart", getCart);
+// Get user's cart from a specific branch
+router.get("/:branch_id", getCartHandler);
+
+// Create cart for user at a specific EXISTING branch
+router.post("/", createCartForUserHandler);
+
+// Update cart currency, and/or conversion rate
+router.put("/:cart_id/currency", updateCartCurrencyHandler);
 
 // Get cart item count
-router.get("/cart/count", getCartCount);
+router.get("/count", getCartCount);
+
+// Get all items in cart - not implemented yet
+router.get("/:cart_id/items", getCartItems);
 
 // Add item to cart
-router.post("/cart/items", addToCart);
+router.post("/:cart_id/items", addToCart);
 
 // Update cart item quantity
-router.put("/cart/items/:itemId", updateCartItem);
+router.put("/items/:itemId", updateCartItem);
 
 // Remove item from cart
-router.delete("/cart/items/:itemId", removeFromCart);
+router.delete("/items/:itemId", removeFromCart);
 
 // Clear entire cart
-router.delete("/cart", clearCart);
+router.delete("/:cart_id/items", clearCart);
 
 export default router;
