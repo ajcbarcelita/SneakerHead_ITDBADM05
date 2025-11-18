@@ -61,7 +61,7 @@
         </div>
       </div>
 
-      <div :style="{ height: '200px', position: 'relative', overflow: 'hidden' }">
+      <div :style="{ height: '200px', position: 'relative', overflow: 'hidden', marginTop: '80px' }">
         <LogoLoop
           :logos="imageLogos"
           :speed="120"
@@ -71,10 +71,11 @@
           :pauseOnHover="true"
           :scaleOnHover="true"
           :fadeOut="true"
-          fadeOutColor="#ffffff"
+          fadeOutColor="bg-neutral-900"
           ariaLabel="Shoe brands"
         />
       </div>
+
     </section>
 
     </main>
