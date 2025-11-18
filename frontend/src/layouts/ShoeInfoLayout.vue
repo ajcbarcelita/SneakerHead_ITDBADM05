@@ -29,16 +29,15 @@
               <p class="text-gray-900 font-medium mt-1">
                 Branch: {{ branch.branch_name }}
               </p>
-
-
-
             </div>
 
             <!-- Price -->
             <p class="text-2xl font-semibold text-orange-500">
-              ₱{{ parseFloat(shoe.price).toLocaleString() }}
+              {{ currency === 'PHP' 
+                  ? `₱${convertedPrice?.toLocaleString('en-US', { minimumFractionDigits: 2 })}` 
+                  : new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2 }).format(convertedPrice) }}
             </p>
-
+            
             <!-- Categories -->
             <div>
               <label class="block mb-2 font-medium">Categories:</label>
@@ -52,10 +51,7 @@
               <label class="block mb-2 font-medium">Select Size:</label>
               <div class="flex flex-wrap gap-2">
                 <button v-for="size in sizes" :key="size.size" @click="selectedSize = size" :disabled="size.stock === 0"
-                  :class="[
-                    'px-4 py-2 rounded border',
-                    size.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'
-                  ]"
+                  :class="[ 'px-4 py-2 rounded border', size.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300' ]"
                   :style="selectedSize?.size === size.size ? { backgroundColor: 'var(--color-oxford-blue)', color: 'white' } : {}">
                   {{ size.size }}
                 </button>
@@ -68,7 +64,6 @@
                 </span>
               </p>
             </div>
-
 
             <!-- Quantity -->
             <div>
@@ -84,7 +79,6 @@
               </InputNumber>
             </div>
 
-
             <!-- Add to Cart -->
             <Button label="Add to Cart" icon="pi pi-shopping-cart" class="mt-4 w-full md:w-auto"
               :disabled="!selectedSize || selectedSize.stock === 0" @click="addToCart" />
@@ -96,39 +90,30 @@
 </template>
 
 <script setup>
-import { ref, watchEffect, toRefs } from 'vue'
-import Card from 'primevue/card'
-import Galleria from 'primevue/galleria'
-import Chip from 'primevue/chip'
-import InputNumber from 'primevue/inputnumber'
-import Button from 'primevue/button'
+  import { ref, computed } from 'vue'
+  import Card from 'primevue/card'
+  import Galleria from 'primevue/galleria'
+  import Chip from 'primevue/chip'
+  import InputNumber from 'primevue/inputnumber'
+  import Button from 'primevue/button'
 
-const props = defineProps({
-  shoe: { type: Object, required: true },
-  images: { type: Array, default: () => [] },
-  sizes: { type: Array, default: () => [] },
-  categories: { type: Array, default: () => [] },
-  branch: { type: Object, default: () => ({ branch_name: 'Unknown Branch' }) }
-})
+  const props = defineProps({
+    shoe: { type: Object, required: true },
+    images: { type: Array, default: () => [] },
+    sizes: { type: Array, default: () => [] },
+    categories: { type: Array, default: () => [] },
+    branch: { type: Object, default: () => ({ branch_name: 'Unknown Branch' }) },
+    convertedPrice: { type: Number, default: null },
+    currency: { type: String, default: 'PHP' }
+  })
 
-const quantity = ref(1)
-const selectedSize = ref(null)
-const shoe = props.shoe
-const images = props.images
-const sizes = ref(props.sizes)
-const categories = props.categories
+  const quantity = ref(1)
+  const selectedSize = ref(null)
 
-function addToCart() {
-  if (!selectedSize || selectedSize.stock === 0) return
-  console.log(`[Cart] Added ${quantity.value} of size ${selectedSize.size} to cart at ${branchName}`)
-}
-
-watchEffect(() => {
-  console.log('Shoe:', shoe)
-  console.log('Selected Size:', selectedSize)
-})
-
-
+  function addToCart() {
+    if (!selectedSize || selectedSize.stock === 0) return
+    console.log(`[Cart] Added ${quantity.value} of size ${selectedSize.size} to cart at ${props.branch.branch_name}`)
+  }
 </script>
 
 <style src="@/styles/tailwind.css"></style>

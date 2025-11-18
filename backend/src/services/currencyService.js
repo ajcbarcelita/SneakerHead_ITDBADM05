@@ -48,7 +48,7 @@ export const convertToPHP = async (amount, fromCurrencyCode) => {
     }
     
     const exchangeRate = await getExchangeRate(fromCurrencyCode);
-    return amount * exchangeRate.rate_to_php;
+    return amount / exchangeRate.rate_to_php;
   } catch (error) {
     throw new Error(`Failed to convert currency: ${error.message}`);
   }
@@ -62,7 +62,7 @@ export const convertFromPHP = async (amount, toCurrencyCode) => {
     }
     
     const exchangeRate = await getExchangeRate(toCurrencyCode);
-    return amount / exchangeRate.rate_to_php;
+    return amount * exchangeRate.rate_to_php;
   } catch (error) {
     throw new Error(`Failed to convert currency: ${error.message}`);
   }
