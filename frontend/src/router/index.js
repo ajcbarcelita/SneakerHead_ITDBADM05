@@ -7,6 +7,7 @@ import RegisterPage from '@/pages/RegisterPage.vue'
 import FullShoeInfo from '@/pages/ShoeInfoPage.vue'
 import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
 import CheckoutPage from '@/pages/CheckoutPage.vue'
+import ShoeCatalogPage from '@/pages/ShoeCatalogPage.vue'
 
 // Admin Pages
 import SysAdminDashboard from '@/pages/SystemAdmin/SysAdminDashboard.vue'
@@ -84,7 +85,7 @@ const router = createRouter({
       meta: {requiresAuth: true}
     },
 
-    // Admin Routes -- to be put requiresAuth
+    // Admin Routes
     {
       path: '/SysAdminDashboard',
       name: 'SADashboard',
@@ -134,8 +135,15 @@ const router = createRouter({
       name: 'ManageOrders',
       component: ManageOrders,
       meta: { requiresAuth: true, branchManagerOnly: true }
+    },
+    {
+      path: '/products',
+      name: 'ShoeCatalog',
+      component: ShoeCatalogPage,
+      meta: { requiresAuth: true }
     }
   ],
+
 })
 
 // Add navigation guards here if needed using router.beforeEach
