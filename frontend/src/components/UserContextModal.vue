@@ -1,10 +1,10 @@
 <template>
   <Dialog
     header="Select Pickup Branch & Currency"
-    :visible="visible"
+    :visible="visibleProp"
     modal
     :closable="false"
-    @hide="$emit('close')"
+    @hide="onHide"
     class="w-full max-w-md"
   >
     <Toast />
@@ -71,14 +71,21 @@ import { useToast } from 'primevue/usetoast';
 
 const toastRef = ref(null);
 const toast = useToast(toastRef);
-const emit = defineEmits(['close']);
 
 const userContextStore = useUserContextStore();
 const authStore = useAuthStore();
 
 userContextStore.loadFromStorage();
 
-const visible = ref(true);
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    default: false
+  }
+});
+const visibleProp = computed (() => props.visible);
+const emit = defineEmits(['update:visible', 'close']);
+
 const branches = ref([]);
 const currencies = ref([]);
 
@@ -97,6 +104,11 @@ onMounted(async () => {
     }
 });
 
+function onHide() {
+  emit('update:visible', false);
+  emit('close');
+}
+ 
 async function applyPreferences() {
     if (!selectedBranch.value) {
         toast.add({ severity: 'warn', summary: 'Validation', detail: 'Please select a valid branch', life: 3000 });
@@ -150,13 +162,13 @@ async function applyPreferences() {
         });
     }
 
-    visible.value = false;
+    emit('update:visible', false);
     emit('close');
 }
 
 function cancel() {
     if (canCancel.value) {
-        visible.value = false;
+        emit('update:visible', false);
         emit('close');
     }
 }
