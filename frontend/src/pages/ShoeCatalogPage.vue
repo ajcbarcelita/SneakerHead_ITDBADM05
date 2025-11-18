@@ -13,14 +13,7 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <InputText v-model="searchQuery" placeholder="Search shoes..." class="w-64" />
-            <Dropdown
-              v-model="selectedCurrency"
-              :options="currencyOptions"
-              optionLabel="label"
-              optionValue="value"
-              class="w-40"
-            />
+            <InputText v-model="searchQuery" placeholder="Search shoes..." class="w-82" />
           </div>
         </div>
 
@@ -58,7 +51,6 @@ import NavBar from '@/components/NavBar.vue'
 import Footer from '@/components/Footer.vue'
 import ShoeCard from '@/components/ShoeCard.vue'
 import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
 
 const router = useRouter()
 
@@ -68,13 +60,7 @@ const shoes = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
 
-const selectedCurrency = ref('PHP')
-const currencyOptions = [
-  { label: 'PHP (₱)', value: 'PHP' },
-  { label: 'USD ($)', value: 'USD' },
-  { label: 'EUR (€)', value: 'EUR' },
-  { label: 'CNY (¥)', value: 'CNY' }
-]
+
 const currencyRate = ref(1) // rate from PHP -> selectedCurrency
 
 
