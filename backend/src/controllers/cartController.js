@@ -159,22 +159,14 @@ export const addToCart = async (req, res) => {
         }
 
         // Find or create cart for user
-        let cart = await ShoppingCart.query(trx).findOne({ user_id: userId });
+        let cart = await ShoppingCart.query(trx).findOne({ user_id: userId, branch_id });
 
         if (!cart) {
           cart = await ShoppingCart.query(trx).insert({
             user_id: userId,
             branch_id: branch_id,
           });
-        } else if (cart.branch_id !== branch_id) {
-          // If cart exists but for different branch, need to handle
-          throw {
-            statusCode: 400,
-            message:
-              "Cart already contains items from a different branch. Please clear your cart first.",
-            current_branch_id: cart.branch_id,
-          };
-        }
+        } 
 
         // Check if item already exists in cart
         const existingItem = await ShoppingCartItem.query(trx).findOne({
