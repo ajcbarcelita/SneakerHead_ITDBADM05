@@ -7,25 +7,9 @@ import { hashPassword, validatePassword } from "../utils/password.js";
 export const getUsers = async (req, res) => {
     try {
         const knex = User.knex();
-        const users = await knex("users")
-            .select(
-                "users.user_id as id",
-                "users.fname",
-                "users.mname", 
-                "users.lname",
-                "users.email", 
-                "users.role_id",
-                "ref_roles.role_name as role",
-                "branches.branch_id",
-                "branches.branch_name",
-                "users.created_at",
-                "users.updated_at",
-                "users.is_deleted"
-            )
-            .leftJoin("ref_roles", "users.role_id", "ref_roles.role_id")
-            .leftJoin("addresses", "users.address_id", "addresses.address_id")
-            .leftJoin("branches", "addresses.address_id", "branches.address_id")
-            .orderBy("branches.branch_id", "asc");
+        const users = await knex("user_details_with_branch")
+            .select("*")
+            .orderBy("branch_id", "asc");
 
         // Format the response
         const formattedUsers = users.map(user => ({
@@ -53,20 +37,9 @@ export const getUsers = async (req, res) => {
 export const getBranches = async (req, res) => {
     try {
         const knex = Branch.knex();
-        const branches = await knex("branches")
-            .select(
-                "branches.branch_id",
-                "branches.branch_name", 
-                "branches.address_id",
-                "addresses.addressline1",
-                "addresses.addressline2", 
-                "addresses.city_id",
-                "ref_ph_cities_municipalities.city_name",
-                "branches.is_deleted"
-            )
-            .leftJoin("addresses", "branches.address_id", "addresses.address_id")
-            .leftJoin("ref_ph_cities_municipalities", "addresses.city_id", "ref_ph_cities_municipalities.city_id")
-            .orderBy("branches.branch_id", "asc");
+        const branches = await knex("branch_details")
+            .select("*")
+            .orderBy("branch_id", "asc");
 
         const formattedBranches = branches.map(branch => ({
             branch_id: branch.branch_id,

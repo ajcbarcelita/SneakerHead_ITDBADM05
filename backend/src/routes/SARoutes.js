@@ -50,7 +50,7 @@ router.get("/metrics", authenticateUser(role), metrics);
 router.get("/users", authenticateUser(role), getUsers);
 
 // Fetch all branches
-router.get("/branches", authenticateUser(role), getBranches);
+router.get("/branches-admin", authenticateUser(role), getBranches);
 
 // Fetch all cities
 router.get("/cities", authenticateUser(role), getCities);
@@ -74,7 +74,7 @@ router.get("/logs", authenticateUser(role), getLogs);
 router.post("/users", authenticateUser(role), addUser);
 
 // Add a new branch
-router.post("/branches", authenticateUser(role), addBranch);
+router.post("/branches-admin", authenticateUser(role), addBranch);
 
 // Add a new promo code
 router.post("/promo-codes", authenticateUser(role), addPromoCode);
@@ -83,7 +83,7 @@ router.post("/promo-codes", authenticateUser(role), addPromoCode);
 router.post("/shoes", authenticateUser(role), upload.array('images', 10), addShoe);
 
 // Update branch
-router.put("/branches/:branchId", authenticateUser(role), updateBranch);
+router.put("/branches-admin/:branchId", authenticateUser(role), updateBranch);
 
 // Update user
 router.put("/users/:userId", authenticateUser(role), updateUser);
