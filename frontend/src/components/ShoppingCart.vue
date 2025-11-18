@@ -18,11 +18,8 @@
             <!-- Shoe Image -->
             <Column header="Image" style="width: 120px">
                 <template #body="slotProps">
-                    <img
-                        :src="slotProps.data.shoe_image || '/placeholder-shoe.png'"
-                        :alt="slotProps.data.shoe_name"
-                        class="w-20 h-20 object-cover rounded border border-gray"
-                    />
+                    <img :src="slotProps.data.shoe_image || '/placeholder-shoe.png'" :alt="slotProps.data.shoe_name"
+                        class="w-20 h-20 object-cover rounded border border-gray" />
                 </template>
             </Column>
 
@@ -60,23 +57,11 @@
             <Column header="Quantity" style="width: 150px">
                 <template #body="slotProps">
                     <div class="flex items-center gap-2">
-                        <Button
-                            icon="pi pi-minus"
-                            size="small"
-                            outlined
-                            @click="decreaseQuantity(slotProps.data)"
-                            :disabled="slotProps.data.quantity <= 1"
-                            class="w-8 h-8"
-                        />
+                        <Button icon="pi pi-minus" size="small" outlined @click="decreaseQuantity(slotProps.data)"
+                            :disabled="slotProps.data.quantity <= 1" class="w-8 h-8" />
                         <span class="font-semibold w-8 text-center">{{ slotProps.data.quantity }}</span>
-                        <Button
-                            icon="pi pi-plus"
-                            size="small"
-                            outlined
-                            @click="increaseQuantity(slotProps.data)"
-                            :disabled="slotProps.data.quantity >= slotProps.data.available_stock"
-                            class="w-8 h-8"
-                        />
+                        <Button icon="pi pi-plus" size="small" outlined @click="increaseQuantity(slotProps.data)"
+                            :disabled="slotProps.data.quantity >= slotProps.data.available_stock" class="w-8 h-8" />
                     </div>
                     <div v-if="slotProps.data.available_stock" class="text-xs text-gray mt-1">
                         {{ slotProps.data.available_stock }} available
@@ -96,14 +81,8 @@
             <!-- Delete -->
             <Column header="" style="width: 100px">
                 <template #body="slotProps">
-                    <Button
-                        icon="pi pi-trash"
-                        severity="danger"
-                        text
-                        rounded
-                        @click="removeItem(slotProps.data)"
-                        class="hover:bg-red-100"
-                    />
+                    <Button icon="pi pi-trash" severity="danger" text rounded @click="removeItem(slotProps.data)"
+                        class="hover:bg-red-100" />
                 </template>
             </Column>
 
@@ -127,20 +106,11 @@
                         </div>
                     </div>
                     <div class="flex gap-3 mt-4">
-                        <Button
-                            icon="pi pi-trash"
-                            label="Clear Cart"
-                            severity="danger"
-                            outlined
-                            @click="clearCart"
-                            class="flex-1 text-red-600 border-red-600 hover:bg-red-50 font-bold py-3"
-                        />
-                        <Button
-                            label="Proceed to Checkout"
-                            icon="pi pi-shopping-cart"
+                        <Button icon="pi pi-trash" label="Clear Cart" severity="danger" outlined @click="clearCart"
+                            class="flex-1 text-red-600 border-red-600 hover:bg-red-50 font-bold py-3" />
+                        <Button label="Proceed to Checkout" icon="pi pi-shopping-cart"
                             class="flex-1 bg-giants-orange border-giants-orange hover:bg-giants-orange/90 text-white font-bold py-3"
-                            @click="proceedToCheckout"
-                        />
+                            @click="proceedToCheckout" />
                     </div>
                 </div>
             </template>
@@ -149,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, toRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -157,17 +127,27 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
 import cartService from '../services/cartService.js'
+import { useUserContextStore } from '@/stores/userContextStore'
 
 const router = useRouter()
 const toast = useToast()
 const confirm = useConfirm()
+
+const userContextStore = useUserContextStore()
+const branchId = toRef(userContextStore, 'branchId')
 
 const cartItems = ref([])
 const cartData = ref(null)
 const loading = ref(false)
 
 onMounted(async () => {
+    userContextStore.loadFromStorage()
     await fetchCart()
+})
+
+// Refetch when branchId changes
+watch(branchId, async (newId, oldId) => {
+    if (newId !== oldId) await fetchCart()
 })
 
 /**
@@ -176,9 +156,12 @@ onMounted(async () => {
 const fetchCart = async () => {
     try {
         loading.value = true
-        const data = await cartService.getCart()
+        let data = await cartService.getCart(branchId.value)
+
         cartData.value = data
         cartItems.value = data.items || []
+
+        console.log('Fetched cart data:', data)
     } catch (error) {
         console.error('Failed to fetch cart:', error)
         toast.add({
