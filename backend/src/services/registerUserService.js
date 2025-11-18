@@ -67,8 +67,9 @@ export async function registerUserService(data) {
       role_id: 3,
     });
 
+    let branches = [];
     if (user.role_id === 3) {
-      const branches = await Branch.query(trx);
+      branches = await Branch.query(trx);
 
       for (const b of branches) {
         await ShoppingCart.query(trx).insert({
@@ -77,7 +78,13 @@ export async function registerUserService(data) {
           currency_code: 'PHP',
           currency_rate_to_peso: 1.00
         });
+      }
+    }
 
+    await trx.commit();
+
+    if (user.role_id === 3) {
+      for (const b of branches) {
         try {
           await logEvent({
             user_id: user.user_id,
@@ -91,8 +98,6 @@ export async function registerUserService(data) {
         }
       }
     }
-
-    await trx.commit();
 
     // remove sensitive fields before returning
     const safeUser = { ...user };
