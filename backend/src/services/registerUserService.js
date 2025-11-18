@@ -6,6 +6,7 @@ import Branch from "../models/Branch.js";
 import ShoppingCart from "../models/ShoppingCart.js";
 import { hashPassword } from "../utils/password.js";
 import { transaction } from "objection";
+import { logEvent } from "./logEventService.js";
 
 export async function registerUserService(data) {
   const {
