@@ -2,6 +2,8 @@ import User from "../models/User.js";
 import Address from "../models/Address.js";
 import City_Municipality from "../models/City_Municipality.js";
 import Province from "../models/Province.js";
+import Branch from "../models/Branch.js";
+import ShoppingCart from "../models/ShoppingCart.js";
 import { hashPassword } from "../utils/password.js";
 import { transaction } from "objection";
 
@@ -65,7 +67,37 @@ export async function registerUserService(data) {
       role_id: 3,
     });
 
+    let branches = [];
+    if (user.role_id === 3) {
+      branches = await Branch.query(trx);
+
+      for (const b of branches) {
+        await ShoppingCart.query(trx).insert({
+          user_id: user.user_id,
+          branch_id: b.branch_id,
+          currency_code: 'PHP',
+          currency_rate_to_peso: 1.00
+        });
+      }
+    }
+
     await trx.commit();
+
+    if (user.role_id === 3) {
+      for (const b of branches) {
+        try {
+          await logEvent({
+            user_id: user.user_id,
+            role_id: user.role_id,
+            action: 'CREATE_CART',
+            description: `Created shopping cart for user ${user.user_id} at branch ${b.branch_id}`,
+            ip: null
+          });
+        } catch (logErr) {
+          console.error(`Failed to log cart creation for branch ${b.branch_id}:`, logErr);
+        }
+      }
+    }
 
     // remove sensitive fields before returning
     const safeUser = { ...user };
