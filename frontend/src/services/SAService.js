@@ -23,7 +23,7 @@ const SAService = {
 
     async getBranches() {
         try {
-            const response = await api.get('/branches');
+            const response = await api.get('branches-admin');
             return response;
         } catch (error) {
             throw error;
@@ -32,7 +32,7 @@ const SAService = {
 
     async addBranch(branchData) {
         try {
-            const response = await api.post('/branches', branchData);
+            const response = await api.post('/branches-admin', branchData);
             return response;
         } catch (error) {
             throw error;
@@ -41,7 +41,7 @@ const SAService = {
 
     async updateBranch(branchId, branchData) {
         try {
-            const response = await api.put(`/branches/${branchId}`, branchData);
+            const response = await api.put(`/branches-admin/${branchId}`, branchData);
             return response;
         } catch (error) {
             throw error;
