@@ -21,21 +21,16 @@
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <div class="flex-1 min-w-0">
                             <p class="text-lg font-semibold text-giants-orange truncate">{{ shoe.name || 'No Name' }}</p>
-                            <p class="text-sm text-gray-600 mt-1 truncate">{{ shoe.brand_name || shoe.brand || 'No Brand' }}</p>
-                        </div>
-                        <div class="text-right flex-shrink-0">
                             <p class="text-lg font-bold whitespace-nowrap">{{ formattedPrice }}</p>
+                            <p class="text-sm text-gray-600 mt-1 truncate">{{ shoe.brand_name || shoe.brand || 'No Brand' }}</p>
                         </div>
                     </div>
 
                     <!-- Action Section -->
                     <div class="mt-4 flex items-center justify-between">
-                        <div v-if="showBranch" class="text-xs px-2 py-1 bg-gray-100 rounded border text-gray-600 truncate">
-                            {{ branchName || 'Branch' }}
-                        </div>
                         <Button 
-                            label="View" 
-                            class="p-button-sm" 
+                            label="View Shoe Details" 
+                            class="p-button-sm w-full" 
                             @click.stop="handleClick"
                             style="background-color: #ff6b35; border-color: #ff6b35;"
                         />
@@ -56,15 +51,13 @@ const emit = defineEmits(['click'])
 const props = defineProps({
     shoe: { type: Object, required: true },
     branchId: { type: [Number, String], default: null },
-    branchName: { type: String, default: '' },
     showBranch: { type: Boolean, default: false },
     currency: { type: String, default: 'PHP' },
     currencyRate: { type: Number, default: 1 }
 })
 
-// Computed properties
+
 const image = computed(() => {
-    // Use the actual thumbnail from your API data
     return props.shoe.thumbnail || '/placeholder-shoe.png'
 })
 
@@ -76,6 +69,7 @@ const formattedPrice = computed(() => {
     const numericPrice = typeof price === 'string' ? parseFloat(price) : price
     const convertedPrice = numericPrice * props.currencyRate
     
+    // Format based on currency
     if (props.currency === 'PHP') {
         return `₱${convertedPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
     } else {
@@ -87,10 +81,12 @@ const formattedPrice = computed(() => {
     }
 })
 
-const handleClick = () => {
-    emit('click')
-}
+const handleClick = (e) => {
+    if (e && e.preventDefault) e.preventDefault()
 
+    // Emit shoe details to the main page
+    emit('click', props.shoe)
+}
 
 </script>
 
