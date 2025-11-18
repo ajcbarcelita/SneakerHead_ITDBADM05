@@ -13,7 +13,7 @@ export async function getBranchById(req, res) {
 
 export async function getAllBranches(req, res) {
   try {
-    const branches = await Branch.query(); // Objection/Knex query
+    const branches = await Branch.query().where('is_deleted', 0); // Objection/Knex query
     res.json(branches);
   } catch (err) {
     console.error(err);

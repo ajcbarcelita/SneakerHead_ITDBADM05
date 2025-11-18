@@ -3,6 +3,7 @@ import ShoppingCartItem from "../models/ShoppingCartItem.js";
 import ShoeSizeInventory from "../models/ShoeSizeInventory.js";
 import RefCurrency from "../models/RefCurrency.js";
 import Shoe from "../models/Shoe.js";
+import Branch from "../models/Branch.js";
 import { transaction } from "objection";
 import { updateCartCurrency } from "../services/updateCartCurrency.js";
 import { getCartForUser, createCartForUser } from "../services/cartService.js";
@@ -13,7 +14,7 @@ import { getCartForUser, createCartForUser } from "../services/cartService.js";
 export async function getCartHandler(req, res) {
   try {
     const userId = req.user.user_id;
-    const { branch_id } = req.query;
+    const { branch_id } = req.params;
 
     if (!branch_id) {
       return res.status(400).json({ error: "branch_id query parameter is required" });

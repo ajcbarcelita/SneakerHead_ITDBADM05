@@ -10,11 +10,12 @@ import {
   getCartCount,
   updateCartCurrencyHandler
 } from "../controllers/cartController.js";
+import { authenticate } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 // All cart routes require authentication
-// router.use(isAuthenticated);
+router.use(authenticate);
 
 // Get user's cart from a specific branch
 router.get("/:branch_id", getCartHandler);
