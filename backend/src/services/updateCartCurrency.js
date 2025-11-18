@@ -19,7 +19,7 @@ export async function updateCartCurrency(user_id, cart_id, currency_code, curren
     // If user has provided a new currency code, use it; otherwise, keep existing
     const updatedCurrencyCode = currency_code || cart.currency_code;
     // If user has provided a new conversion rate, use it; otherwise, keep existing
-    const updatedCurrencyRate = currency_rate_to_peso !== undefined ? currency_rate_to_peso : cart.currency_rate_to_peso;
+    const updatedCurrencyRate = currency_rate_to_peso !== undefined ? Number(currency_rate_to_peso) : cart.currency_rate_to_peso;
 
     // Only update if something changed
     if (
@@ -29,7 +29,7 @@ export async function updateCartCurrency(user_id, cart_id, currency_code, curren
     return cart; // nothing to update
     }
 
-    const updatedCart = await ShoppingCart.query().patchAndFetchById(cartId, {
+    const updatedCart = await ShoppingCart.query().patchAndFetchById(cart_id, {
         currency_code: updatedCurrencyCode,
         currency_rate_to_peso: updatedCurrencyRate,
   });

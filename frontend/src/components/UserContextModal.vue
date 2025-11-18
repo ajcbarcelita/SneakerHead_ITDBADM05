@@ -7,6 +7,8 @@
     @hide="$emit('close')"
     class="w-full max-w-md"
   >
+    <Toast />
+
     <div class="space-y-4">
       <!-- Branch Dropdown -->
       <div>
@@ -54,57 +56,108 @@
 </template>
 
 <script setup>
-  import Dialog from 'primevue/dialog';
-  import Button from 'primevue/button';
-  import Dropdown from 'primevue/dropdown';
-  import { ref, onMounted, computed } from 'vue';
-  import { useUserContextStore } from '@/stores/userContextStore';
-  import { getAllBranches } from '@/services/branchService';
-  import { getCurrencies } from '@/services/currencyService';
+import { ref, onMounted, computed } from 'vue';
+import { useUserContextStore } from '@/stores/userContextStore';
+import { useAuthStore } from '@/stores/authStore';
+import { getAllBranches } from '@/services/branchService';
+import { getCurrenciesWithRates } from '@/services/currencyService';
+import cartService from '@/services/cartService';
 
-  const emit = defineEmits(['close']);
-  const userContextStore = useUserContextStore();
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
+import Dropdown from 'primevue/dropdown';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 
-  // Load localStorage
-  userContextStore.loadFromStorage();
+const toastRef = ref(null);
+const toast = useToast(toastRef);
+const emit = defineEmits(['close']);
 
-  const visible = ref(true);
-  const branches = ref([]);
-  const currencies = ref([]);
+const userContextStore = useUserContextStore();
+const authStore = useAuthStore();
 
-  const selectedBranch = ref(userContextStore.branchId || null);
-  const selectedCurrency = ref(userContextStore.chosenCurrency || 'PHP');
+userContextStore.loadFromStorage();
 
-  const canCancel = computed(() =>
-      !!userContextStore.branchId || !!userContextStore.chosenCurrency
-  );
+const visible = ref(true);
+const branches = ref([]);
+const currencies = ref([]);
 
-  onMounted(async () => {
-      try {
-          branches.value = await getAllBranches();
-          currencies.value = await getCurrencies();
-      } catch (err) {
-          console.error('Error fetching branches or currencies', err);
-      }
-  });
+const selectedBranch = ref(userContextStore.branchId || null);
+const selectedCurrency = ref(userContextStore.chosenCurrency || 'PHP');
 
-  function applyPreferences() {
-      if (!selectedBranch.value) {
-          alert('Please select a valid branch.');
-          return;
-      }
+const canCancel = computed(() => !!userContextStore.branchId || !!userContextStore.chosenCurrency);
 
-      userContextStore.setBranch(Number(selectedBranch.value));
-      userContextStore.setCurrency(selectedCurrency.value);
+onMounted(async () => {
+    try {
+        branches.value = await getAllBranches();
+        currencies.value = await getCurrenciesWithRates();
+    } catch (err) {
+        console.error('Error fetching branches or currencies', err);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load branches or currencies', life: 4000 });
+    }
+});
 
-      visible.value = false;
-      emit('close');
-  }
+async function applyPreferences() {
+    if (!selectedBranch.value) {
+        toast.add({ severity: 'warn', summary: 'Validation', detail: 'Please select a valid branch', life: 3000 });
+        return;
+    }
 
-  function cancel() {
-      if (canCancel.value) {
-          visible.value = false;
-          emit('close');
-      }
-  }
+    // Always update local storage
+    userContextStore.setBranch(Number(selectedBranch.value));
+    userContextStore.setCurrency(selectedCurrency.value);
+
+    // Check if user is logged in and is a Customer, if yes, only do cart operations
+    if (authStore.isLoggedIn && authStore.isCustomer) {
+        try {
+            // Fetch selected currency rate to PHP
+            const currencyObj = currencies.value.find(c => c.currency_code === selectedCurrency.value);
+            const rateToPeso = Number(currencyObj?.exchangeRates?.[0]?.rate_to_php ?? 1);
+
+            // Try fetching existing cart
+            let cart;
+            try {
+                cart = await cartService.getCart(selectedBranch.value);
+            } catch (err) {
+                // Cart not found, will create
+            }
+
+            if (!cart) {
+                await cartService.createCart({
+                    branch_id: Number(selectedBranch.value),
+                    currency_code: selectedCurrency.value,
+                    currency_rate_to_peso: rateToPeso
+                });
+                toast.add({ severity: 'success', summary: 'Cart Created', detail: 'Your cart has been created.', life: 4000 });
+            } else if (cart.currency_code !== selectedCurrency.value) {
+                await cartService.updateCurrency(cart.cart_id, selectedCurrency.value, rateToPeso);
+                toast.add({ severity: 'success', summary: 'Cart Updated', detail: 'Cart currency updated.', life: 4000 });
+            } else {
+                toast.add({ severity: 'info', summary: 'No Changes', detail: 'Cart already uses this currency.', life: 3000 });
+            }
+
+        } catch (err) {
+            console.error(err);
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update cart', life: 4000 });
+        }
+    } else {
+        // Guest or non-Customer
+        toast.add({
+            severity: 'info',
+            summary: 'Preferences Saved',
+            detail: 'Preferences saved locally. Log in or register to save and access cart.',
+            life: 4000
+        });
+    }
+
+    visible.value = false;
+    emit('close');
+}
+
+function cancel() {
+    if (canCancel.value) {
+        visible.value = false;
+        emit('close');
+    }
+}
 </script>
