@@ -1,4 +1,5 @@
 import { Model } from 'objection';
+import RefCurrency from './RefCurrency.js';
 
 class ExchangeRate extends Model {
   static get tableName() {
@@ -30,8 +31,6 @@ class ExchangeRate extends Model {
   }
 
   static get relationMappings() {
-    const RefCurrency = require('./RefCurrency');
-
     return {
       currency: {
         relation: Model.BelongsToOneRelation,
