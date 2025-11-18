@@ -4,7 +4,8 @@ export const useUserContextStore = defineStore('userContext', {
     state: () => ({
         branchId: null,
         chosenCurrency: 'PHP',
-        currencyRate: 1.00
+        currencyRate: 1.00,
+        showModal: false
     }),
 
     getters: {
@@ -13,6 +14,10 @@ export const useUserContextStore = defineStore('userContext', {
     },
 
     actions: {
+        setModal(val) {
+            this.showModal = val;
+        },
+
         setBranch(branchId) {
             this.branchId = branchId;
             localStorage.setItem('branchId', branchId);

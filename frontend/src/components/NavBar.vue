@@ -21,7 +21,7 @@
         <div class="flex items-center justify-end space-x-4 text-base">
            <!-- Branch & Currency button -->
           <button
-            @click="showModal = true"
+            @click="userContextStore.setModal(true)"
             class="px-3 py-1 rounded-md bg-oxford-blue text-antiflash-white font-Montserrat font-bold
                   hover:bg-white hover:text-giants-orange transition-colors duration-200 flex items-center"
           >
@@ -66,16 +66,14 @@
       </div>
     </div>
   </nav>
-  <UserContextModal v-model:visible="showModal" @close="showModal = false" />
 </template>
 
 <script setup>
-  import { ref } from 'vue';
   import { useAuthStore } from "@/stores/authStore";
-  import UserContextModal from './UserContextModal.vue';
+  import { useUserContextStore } from '@/stores/userContextStore.js';
   
   const auth = useAuthStore();
-  const showModal = ref(false);
+  const userContextStore = useUserContextStore();
 
   function logout() {
     auth.logout();
