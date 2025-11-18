@@ -50,6 +50,9 @@ importers:
       vue:
         specifier: ^3.5.18
         version: 3.5.23
+      vue-bits:
+        specifier: ^1.1.1
+        version: 1.1.1(vue@3.5.23)
       vue-router:
         specifier: ^4.5.1
         version: 4.6.3(vue@3.5.23)
@@ -1629,6 +1632,12 @@ packages:
       yaml:
         optional: true
 
+  vue-bits@1.1.1:
+    resolution: {integrity: sha512-UfM7E+QhL44heKJ715TZzYjGmz0Tyd4IpBg8cxuvjnxkK7CZ/O2eU2FjjXQvoJU+NYjp4PxoZ5xfEMOyqamYwg==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      vue: ^2.6.11
+
   vue-eslint-parser@10.2.0:
     resolution: {integrity: sha512-CydUvFOQKD928UzZhTp4pr2vWz1L+H99t7Pkln2QSPdvmURT0MoC4wUccfCnuEaihNsu9aYYyk+bep8rlfkUXw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -3121,6 +3130,10 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.6.1
       lightningcss: 1.30.2
+
+  vue-bits@1.1.1(vue@3.5.23):
+    dependencies:
+      vue: 3.5.23
 
   vue-eslint-parser@10.2.0(eslint@9.39.1(jiti@2.6.1)):
     dependencies:

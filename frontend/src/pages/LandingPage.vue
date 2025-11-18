@@ -22,6 +22,61 @@
 
         </div>
       </section>
+
+      <section class="w-full py-20 bg-neutral-900 text-white">
+      <h1 class="text-5xl md:text-6xl font-bold leading-tight text-center mb-12">
+        Why SneakerHead?
+      </h1>
+      <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+        <!-- Card 1 -->
+        <div class="bg-neutral-800 p-6 rounded-2xl shadow-lg hover:scale-[1.02] transition">
+          <h3 class="text-xl font-semibold mb-2">100% Verified Authentic</h3>
+          <p class="text-neutral-300">
+            No fakes, no nonsense — every pair is sourced and authenticated.
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bg-neutral-800 p-6 rounded-2xl shadow-lg hover:scale-[1.02] transition">
+          <h3 class="text-xl font-semibold mb-2">Real-Time Branch Stock</h3>
+          <p class="text-neutral-300">
+            See which branch has your size right now. No more “Out of stock po.”
+          </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="bg-neutral-800 p-6 rounded-2xl shadow-lg hover:scale-[1.02] transition">
+          <h3 class="text-xl font-semibold mb-2">Exclusive Deals & Promos</h3>
+          <p class="text-neutral-300">
+            Seasonal drops, promo codes, and special discounts.
+          </p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="bg-neutral-800 p-6 rounded-2xl shadow-lg hover:scale-[1.02] transition">
+          <h3 class="text-xl font-semibold mb-2">Multi-Currency Ready</h3>
+          <p class="text-neutral-300">
+            USD, PHP, and more — auto-converted in real time.
+          </p>
+        </div>
+      </div>
+
+      <div :style="{ height: '200px', position: 'relative', overflow: 'hidden' }">
+        <LogoLoop
+          :logos="imageLogos"
+          :speed="120"
+          direction="left"
+          :logoHeight="120"
+          :gap="60"
+          :pauseOnHover="true"
+          :scaleOnHover="true"
+          :fadeOut="true"
+          fadeOutColor="#ffffff"
+          ariaLabel="Shoe brands"
+        />
+      </div>
+    </section>
+
     </main>
     <footer>
       <Footer />
@@ -30,8 +85,29 @@
 </template>
 
 <script setup>
-import NavBar from '@/components/NavBar.vue'
-import Footer from '@/components/Footer.vue'
+  import NavBar from '@/components/NavBar.vue'
+  import Footer from '@/components/Footer.vue'
+  import LogoLoop from '@/blocks/Animations/LogoLoop/LogoLoop.vue';
+
+  import nikeLogo from '@/assets/nike-logo.png';
+  import adidasLogo from '@/assets/adidas-logo.png';
+  import pumaLogo from '@/assets/puma-logo.png';
+  import asicsLogo from '@/assets/asics-logo.png';
+  import converseLogo from '@/assets/converse-logo.png';
+  import nbLogo from '@/assets/nb-logo.png';
+  import onitsukaLogo from '@/assets/onitsuka-tiger-logo.png';
+  import vansLogo from '@/assets/vans-logo.png';
+
+  const imageLogos = [
+    { src: nikeLogo, alt: "Nike" },
+    { src: adidasLogo, alt: "Adidas" },
+    { src: pumaLogo, alt: "Puma" },
+    { src: asicsLogo, alt: "Asics" },
+    { src: converseLogo, alt: "Converse" },
+    { src: nbLogo, alt: "New Balance" },
+    { src: onitsukaLogo, alt: "Onitsuka Tiger" },
+    { src: vansLogo, alt: "Vans" },
+  ]
 </script>
 
 <style src="@/styles/tailwind.css"></style>
