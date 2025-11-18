@@ -1,7 +1,9 @@
 -- Mendoza, John Kirbie's Stored Procedures
 
 -- Updating User Details Stored Procedure
+-- Updating User Details Stored Procedure
 DELIMITER $$
+
 CREATE PROCEDURE update_user_details (
     IN p_user_id INT,
     IN p_fname VARCHAR(100),
@@ -16,25 +18,25 @@ CREATE PROCEDURE update_user_details (
 BEGIN
     DECLARE v_address_id INT;
     DECLARE v_city_province_id INT;
+    DECLARE v_role_id INT;
 
     START TRANSACTION;
 
-    -- Fetch the existing address_id for this user
-    SELECT address_id
-    INTO v_address_id
+    -- Fetch the existing address_id and role_id for this user
+    SELECT address_id, role_id
+    INTO v_address_id, v_role_id
     FROM users
     WHERE user_id = p_user_id
     LIMIT 1;
 
-    -- If the user has no address, rollback and stop
-    IF v_address_id IS NULL THEN
+    -- If user does not exist
+    IF v_role_id IS NULL THEN
         ROLLBACK;
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'User has no address record to update.';
+            SET MESSAGE_TEXT = 'User not found.';
     END IF;
 
-    -- If a city is provided, validate that the city exists,
-    -- and if a province is also provided, make sure they match
+    -- Validate city and province if city is provided
     IF p_city_id IS NOT NULL THEN
         SELECT province_id
         INTO v_city_province_id
@@ -57,37 +59,59 @@ BEGIN
         END IF;
     END IF;
 
-    -- Update users table (only change fields that are not null)
+    -- If the user has no address yet, create one from the parameters
+    IF v_address_id IS NULL THEN
+
+        -- Basic check so we do not violate NOT NULL and FK constraints
+        IF p_city_id IS NULL OR p_addressline1 IS NULL THEN
+            ROLLBACK;
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Cannot create address, missing required address details.';
+        END IF;
+
+        INSERT INTO addresses (addressline1, addressline2, city_id)
+        VALUES (p_addressline1, p_addressline2, p_city_id);
+
+        SET v_address_id = LAST_INSERT_ID();
+
+        -- Attach the new address to the user
+        UPDATE users
+        SET address_id = v_address_id
+        WHERE user_id = p_user_id;
+
+    ELSE
+        -- User already has an address, so update it
+        UPDATE addresses
+        SET
+            addressline1 = p_addressline1,
+            addressline2 = p_addressline2,
+            city_id      = p_city_id
+        WHERE address_id = v_address_id;
+    END IF;
+
+    -- Update users table
     UPDATE users
     SET
-        fname      = COALESCE(p_fname, fname),
-        mname      = COALESCE(p_mname, mname),
-        lname      = COALESCE(p_lname, lname),
+        fname      = p_fname,
+        mname      = p_mname,
+        lname      = p_lname,
         updated_at = NOW()
     WHERE user_id = p_user_id;
 
-    -- Update addresses table (only change fields that are not null)
-    UPDATE addresses
-    SET
-        addressline1 = COALESCE(p_addressline1, addressline1),
-        addressline2 = COALESCE(p_addressline2, addressline2),
-        city_id      = COALESCE(p_city_id, city_id)
-    WHERE address_id = v_address_id;
-
-SELECT role_id FROM user;
-
     -- Log the event
     CALL sp_log_event(
-        p_user_id,                 -- p_user_id
-        role_id,                      -- role_id
-        'UPDATE_PROFILE',          -- p_action
-        'User updated profile details.', -- p_description
-         p_ip_address                       -- ip
+        p_user_id,                      -- p_user_id
+        v_role_id,                      -- role_id
+        'UPDATE_PROFILE',               -- p_action
+        'User updated profile details.',-- p_description
+        p_ip_address                    -- ip_address
     );
 
     COMMIT;
 END $$
+
 DELIMITER ;
+
 
 -- Changing Password Stored Procedure 
 DELIMITER $$
@@ -97,7 +121,16 @@ CREATE PROCEDURE change_user_password (
     IN p_ip_address VARCHAR(45)
 )
 BEGIN
+    DECLARE v_role_id INT;
+
     START TRANSACTION;
+
+    -- Fetch role_id for logging
+    SELECT role_id
+    INTO v_role_id
+    FROM users
+    WHERE user_id = p_user_id
+    LIMIT 1;
 
     UPDATE users
     SET 
@@ -105,11 +138,10 @@ BEGIN
         updated_at = NOW()
     WHERE user_id = p_user_id;
 
-SELECT role_id FROM user;
-
+    -- Log the event
     CALL sp_log_event(
         p_user_id,
-        role_id,
+        v_role_id,
         'CHANGE_PASSWORD',
         'User changed password.',
         p_ip_address

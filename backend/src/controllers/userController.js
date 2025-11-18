@@ -56,7 +56,7 @@ export const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user.user_id
     const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip || null
-    const { fname, mname, lname, email, addressline1, addressline2, province_id, city_id } = req.body
+    const { fname, mname, lname, addressline1, addressline2, province_id, city_id } = req.body
 
     // Validate required fields
     if (!fname || !lname) {
@@ -66,54 +66,17 @@ export const updateUserProfile = async (req, res) => {
     const knex = User.knex();
 
     // Call the stored procedure
-    await knex.raw('CALL update_user_details(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    await knex.raw('CALL update_user_details(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
       userId,
       fname || null,
       mname || null,
       lname || null,
-      email || null,
       addressline1 || null,
       addressline2 || null,
       province_id || null,
       city_id || null,
       ip
     ])
-    // Use transaction for atomicity
-    const result = await knex.transaction(async (trx) => {
-      // Get current user to check if they have an address_id
-      const currentUser = await User.query(trx).findById(userId);
-
-      let addressId = currentUser.address_id;
-
-      // Update or create address if address data is provided
-      if (addressId) {
-        // Update existing address
-        await Address.query(trx).patchAndFetchById(addressId, {
-          addressline1: addressline1 || null,
-          addressline2: addressline2 || null,
-          city_id: city_id || null,
-        });
-      } else if (city_id || addressline1) {
-        // Create new address if data provided and user doesn't have one
-        const newAddress = await Address.query(trx).insert({
-          addressline1: addressline1 || null,
-          addressline2: addressline2 || null,
-          city_id: city_id || null,
-        });
-        addressId = newAddress.address_id;
-      }
-
-      // Update user profile
-      await User.query(trx).patchAndFetchById(userId, {
-        fname,
-        mname: mname || null,
-        lname,
-        address_id: addressId,
-        updated_at: new Date().toISOString(),
-      });
-
-      return { addressId };
-    });
 
     // Fetch updated profile from view
     const updatedProfile = await knex('user_details_view')
