@@ -20,6 +20,8 @@ BEGIN
     DECLARE v_city_province_id INT;
     DECLARE v_role_id INT;
 
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
     START TRANSACTION;
 
     -- Fetch the existing address_id and role_id for this user
@@ -122,6 +124,8 @@ CREATE PROCEDURE change_user_password (
 )
 BEGIN
     DECLARE v_role_id INT;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
 
     START TRANSACTION;
 

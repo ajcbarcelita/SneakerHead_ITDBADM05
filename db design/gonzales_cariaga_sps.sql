@@ -35,6 +35,8 @@ CREATE PROCEDURE update_user (
 BEGIN
   DECLARE user_exists INT DEFAULT 0;
   
+  SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
   START TRANSACTION;
   
   -- Check if user exists
@@ -76,6 +78,8 @@ CREATE PROCEDURE add_branch (
 BEGIN
   DECLARE v_address_id INT;
   
+  SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
   START TRANSACTION;
   
   -- Insert into addresses then fetch the id
@@ -108,6 +112,8 @@ CREATE PROCEDURE update_branch (
 BEGIN
   DECLARE branch_exists INT DEFAULT 0;
   DECLARE v_address_id INT;
+
+  SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
   
   START TRANSACTION;
   
@@ -173,7 +179,7 @@ DELIMITER ;
 
 -- Get stocks for a specific branch
 DELIMITER $$
-
+DROP PROCEDURE IF EXISTS get_branch_stocks $$ 
 CREATE PROCEDURE get_branch_stocks(IN p_branch_id INT)
 BEGIN
     SELECT 
@@ -181,7 +187,10 @@ BEGIN
         s.name,
         s.price,
         b.brand_name AS brand,
-        si.img_path AS image,
+        (SELECT img_path 
+         FROM shoe_images 
+         WHERE shoe_id = s.shoe_id 
+         LIMIT 1) AS image,
         GROUP_CONCAT(
             CONCAT('{"size":', ss.shoe_size, ',"quantity":', ssi.stock, '}')
             ORDER BY ss.shoe_size
@@ -191,18 +200,13 @@ BEGIN
     JOIN ref_shoe_brands b ON s.brand_id = b.brand_id
     JOIN shoe_size_inventory ssi ON s.shoe_id = ssi.shoe_id
     JOIN ref_us_sizes ss ON ssi.shoe_us_size = ss.shoe_size
-    LEFT JOIN shoe_images si ON s.shoe_id = si.shoe_id
     WHERE ssi.branch_id = p_branch_id
       AND s.is_deleted = FALSE
-    GROUP BY s.shoe_id, s.name, s.price, b.brand_name, si.img_path
+    GROUP BY s.shoe_id, s.name, s.price, b.brand_name
     ORDER BY s.name;
 END$$
 
 DELIMITER ;
-
-SELECT * FROM shoe_size_inventory;
-
-CALL get_branch_stocks(1);
 
 
 -- Update Stock Procedure
@@ -227,6 +231,9 @@ BEGIN
         RESIGNAL;
     END;
     
+    -- No Dirty reads and Faster than SERIALIZABLE
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
     -- Start transaction
     START TRANSACTION;
     
@@ -240,10 +247,10 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shoe not found';
     END IF;
     
-    -- Get the number of sizes in the JSON array
+    -- Get the length of json
     SET total_sizes = JSON_LENGTH(p_sizes_json);
     
-    -- Loop through each size and update
+    -- Loop through each size 
     WHILE i < total_sizes DO
         SET current_size = JSON_EXTRACT(p_sizes_json, CONCAT('$[', i, '].size'));
         SET current_quantity = JSON_EXTRACT(p_sizes_json, CONCAT('$[', i, '].quantity'));
@@ -258,11 +265,42 @@ BEGIN
         SET i = i + 1;
     END WHILE;
     
-    -- Commit the transaction
     COMMIT;
-END$$
+END
 
-DELIMITER ;
+$$ DELIMITER ;
+
+
+-- View to get branch orders
+DROP VIEW IF EXISTS branch_orders_view;
+
+CREATE VIEW branch_orders_view AS
+SELECT 
+    o.order_id,
+    CONCAT(u.fname,' ', u.lname) AS full_name,
+    o.branch_id,
+    o.total_price,
+    o.promo_code,
+    o.created_at,
+    oi.order_item_id,
+    oi.shoe_id,
+    s.name,
+    (SELECT img_path 
+     FROM shoe_images 
+     WHERE shoe_id = s.shoe_id 
+     LIMIT 1) AS img_path,  
+    oi.shoe_size,
+    oi.quantity,
+    oi.subtotal,
+    sb.brand_id,
+    sb.brand_name
+FROM orders o
+LEFT JOIN users u ON o.user_id = u.user_id
+LEFT JOIN branches b ON o.branch_id = b.branch_id
+LEFT JOIN promo_codes pc ON o.promo_code = pc.promo_code
+LEFT JOIN order_items oi ON o.order_id = oi.order_id
+LEFT JOIN shoes s ON oi.shoe_id = s.shoe_id
+LEFT JOIN ref_shoe_brands sb ON s.brand_id = sb.brand_id;
 
 
 -- View to get shoes
@@ -365,4 +403,143 @@ BEGIN
   SELECT v_shoe_id as shoe_id;
 
 END$$
+DELIMITER ;
+
+
+-- Get Top Customer
+DELIMITER $$
+
+CREATE PROCEDURE get_top_customer(
+    IN p_period VARCHAR(10),
+    IN p_branch VARCHAR(100)
+)
+BEGIN
+    -- DAILY
+    IF p_period = 'daily' THEN
+        SELECT 
+            u.user_id,
+            CONCAT(u.fname, ' ', u.lname) AS full_name,
+            SUM(o.total_price) AS total_spent
+        FROM orders o
+        JOIN users u ON o.user_id = u.user_id
+        JOIN branches b ON o.branch_id = b.branch_id
+        WHERE DATE(o.created_at) = CURDATE()
+          AND (b.branch_name = p_branch)
+        GROUP BY u.user_id
+        ORDER BY total_spent DESC
+        LIMIT 1;
+
+    -- MONTHLY
+    ELSEIF p_period = 'monthly' THEN
+        SELECT 
+            u.user_id,
+            CONCAT(u.fname, ' ', u.lname) AS full_name,
+            SUM(o.total_price) AS total_spent
+        FROM orders o
+        JOIN users u ON o.user_id = u.user_id
+        JOIN branches b ON o.branch_id = b.branch_id
+        WHERE YEAR(o.created_at) = YEAR(CURDATE())
+          AND MONTH(o.created_at) = MONTH(CURDATE())
+          AND (b.branch_name = p_branch)
+        GROUP BY u.user_id
+        ORDER BY total_spent DESC
+        LIMIT 1;
+
+    -- YEARLY
+    ELSEIF p_period = 'yearly' THEN
+        SELECT 
+            u.user_id,
+            CONCAT(u.fname, ' ', u.lname) AS full_name,
+            SUM(o.total_price) AS total_spent
+        FROM orders o
+        JOIN users u ON o.user_id = u.user_id
+        JOIN branches b ON o.branch_id = b.branch_id
+        WHERE YEAR(o.created_at) = YEAR(CURDATE())
+          AND (b.branch_name = p_branch)
+        GROUP BY u.user_id
+        ORDER BY total_spent DESC
+        LIMIT 1;
+    END IF;
+END$$
+
+DELIMITER ;
+
+
+-- Get Top Selling Product
+
+DELIMITER $$
+
+CREATE PROCEDURE get_top_product(
+    IN p_period VARCHAR(10),
+    IN p_branch VARCHAR(100)
+)
+BEGIN
+    -- DAILY
+    IF p_period = 'daily' THEN
+        SELECT 
+            oi.shoe_id,
+            s.name AS product_name,
+            SUM(oi.quantity) AS total_sold
+        FROM order_items oi
+        JOIN shoes s ON oi.shoe_id = s.shoe_id
+        JOIN branches b ON oi.branch_id = b.branch_id
+        WHERE DATE(oi.created_at) = CURDATE()
+          AND b.branch_name = p_branch
+        GROUP BY oi.shoe_id
+        ORDER BY total_sold DESC
+        LIMIT 1;
+
+    -- MONTHLY
+    ELSEIF p_period = 'monthly' THEN
+        SELECT 
+            oi.shoe_id,
+            s.name AS product_name,
+            SUM(oi.quantity) AS total_sold
+        FROM order_items oi
+        JOIN shoes s ON oi.shoe_id = s.shoe_id
+        JOIN branches b ON oi.branch_id = b.branch_id
+        WHERE YEAR(oi.created_at) = YEAR(CURDATE())
+          AND MONTH(oi.created_at) = MONTH(CURDATE())
+          AND b.branch_name = p_branch
+        GROUP BY oi.shoe_id
+        ORDER BY total_sold DESC
+        LIMIT 1;
+
+    -- YEARLY
+    ELSEIF p_period = 'yearly' THEN
+        SELECT 
+            oi.shoe_id,
+            s.name AS product_name,
+            SUM(oi.quantity) AS total_sold
+        FROM order_items oi
+        JOIN shoes s ON oi.shoe_id = s.shoe_id
+        JOIN branches b ON oi.branch_id = b.branch_id
+        WHERE YEAR(oi.created_at) = YEAR(CURDATE())
+          AND b.branch_name = p_branch
+        GROUP BY oi.shoe_id
+        ORDER BY total_sold DESC
+        LIMIT 1;
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Get Low Stock from specific branch
+DELIMITER $$
+
+CREATE PROCEDURE get_low_stock_branch(
+    IN p_branch VARCHAR(100)
+)
+BEGIN
+    SELECT 
+        COUNT(s.shoe_id) AS low_stock
+    FROM
+        shoe_size_inventory s
+    JOIN
+        branches b ON s.branch_id = b.branch_id
+    WHERE
+        s.stock <= 5
+        AND b.branch_name = p_branch;
+END $$
+
 DELIMITER ;
