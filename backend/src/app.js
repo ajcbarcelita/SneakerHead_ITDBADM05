@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/branches", branchRoutes);
 app.use("/currencies", currencyRoutes);
-
+app.use("/shoes", shoeRoutes);
 
 // attach db to req for easy access in routes
 app.locals.db = db;
@@ -48,7 +48,6 @@ app.use("/", orderRoutes);
 app.use("/", userRoutes);
 app.use("/", BMRoutes);
 app.use("/", SARoutes);
-app.use("/shoes", shoeRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

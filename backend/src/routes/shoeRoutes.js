@@ -1,7 +1,10 @@
 import express from "express";
-import { getShoesByBranchController, getShoeDetailsController } from "../controllers/shoeController.js";
+import { getShoesByBranchController, getShoeDetailsController, getBrandsController, getCategoriesController } from "../controllers/shoeController.js";
 
 const router = express.Router();
+
+router.get("/brands", getBrandsController);
+router.get("/categories", getCategoriesController);
 
 // Get all shoes available at a branch
 router.get("/branch/:branch_id", getShoesByBranchController);

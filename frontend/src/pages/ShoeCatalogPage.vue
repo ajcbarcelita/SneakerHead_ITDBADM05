@@ -12,6 +12,28 @@
                         <p class="text-1xl text-gray-600 mt-3">Browse our collection of sneakers available at your
                             selected branch.</p>
                     </div>
+                    
+                    <MultiSelect 
+                        v-model="selectedBrands" 
+                        :options="brands" 
+                        optionLabel="label" 
+                        optionValue="value"
+                        placeholder="All Brands"
+                        display-selected-label="false"
+                        class="w-72"
+                        showClear
+                    />
+
+                    <MultiSelect 
+                        v-model="selectedCategories" 
+                        :options="categories" 
+                        optionLabel="label" 
+                        optionValue="value"
+                        placeholder="All Categories"
+                        display-selected-label="false"
+                        class="w-72"
+                        showClear
+                    />
 
                     <div class="flex items-center gap-3">
                         <InputText v-model="searchQuery" placeholder="Search shoes..." class="w-82" />
@@ -45,13 +67,18 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+
 import NavBar from '@/components/NavBar.vue'
 import Footer from '@/components/Footer.vue'
 import ShoeCard from '@/components/ShoeCard.vue'
 import UserContextModal from '@/components/UserContextModal.vue'
+
 import InputText from 'primevue/inputtext'
+import Listbox from 'primevue/listbox'
+import MultiSelect from 'primevue/multiselect'
+
 import { useUserContextStore } from '@/stores/userContextStore'
-import { getShoesByBranch } from '@/services/shoeService'
+import { getShoesByBranch, getAllBrands, getAllCategories } from '@/services/shoeService'
 import { getCurrenciesWithRates } from '@/services/currencyService'
 
 const router = useRouter()
@@ -67,15 +94,38 @@ const currencyRate = ref(1)
 const showContextModal = ref(false)
 const currencies = ref([])
 
-// Search Filter
-const filteredShoes = computed(() => {
-    if (!searchQuery.value) return shoes.value
+const brands = ref([])
+const categories = ref([])
 
-    const query = searchQuery.value.toLowerCase()
-    return shoes.value.filter(shoe =>
-        shoe?.name?.toLowerCase().includes(query) ||
-        shoe?.brand_name?.toLowerCase().includes(query)
-    )
+const selectedBrands = ref([])
+const selectedCategories = ref([])
+
+const filteredShoes = computed(() => {
+    // Map selected brand/category IDs back to labels
+    const selectedBrandLabels = selectedBrands.value
+        .map(id => brands.value.find(b => b.value === id)?.label)
+        .filter(Boolean) // remove undefined
+
+    const selectedCategoryLabels = selectedCategories.value
+        .map(id => categories.value.find(c => c.value === id)?.label)
+        .filter(Boolean)
+
+    return shoes.value.filter(shoe => {
+        // 1️⃣ Search filter
+        const matchesSearch = !searchQuery.value ||
+            shoe.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+            shoe.brand_name.toLowerCase().includes(searchQuery.value.toLowerCase())
+
+        // 2️⃣ Brand filter
+        const matchesBrand = !selectedBrandLabels.length ||
+            selectedBrandLabels.includes(shoe.brand_name)
+
+        // 3️⃣ Category filter
+        const matchesCategory = !selectedCategoryLabels.length ||
+            shoe.categories.some(cat => selectedCategoryLabels.includes(cat))
+
+        return matchesSearch && matchesBrand && matchesCategory
+    })
 })
 
 // Fetch shoes for the selected branch
@@ -86,15 +136,8 @@ async function fetchShoes() {
     try {
         const response = await getShoesByBranch(managerBranchId.value)
 
-        // Nested array
-        let shoeData = response.data
-
-        if (Array.isArray(shoeData) && shoeData.length > 0) {
-            shoeData = shoeData[0]
-        }
-
-        if (Array.isArray(shoeData)) {
-            shoes.value = shoeData
+         if (Array.isArray(response.data)) {
+            shoes.value = response.data
             console.log('Loaded shoes:', shoes.value)
         } else {
             console.error('Invalid or missing shoe data:', response.data)
@@ -168,14 +211,26 @@ watch(() => userContextStore.chosenCurrency, () => {
     updateCurrencyRate()
 })
 
+async function fetchFilters() {
+    try {
+        const [brandsResponse, categoriesResponse] = await Promise.all([
+            getAllBrands(),
+            getAllCategories()
+        ])
+        brands.value = brandsResponse.data
+        categories.value = categoriesResponse.data
+    } catch (err) {
+        brands.value = []
+        categories.value = []
+        console.error(err)
+    }
+}
+
 onMounted(async () => {
     userContextStore.loadFromStorage()
-    await fetchCurrencies()
-
-    // Show context modal if no branch selected
-    if (!userContextStore.branchId) {
-        showContextModal.value = true
-    } else {
+    await Promise.all([fetchCurrencies(), fetchFilters()])
+    if (!userContextStore.branchId) showContextModal.value = true
+    else {
         initializeFromContext()
         fetchShoes()
     }
