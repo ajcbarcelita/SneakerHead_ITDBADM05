@@ -61,13 +61,7 @@
         <span class="font-semibold text-charcoal">{{ formatPrice(subtotal) }}</span>
       </div>
 
-      <!-- Shipping -->
-      <div class="flex justify-between mb-3">
-        <span class="text-charcoal">Shipping:</span>
-        <span class="font-semibold" :class="deliveryMethod === 'pickup' ? 'text-green-600' : 'text-charcoal'">
-          {{ deliveryMethod === 'pickup' ? 'FREE' : formatPrice(shipping) }}
-        </span>
-      </div>
+
 
       <!-- Promo Code Applied Label -->
       <div v-if="promoApplied" class="flex justify-between mb-3">
@@ -167,10 +161,7 @@ const props = defineProps({
     required: true,
     default: 0
   },
-  shipping: {
-    type: Number,
-    default: 0
-  },
+
   currencyCode: {
     type: String,
     default: 'PHP'
@@ -204,9 +195,7 @@ watch(deliveryMethod, (newMethod) => {
 
 // Computed
 const total = computed(() => {
-  const shippingCost = deliveryMethod.value === 'pickup' ? 0 : props.shipping
-  const subtotalWithShipping = props.subtotal + shippingCost
-  return Math.max(0, subtotalWithShipping - promoDiscount.value)
+  return Math.max(0, props.subtotal - promoDiscount.value)
 })
 
 // Methods
@@ -270,7 +259,6 @@ const handleCheckout = () => {
   emit('checkout', {
     deliveryMethod: deliveryMethod.value,
     subtotal: props.subtotal,
-    shipping: deliveryMethod.value === 'pickup' ? 0 : props.shipping,
     discount: promoDiscount.value,
     total: total.value,
     promoCode: promoApplied.value ? promoCode.value : null

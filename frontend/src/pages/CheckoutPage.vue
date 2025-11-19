@@ -89,7 +89,6 @@
         <div class="sticky top-6">
           <CheckoutCard
             :subtotal="subtotal"
-            :shipping="shippingCost"
             :currency-code="cartData?.currency_code || 'PHP'"
             :currency-rate="parseFloat(cartData?.currency_rate_to_peso) || 1"
             :loading="submitting"
@@ -239,11 +238,6 @@ const subtotal = computed(() => {
   // Return the PHP subtotal without conversion
   // CheckoutCard will handle the currency conversion
   return cartData.value?.subtotal || 0
-})
-
-const shippingCost = computed(() => {
-  // Return PHP shipping cost, CheckoutCard will convert it
-  return 100
 })
 
 const formatCurrency = (value) => {
