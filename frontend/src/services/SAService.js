@@ -60,6 +60,8 @@ const SAService = {
     async updateUser(userId, userData) {
         try {
             const response = await api.put(`/users/${userId}`, userData);
+            // In your SAService.updateUser method
+        console.log('Making request to:', `/users/${userId}`);
             return response;
         } catch (error) {
             throw error;
