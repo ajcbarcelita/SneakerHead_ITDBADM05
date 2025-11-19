@@ -58,14 +58,14 @@
       <!-- Subtotal -->
       <div class="flex justify-between mb-3">
         <span class="text-charcoal">Subtotal:</span>
-        <span class="font-semibold text-charcoal">₱{{ formatPrice(subtotal) }}</span>
+        <span class="font-semibold text-charcoal">{{ formatPrice(subtotal) }}</span>
       </div>
 
       <!-- Shipping -->
       <div class="flex justify-between mb-3">
         <span class="text-charcoal">Shipping:</span>
         <span class="font-semibold" :class="deliveryMethod === 'pickup' ? 'text-green-600' : 'text-charcoal'">
-          {{ deliveryMethod === 'pickup' ? 'FREE' : '₱' + formatPrice(shipping) }}
+          {{ deliveryMethod === 'pickup' ? 'FREE' : formatPrice(shipping) }}
         </span>
       </div>
 
@@ -107,7 +107,7 @@
         <Message v-if="promoApplied && promoDiscount > 0" severity="success" class="mt-2" :closable="false">
           <div class="flex items-center gap-2">
             <i class="pi pi-tag"></i>
-            <span>{{ promoCode }} applied! You saved ₱{{ formatPrice(promoDiscount) }}</span>
+            <span>{{ promoCode }} applied! You saved {{ formatPrice(promoDiscount) }}</span>
           </div>
         </Message>
 
@@ -120,7 +120,7 @@
       <!-- Discount (if promo applied) -->
       <div v-if="promoApplied && promoDiscount > 0" class="flex justify-between mb-3">
         <span class="text-green-600">Discount:</span>
-        <span class="font-semibold text-green-600">-₱{{ formatPrice(promoDiscount) }}</span>
+        <span class="font-semibold text-green-600">-{{ formatPrice(promoDiscount) }}</span>
       </div>
 
       <!-- Divider -->
@@ -129,7 +129,7 @@
       <!-- Total -->
       <div class="flex justify-between mb-4">
         <span class="text-xl font-bold text-oxford-blue">Total:</span>
-        <span class="text-xl font-bold text-giants-orange">₱{{ formatPrice(total) }}</span>
+        <span class="text-xl font-bold text-giants-orange">{{ formatPrice(total) }}</span>
       </div>
 
       <!-- Checkout Button -->
@@ -138,7 +138,7 @@
         icon="pi pi-arrow-right"
         iconPos="right"
         @click="handleCheckout"
-        :loading="processingCheckout"
+        :loading="loading || processingCheckout"
         class="w-full bg-giants-orange text-white border-giants-orange hover:bg-oxford-blue py-3 text-lg font-semibold"
       />
     </template>
@@ -163,6 +163,18 @@ const props = defineProps({
   shipping: {
     type: Number,
     default: 0
+  },
+  currencyCode: {
+    type: String,
+    default: 'PHP'
+  },
+  currencyRate: {
+    type: Number,
+    default: 1
+  },
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -192,10 +204,20 @@ const total = computed(() => {
 
 // Methods
 const formatPrice = (price) => {
-  return parseFloat(price).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
+  const numericValue = parseFloat(price)
+  const convertedValue = props.currencyCode === 'PHP' 
+    ? numericValue 
+    : numericValue * props.currencyRate
+
+  if (props.currencyCode === 'PHP') {
+    return `₱${convertedValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+  } else {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: props.currencyCode,
+      minimumFractionDigits: 2
+    }).format(convertedValue)
+  }
 }
 
 const applyPromoCode = async () => {

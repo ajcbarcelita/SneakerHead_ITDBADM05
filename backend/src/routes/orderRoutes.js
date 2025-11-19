@@ -1,8 +1,22 @@
 import express from "express";
-import { getOrderHistory, getOrderDetails } from "../controllers/orderController.js";
+import { createOrder, getOrderHistory, getOrderDetails } from "../controllers/orderController.js";
 import { authenticate } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
+
+/**
+ * POST /orders
+ * Create a new order from shopping cart
+ * Requires: JWT token
+ * Body: {
+ *   cart_id: number,
+ *   delivery_method: 'delivery' | 'pickup',
+ *   address_id?: number (required for delivery),
+ *   branch_id?: number (required for pickup),
+ *   promo_code?: string
+ * }
+ */
+router.post("/orders", authenticate, createOrder);
 
 /**
  * GET /orders

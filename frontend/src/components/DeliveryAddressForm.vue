@@ -8,158 +8,57 @@
         </div>
       </template>
 
-      <template #subtitle>
-        <p class="text-gray">Please provide your delivery address details</p>
-      </template>
-
       <template #content>
-        <div class="space-y-4">
-          <!-- Contact Information -->
-          <div class="border-b border-gray-200 pb-4">
-            <h3 class="text-lg font-semibold text-oxford-blue mb-3">Contact Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FloatLabel variant="on">
-                <InputText
-                  id="contactName"
-                  v-model="addressForm.contactName"
-                  class="w-full"
-                  :class="{ 'p-invalid': errors.contactName }"
-                />
-                <label for="contactName">Full Name *</label>
-              </FloatLabel>
-
-              <FloatLabel variant="on">
-                <InputText
-                  id="contactNumber"
-                  v-model="addressForm.contactNumber"
-                  class="w-full"
-                  :class="{ 'p-invalid': errors.contactNumber }"
-                  maxlength="11"
-                />
-                <label for="contactNumber">Contact Number *</label>
-              </FloatLabel>
-            </div>
-            <small v-if="errors.contactName || errors.contactNumber" class="text-red-500 mt-1 block">
-              {{ errors.contactName || errors.contactNumber }}
-            </small>
-          </div>
-
-          <!-- Address Details -->
-          <div class="border-b border-gray-200 pb-4">
-            <h3 class="text-lg font-semibold text-oxford-blue mb-3">Address Details</h3>
-            <div class="grid grid-cols-1 gap-4">
-              <!-- Address Line 1 -->
-              <FloatLabel variant="on">
-                <InputText
-                  id="addressLine1"
-                  v-model="addressForm.addressLine1"
-                  class="w-full"
-                  :class="{ 'p-invalid': errors.addressLine1 }"
-                  placeholder="House/Unit/Floor No., Building Name, Street Name"
-                />
-                <label for="addressLine1">Address Line 1 *</label>
-              </FloatLabel>
-              <small v-if="errors.addressLine1" class="text-red-500 -mt-2">{{ errors.addressLine1 }}</small>
-
-              <!-- Address Line 2 -->
-              <FloatLabel variant="on">
-                <InputText
-                  id="addressLine2"
-                  v-model="addressForm.addressLine2"
-                  class="w-full"
-                  placeholder="Barangay, Subdivision, Landmark (Optional)"
-                />
-                <label for="addressLine2">Address Line 2</label>
-              </FloatLabel>
-
-              <!-- Province and City -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <FloatLabel variant="on">
-                    <Select
-                      id="province"
-                      v-model="addressForm.province"
-                      :options="provinces"
-                      optionLabel="name"
-                      optionValue="code"
-                      filter
-                      class="w-full"
-                      :class="{ 'p-invalid': errors.province }"
-                      @change="onProvinceChange"
-                    />
-                    <label for="province">Province *</label>
-                  </FloatLabel>
-                  <small v-if="errors.province" class="text-red-500 mt-1 block">{{ errors.province }}</small>
-                </div>
-
-                <div>
-                  <FloatLabel variant="on">
-                    <Select
-                      id="city"
-                      v-model="addressForm.city"
-                      :options="cities"
-                      optionLabel="name"
-                      optionValue="code"
-                      filter
-                      class="w-full"
-                      :class="{ 'p-invalid': errors.city }"
-                      :disabled="!addressForm.province"
-                    />
-                    <label for="city">City / Municipality *</label>
-                  </FloatLabel>
-                  <small v-if="errors.city" class="text-red-500 mt-1 block">{{ errors.city }}</small>
-                </div>
-              </div>
-
-              <!-- Postal Code -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FloatLabel variant="on">
-                  <InputText
-                    id="postalCode"
-                    v-model="addressForm.postalCode"
-                    class="w-full"
-                    maxlength="4"
-                    :class="{ 'p-invalid': errors.postalCode }"
-                  />
-                  <label for="postalCode">Postal Code *</label>
-                </FloatLabel>
-                <small v-if="errors.postalCode" class="text-red-500 mt-1 block">{{ errors.postalCode }}</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Additional Instructions -->
-          <div>
-            <FloatLabel variant="on">
-              <Textarea
-                id="deliveryNotes"
-                v-model="addressForm.deliveryNotes"
-                rows="3"
-                class="w-full"
-                placeholder="e.g., Gate code, landmarks, delivery instructions"
-              />
-              <label for="deliveryNotes">Delivery Instructions (Optional)</label>
-            </FloatLabel>
+        <div class="space-y-4" v-if="loading">
+          <div class="text-center py-8">
+            <i class="pi pi-spin pi-spinner text-4xl text-oxford-blue"></i>
+            <p class="mt-4 text-gray">Loading address information...</p>
           </div>
         </div>
-      </template>
 
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <Button
-            label="Clear Form"
-            icon="pi pi-times"
-            outlined
-            @click="clearForm"
-            class="text-gray border-gray-300 hover:bg-gray-100"
-          />
-          <Button
-            label="Confirm Address"
-            icon="pi pi-check"
-            @click="submitAddress"
-            :loading="isSubmitting"
-            class="bg-oxford-blue text-white border-oxford-blue hover:bg-charcoal"
-          />
+        <div class="space-y-4" v-else>
+          <!-- Address Line 1 -->
+          <div>
+            <label class="block text-sm font-semibold text-charcoal mb-2">Address Line 1</label>
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <p class="text-charcoal">{{ addressData.addressline1 || 'Not provided' }}</p>
+            </div>
+          </div>
+
+          <!-- Address Line 2 -->
+          <div>
+            <label class="block text-sm font-semibold text-charcoal mb-2">Address Line 2</label>
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <p class="text-charcoal">{{ addressData.addressline2 || 'Not provided' }}</p>
+            </div>
+          </div>
+
+          <!-- Province and City -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-charcoal mb-2">Province</label>
+              <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <p class="text-charcoal">{{ addressData.province_name || 'Not provided' }}</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-charcoal mb-2">City / Municipality</label>
+              <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <p class="text-charcoal">{{ addressData.city_name || 'Not provided' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Address Button -->
+          <div class="flex gap-3 pt-4">
+            <Button
+              label="Edit Address"
+              icon="pi pi-pencil"
+              @click="goToEditAddress"
+              class="w-full bg-oxford-blue text-white border-oxford-blue hover:bg-charcoal"
+            />
+          </div>
         </div>
       </template>
     </Card>
@@ -168,174 +67,48 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import Card from 'primevue/card'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
 import Button from 'primevue/button'
-import FloatLabel from 'primevue/floatlabel'
+import userService from '@/services/userService'
 
-// Emits
-const emit = defineEmits(['addressConfirmed'])
+const router = useRouter()
 
-// State
-const addressForm = ref({
-  contactName: '',
-  contactNumber: '',
-  addressLine1: '',
-  addressLine2: '',
-  province: null,
-  city: null,
-  postalCode: '',
-  deliveryNotes: '',
-  saveAddress: false
+const addressData = ref({
+  addressline1: '',
+  addressline2: '',
+  province_name: '',
+  city_name: ''
 })
 
-const errors = ref({})
-const isSubmitting = ref(false)
-const provinces = ref([])
-const cities = ref([])
+const loading = ref(false)
 
-// Methods
-const loadProvinces = async () => {
+onMounted(async () => {
+  await loadUserAddress()
+})
+
+const loadUserAddress = async () => {
   try {
-    // Load from the ph_provinces.json file
-    const response = await fetch('/src/data/ph_provinces.json')
-    const data = await response.json()
-    // Map the data to match the expected format (code, name)
-    provinces.value = data.map(province => ({
-      code: province.province_id,
-      name: province.province_name
-    }))
-  } catch (error) {
-    console.error('Error loading provinces:', error)
-    // Fallback sample data
-    provinces.value = [
-      { code: 82, name: 'Metro Manila' },
-      { code: 18, name: 'Cavite' },
-      { code: 19, name: 'Laguna' },
-      { code: 11, name: 'Bulacan' }
-    ]
-  }
-}
-
-const onProvinceChange = async () => {
-  // Clear city when province changes
-  addressForm.value.city = null
-  cities.value = []
-
-  if (!addressForm.value.province) return
-
-  try {
-    // Load from the ph_locations.json file
-    const response = await fetch('/src/data/ph_locations.json')
-    const data = await response.json()
-
-    // Get cities for the selected province (province ID is the key)
-    const provinceId = addressForm.value.province.toString()
-    if (data.cities && data.cities[provinceId]) {
-      cities.value = data.cities[provinceId].map(city => ({
-        code: city.id,
-        name: city.name
-      }))
-    } else {
-      cities.value = []
-      console.warn(`No cities found for province ID: ${provinceId}`)
+    loading.value = true
+    const profile = await userService.getUserProfile()
+    
+    addressData.value = {
+      address_id: profile.address_id,
+      addressline1: profile.addressline1,
+      addressline2: profile.addressline2,
+      province_name: profile.province_name,
+      city_name: profile.city_name
     }
   } catch (error) {
-    console.error('Error loading cities:', error)
-    // Fallback sample data
-    cities.value = [
-      { code: 1, name: 'Quezon City' },
-      { code: 2, name: 'Makati' },
-      { code: 3, name: 'Manila' }
-    ]
-  }
-}
-
-const validateForm = () => {
-  errors.value = {}
-
-  if (!addressForm.value.contactName?.trim()) {
-    errors.value.contactName = 'Full name is required'
-  }
-
-  if (!addressForm.value.contactNumber?.trim()) {
-    errors.value.contactNumber = 'Contact number is required'
-  } else if (!/^09\d{9}$/.test(addressForm.value.contactNumber)) {
-    errors.value.contactNumber = 'Invalid mobile number format (09XXXXXXXXX)'
-  }
-
-  if (!addressForm.value.addressLine1?.trim()) {
-    errors.value.addressLine1 = 'Address Line 1 is required'
-  }
-
-  if (!addressForm.value.province) {
-    errors.value.province = 'Province is required'
-  }
-
-  if (!addressForm.value.city) {
-    errors.value.city = 'City/Municipality is required'
-  }
-
-  if (!addressForm.value.postalCode?.trim()) {
-    errors.value.postalCode = 'Postal code is required'
-  } else if (!/^\d{4}$/.test(addressForm.value.postalCode)) {
-    errors.value.postalCode = 'Postal code must be 4 digits'
-  }
-
-  return Object.keys(errors.value).length === 0
-}
-
-const submitAddress = async () => {
-  if (!validateForm()) {
-    return
-  }
-
-  isSubmitting.value = true
-
-  try {
-    // Get province and city names
-    const provinceName = provinces.value.find(p => p.code === addressForm.value.province)?.name
-    const cityName = cities.value.find(c => c.code === addressForm.value.city)?.name
-
-    const addressData = {
-      ...addressForm.value,
-      provinceName,
-      cityName,
-      fullAddress: `${addressForm.value.addressLine1}, ${addressForm.value.addressLine2 ? addressForm.value.addressLine2 + ', ' : ''}${cityName}, ${provinceName} ${addressForm.value.postalCode}`
-    }
-
-    // TODO: Save to backend if saveAddress is true
-
-    emit('addressConfirmed', addressData)
-  } catch (error) {
-    console.error('Error submitting address:', error)
+    console.error('Error loading user address:', error)
   } finally {
-    isSubmitting.value = false
+    loading.value = false
   }
 }
 
-const clearForm = () => {
-  addressForm.value = {
-    contactName: '',
-    contactNumber: '',
-    addressLine1: '',
-    addressLine2: '',
-    province: null,
-    city: null,
-    postalCode: '',
-    deliveryNotes: '',
-    saveAddress: false
-  }
-  errors.value = {}
-  cities.value = []
+const goToEditAddress = () => {
+  router.push('/profile')
 }
-
-// Lifecycle
-onMounted(() => {
-  loadProvinces()
-})
 </script>
 
 <style scoped>

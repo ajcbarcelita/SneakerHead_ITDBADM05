@@ -2,7 +2,7 @@ USE sneakerhead;
 
 DELIMITER $$
 CREATE TRIGGER stock_update
-BEFORE INSERT ON order_items
+AFTER INSERT ON order_items
 FOR EACH ROW
 BEGIN
     -- Try to reduce stock in one atomic update

@@ -135,6 +135,8 @@ const confirm = useConfirm()
 
 const userContextStore = useUserContextStore()
 const branchId = toRef(userContextStore, 'branchId')
+const chosenCurrency = toRef(userContextStore, 'chosenCurrency')
+const currencyRate = toRef(userContextStore, 'currencyRate')
 
 const cartItems = ref([])
 const cartData = ref(null)
@@ -149,6 +151,17 @@ onMounted(async () => {
 watch(branchId, async (newId, oldId) => {
     if (newId !== oldId) await fetchCart()
 })
+
+// Real-time price updates when currency changes
+watch([chosenCurrency, currencyRate], async (newValues, oldValues) => {
+    if (newValues[0] !== oldValues[0] || newValues[1] !== oldValues[1]) {
+        // Currency or rate changed, update cart data with new currency info
+        if (cartData.value) {
+            cartData.value.currency_code = userContextStore.chosenCurrency
+            cartData.value.currency_rate_to_peso = userContextStore.currencyRate
+        }
+    }
+}, { deep: true })
 
 /**
  * Fetch cart data from backend

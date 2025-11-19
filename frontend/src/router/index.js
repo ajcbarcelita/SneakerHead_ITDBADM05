@@ -7,6 +7,7 @@ import RegisterPage from '@/pages/RegisterPage.vue'
 import FullShoeInfo from '@/pages/ShoeInfoPage.vue'
 import ShoppingCartPage from '@/pages/ShoppingCartPage.vue'
 import CheckoutPage from '@/pages/CheckoutPage.vue'
+import OrderConfirmationPage from '@/pages/OrderConfirmationPage.vue'
 import ShoeCatalogPage from '@/pages/ShoeCatalogPage.vue'
 
 // Admin Pages
@@ -76,6 +77,12 @@ const router = createRouter({
       path: '/checkout',
       name: 'Checkout',
       component: CheckoutPage,
+      meta: {requiresAuth: true, customerOnly: true}
+    },
+    {
+      path: '/order-confirmation/:orderId',
+      name: 'order-confirmation',
+      component: OrderConfirmationPage,
       meta: {requiresAuth: true, customerOnly: true}
     },
     {
