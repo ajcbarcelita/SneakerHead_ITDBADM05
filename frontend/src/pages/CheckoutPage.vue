@@ -174,14 +174,6 @@ watch(
   { deep: true }
 )
 
-// Watch for delivery method changes to reset address confirmation
-watch(
-  () => checkoutData.value.deliveryMethod,
-  (newMethod) => {
-    console.log('Delivery method changed to:', newMethod)
-  }
-)
-
 // Lifecycle
 onMounted(async () => {
   await loadCartData()
@@ -274,28 +266,23 @@ const goBackToCart = () => {
 
 const handleAddressConfirmed = (addressData) => {
   checkoutData.value.addressData = addressData
-  console.log('Address confirmed:', addressData)
 }
 
 const handlePromoApplied = (promoData) => {
   checkoutData.value.promoCode = promoData.code
   checkoutData.value.promoDiscount = promoData.discount
-  console.log('Promo applied:', promoData)
 }
 
 const handlePromoRemoved = () => {
   checkoutData.value.promoCode = null
   checkoutData.value.promoDiscount = 0
-  console.log('Promo removed')
 }
 
 const handleDeliveryMethodChanged = (method) => {
   checkoutData.value.deliveryMethod = method
-  console.log('Delivery method changed to:', method)
 }
 
 const handleCheckout = async (orderSummary) => {
-  console.log('Processing checkout...')
 
   // Validate delivery method
   if (orderSummary.deliveryMethod === 'delivery' && !checkoutData.value.addressData) {
@@ -329,8 +316,6 @@ const handleCheckout = async (orderSummary) => {
       branch_id: orderSummary.deliveryMethod === 'pickup' ? userContextStore.branchId : cartData.value.branch_id,
       promo_code: checkoutData.value.promoCode || null
     }
-
-    console.log('Submitting order:', orderData)
 
     // Create order
     const result = await orderService.createOrder(orderData)

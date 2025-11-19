@@ -15,11 +15,12 @@
           style, and the latest drops, delivered straight to your collection.
         </p>
         <div class="flex gap-4 mt-4 flex-wrap justify-center">
-          <a href="#shop"
-            class="px-6 py-3 bg-giants-orange text-white-smoke font-semibold rounded-lg hover:bg-orange-600 transition">
+          <router-link
+            to="/products"
+            class="px-6 py-3 bg-giants-orange text-white-smoke font-semibold rounded-lg hover:bg-orange-600 transition"
+          >
             Shop Now
-          </a>
-
+          </router-link>
         </div>
       </section>
 

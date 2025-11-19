@@ -1,6 +1,6 @@
 <template>
   <router-view />
-  <Toast />
+  <Toast position="bottom-right"/>
   <ConfirmDialog />
   <UserContextModal 
     v-model:visible="userContextStore.showModal"

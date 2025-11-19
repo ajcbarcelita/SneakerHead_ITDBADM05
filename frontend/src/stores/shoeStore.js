@@ -12,9 +12,7 @@ export const useShoeStore = defineStore('shoes', {
   actions: {
     async loadShoes(branch_id) {
       this.loading = true
-      console.log('[Store] Fetching shoes for branch:', branch_id)
       const res = await getShoesByBranch(branch_id)
-      console.log('[Store] Shoes response:', res.data)
       this.shoes = res.data
       this.loading = false
     },
@@ -22,9 +20,7 @@ export const useShoeStore = defineStore('shoes', {
     async loadShoeDetails(shoe_id, branch_id) {
       this.selectedShoe = null
       this.loading = true
-      console.log('[Store] Fetching shoe details:', { shoe_id, branch_id })
       const res = await getFullShoeDetails(shoe_id, branch_id)
-      console.log('[Store] Raw response:', res.data)
     
       const data = res.data
 
@@ -47,7 +43,6 @@ export const useShoeStore = defineStore('shoes', {
         })),
         branch: branchObj
       }
-      console.log('[Store] Formatted selectedShoe:', this.selectedShoe)
       this.loading = false
     }
   }

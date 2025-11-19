@@ -21,36 +21,82 @@ DELIMITER ;
 
 -- SP to update user info
 DELIMITER $$
-CREATE PROCEDURE update_user (
+
+CREATE PROCEDURE update_user(
   IN p_user_id INT,
-  IN p_email VARCHAR(255),
   IN p_pw_hash VARCHAR(255),
   IN p_fname VARCHAR(100),
   IN p_lname VARCHAR(100),
   IN p_mname VARCHAR(50),
   IN p_address_id INT,
   IN p_role_id INT,
+  IN p_branch_id INT,
   IN p_is_deleted TINYINT(1)
-) 
+)
 BEGIN
   DECLARE user_exists INT DEFAULT 0;
-  
-  SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-
+  DECLARE user_is_assigned INT DEFAULT 0;
+  DECLARE branch_has_manager INT DEFAULT 0;
+  DECLARE current_role INT DEFAULT 0;
   START TRANSACTION;
   
   -- Check if user exists
-  SELECT COUNT(*) INTO user_exists FROM users WHERE user_id = p_user_id;
+  SELECT COUNT(*) INTO user_exists 
+  FROM users 
+  WHERE user_id = p_user_id;
+  
+  -- Get current role of user
+  SELECT role_id into current_role
+  FROM users
+  WHERE user_id = p_user_id;
   
   IF user_exists = 0 THEN
     ROLLBACK;
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User not found';
   END IF;
   
+  -- Handle branch manager assignments
+  IF current_role = 2 THEN
+    -- Check if branch already has a different manager (only if assigning to a branch)
+    IF p_branch_id IS NOT NULL THEN
+      SELECT COUNT(*) INTO branch_has_manager
+      FROM branch_admin_assignments
+      WHERE branch_id = p_branch_id AND staff_id != p_user_id;
+      
+      IF branch_has_manager > 0 THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Branch already has a manager assigned';
+      END IF;
+    END IF;
+    
+    -- Check if user is already assigned
+    SELECT COUNT(*) INTO user_is_assigned
+    FROM branch_admin_assignments
+    WHERE staff_id = p_user_id;
+    
+    IF user_is_assigned > 0 THEN
+      -- Update or remove assignment
+      IF p_branch_id IS NOT NULL THEN
+        UPDATE branch_admin_assignments
+        SET branch_id = p_branch_id, role_at_branch = p_role_id, assigned_at = NOW() 
+        WHERE staff_id = p_user_id;
+      ELSE
+        -- Remove assignment if branch_id is NULL (unassign)
+        DELETE FROM branch_admin_assignments 
+        WHERE staff_id = p_user_id;
+      END IF;
+    ELSE
+      -- Create new assignment only if branch_id is provided
+      IF p_branch_id IS NOT NULL THEN
+        INSERT INTO branch_admin_assignments(staff_id, branch_id, role_at_branch, assigned_at)
+        VALUES(p_user_id, p_branch_id, 2, NOW());
+      END IF;
+    END IF;
+  END IF;
+  
   -- Update only the provided fields
   UPDATE users
   SET 
-    email = COALESCE(p_email, email),
     pw_hash = COALESCE(p_pw_hash, pw_hash),
     fname = COALESCE(p_fname, fname),
     lname = COALESCE(p_lname, lname),
@@ -62,9 +108,8 @@ BEGIN
   WHERE user_id = p_user_id;
   
   COMMIT;
-END;
-$$ 
-DELIMITER ;
+END
+$$ DELIMITER ;
 
 
 -- SP to add a branch
@@ -318,93 +363,6 @@ LEFT JOIN shoe_images si ON s.shoe_id = si.shoe_id
 LEFT JOIN shoe_categories sc ON s.shoe_id = sc.shoe_id
 LEFT JOIN ref_shoe_categories rsc ON sc.shoe_category_id = rsc.category_id
 GROUP BY s.shoe_id, s.name, s.price, s.brand_id;
-
--- SP to add shoe
-DELIMITER $$
-CREATE PROCEDURE add_shoe(
-  IN p_brand_id INT,
-  IN p_name VARCHAR(50),
-  IN p_price DECIMAL(10, 2),
-  IN p_img_paths TEXT,  -- Comma-separated image paths
-  IN p_categories TEXT  -- Comma-separated category IDs
-)
-BEGIN
-  DECLARE v_shoe_id INT;
-  DECLARE v_done INT DEFAULT FALSE;
-  DECLARE v_img_path VARCHAR(255);
-  DECLARE v_category_id INT;
-  DECLARE v_img_cursor CURSOR FOR 
-    SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(p_img_paths, ',', numbers.n), ',', -1)) as img_path
-    FROM (
-      SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 
-      UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10
-    ) numbers
-    WHERE CHAR_LENGTH(p_img_paths) - CHAR_LENGTH(REPLACE(p_img_paths, ',', '')) >= numbers.n - 1;
-  
-  DECLARE v_cat_cursor CURSOR FOR 
-    SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(p_categories, ',', numbers.n), ',', -1)) as category_id
-    FROM (
-      SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 
-      UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10
-    ) numbers
-    WHERE CHAR_LENGTH(p_categories) - CHAR_LENGTH(REPLACE(p_categories, ',', '')) >= numbers.n - 1;
-  
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = TRUE;
-
-  -- Start transaction
-  START TRANSACTION;
-
-  -- Insert the shoe
-  INSERT INTO shoes (brand_id, name, price, is_deleted)
-  VALUES (p_brand_id, p_name, p_price, 0);
-  
-  -- Get the last inserted shoe_id
-  SET v_shoe_id = LAST_INSERT_ID();
-
-  -- Insert multiple images
-  IF p_img_paths IS NOT NULL AND p_img_paths != '' THEN
-    OPEN v_img_cursor;
-    
-    img_loop: LOOP
-      FETCH v_img_cursor INTO v_img_path;
-      IF v_done THEN
-        LEAVE img_loop;
-      END IF;
-      
-      INSERT INTO shoe_images (shoe_id, img_path)
-      VALUES (v_shoe_id, v_img_path);
-    END LOOP;
-    
-    CLOSE v_img_cursor;
-    SET v_done = FALSE;
-  END IF;
-
-  -- Insert multiple categories
-  IF p_categories IS NOT NULL AND p_categories != '' THEN
-    OPEN v_cat_cursor;
-    
-    cat_loop: LOOP
-      FETCH v_cat_cursor INTO v_category_id;
-      IF v_done THEN
-        LEAVE cat_loop;
-      END IF;
-      
-      INSERT INTO shoe_categories (shoe_id, shoe_category_id)
-      VALUES (v_shoe_id, v_category_id);
-    END LOOP;
-    
-    CLOSE v_cat_cursor;
-  END IF;
-
-  -- Commit transaction
-  COMMIT;
-  
-  -- Return the created shoe ID
-  SELECT v_shoe_id as shoe_id;
-
-END$$
-DELIMITER ;
-
 
 -- Get Top Customer
 DELIMITER $$

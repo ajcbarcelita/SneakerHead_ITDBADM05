@@ -63,7 +63,7 @@
                 </div>
               </div>
 
-              <Button label="Add Branch Manager" icon="pi pi-plus" class="add-btn h-12 whitespace-nowrap" 
+              <Button label="Add User" icon="pi pi-plus" class="add-btn h-12 whitespace-nowrap" 
                       @click="showAddUserDialog = true" />
             </div>
           </div>
@@ -80,7 +80,7 @@
               :rowsPerPageOptions="[5, 10, 20, 50]"
               currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
             >
-              <Column field="id" header="User ID" :sortable="true"></Column>
+              <Column field="user_id" header="User ID" :sortable="true"></Column>
               <Column field="name" header="Name" :sortable="true"></Column>
               <Column field="email" header="Email" :sortable="true"></Column>
               <Column field="branchName" header="Branch" :sortable="true">
@@ -95,7 +95,7 @@
                       :severity="getRoleSeverity(slotProps.data.role)" />
                 </template>
               </Column>
-              <Column field="is_deleted" header="Status" :sortable="true">
+              <Column field="is_deleted", header="Status" :sortable="true">
                 <template #body="slotProps">
                   <Tag 
                     :value="slotProps.data.is_deleted ? 'Inactive' : 'Active'" 
@@ -110,8 +110,7 @@
                       icon="pi pi-pencil" 
                       class="p-button-rounded p-button-text edit-btn" 
                       @click="editUser(slotProps.data)"
-                      :disabled="!canEditUser(slotProps.data)"
-                      v-tooltip="getEditButtonTooltip(slotProps.data)"
+                      v-tooltip="'Edit User'"
                     />
                   </div>
                 </template>
@@ -184,7 +183,7 @@
                   <span v-else class="text-gray-500">-</span>
                 </template>
               </Column>
-              <Column field="is_deleted" header="Status" :sortable="true">
+              <Column field="is_deleted", header="Status" :sortable="true">
                 <template #body="slotProps">
                   <Tag 
                     :value="slotProps.data.is_deleted ? 'Inactive' : 'Active'" 
@@ -279,16 +278,28 @@
           </small>
         </div>
         <div class="field">
+          <label class="font-semibold text-charcoal">Role <span class="text-red-500">*</span></label>
+          <Dropdown
+            v-model="newUser.role_id"
+            :options="userRoleOptionsForAdd"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select Role"
+            class="w-full"
+            @change="onRoleChange"
+          />
+        </div>
+        <div class="field" v-if="showBranchAssignment">
           <label class="font-semibold text-charcoal">Branch Assignment</label>
           <Dropdown
-            v-model="newUser.address_id"
+            v-model="newUser.branch_id"
             :options="availableBranchesForAdd"
             optionLabel="label"
             optionValue="value"
             placeholder="Select Branch"
             class="w-full"
           />
-          <small class="text-gray-500 mt-1 block">Leave unassigned if no branch assignment needed</small>
+          <small class="text-gray-500 mt-1 block">Required for Branch Managers</small>
         </div>
       </div>
       <template #footer>
@@ -326,20 +337,22 @@
           <p class="text-sm text-gray-500 mt-2">Personal information and role cannot be modified</p>
         </div>
 
-        <!-- Editable Branch Assignment Section -->
-        <div class="border-b pb-4">
+        <!-- Editable Branch Assignment Section (Only for Branch Managers) -->
+        <div class="border-b pb-4" v-if="isEditingBranchManager">
           <h3 class="text-lg font-semibold text-charcoal mb-4">Branch Assignment</h3>
           <div class="field">
-            <label class="font-semibold text-charcoal block mb-2">Branch</label>
+            <label class="font-semibold text-charcoal block mb-2">Branch <span class="text-red-500">*</span></label>
             <Dropdown
-              v-model="editingUser.address_id"
+              v-model="editingUser.branch_id"
               :options="availableBranchesForEdit"
               optionLabel="label"
               optionValue="value"
               placeholder="Select Branch"
               class="w-full"
+              :class="{ 'p-invalid': !editingUser.branch_id && isEditingBranchManager }"
             />
-            <small class="text-gray-500 mt-1 block">Leave unassigned if no branch assignment needed</small>
+            <small v-if="!editingUser.branch_id && isEditingBranchManager" class="p-error">Branch assignment is required for Branch Managers</small>
+            <small v-else class="text-gray-500 mt-1 block">Branch assignment is required for Branch Managers</small>
           </div>
         </div>
 
@@ -351,8 +364,8 @@
               v-model="editingUser.is_deleted" 
               :binary="true" 
               inputId="isDeleted" 
-              :trueValue="true" 
-              :falseValue="false"
+              :trueValue="1" 
+              :falseValue="0"
             />
             <label for="isDeleted" class="font-semibold text-charcoal">Deactivate Account</label>
           </div>
@@ -465,8 +478,8 @@
               v-model="editingBranch.is_deleted" 
               :binary="true" 
               inputId="branchIsDeleted" 
-              :trueValue="true" 
-              :falseValue="false"
+              :trueValue="1" 
+              :falseValue="0"
             />
             <label for="branchIsDeleted" class="font-semibold text-charcoal">Deactivate Branch</label>
           </div>
@@ -537,7 +550,9 @@ const newUser = ref({
   mname: '',
   email: '',
   pw_hash: '',
-  address_id: null
+  role_id: null,
+  address_id: null,
+  branch_id: null
 })
 
 // ADD BRANCH DIALOG STATE
@@ -559,27 +574,36 @@ const editingBranch = ref({
   addressline1: '',
   addressline2: '',
   city_id: null,
-  is_deleted: false
+  is_deleted: 0
 })
 
 // EDIT USER DIALOG STATE
 const editingUser = ref({
-  id: null,
+  user_id: null,
   fname: '',
   mname: '',
   lname: '',
   email: '',
   role_id: null,
   address_id: null,
-  is_deleted: false
+  branch_id: null,
+  is_deleted: 0,
+  pw_hash: ''
 })
 
-// Dropdown options for user roles
+// Dropdown options for user roles (for filtering)
 const userRoleOptions = [
   { label: 'All Roles', value: 'all' },
   { label: 'Admin', value: 'Admin' },
   { label: 'Branch Manager', value: 'Branch Manager' },
   { label: 'Customer', value: 'Customer' }
+]
+
+// Dropdown options for user roles (for adding new users)
+const userRoleOptionsForAdd = [
+  { label: 'Admin', value: 1 },
+  { label: 'Branch Manager', value: 2 },
+  { label: 'Customer', value: 3 }
 ]
 
 // Dropdown options for user branches
@@ -595,33 +619,44 @@ const userStatusOptions = [
   { label: 'Inactive', value: 'inactive' }
 ]
 
-// Available branches for assignment (for add user)
-const availableBranchesForAdd = computed(() => {
-  const activeBranches = branches.value.filter(branch => !branch.is_deleted);
-  
-  return [
-    { label: 'Unassigned', value: null },
-    ...(activeBranches.map(branch => ({
-      label: branch.branch_name,
-      value: branch.address_id
-    })) || [])
-  ]
-})
-
-// Available branches for assignment (for edit user)
-const availableBranchesForEdit = computed(() => {
-  const activeBranches = branches.value.filter(branch => !branch.is_deleted);
-  
-  return [
-    { label: 'Unassigned', value: null },
-    ...(activeBranches.map(branch => ({
-      label: branch.branch_name,
-      value: branch.address_id
-    })) || [])
-  ]
-})
-
 // Computed properties
+const showBranchAssignment = computed(() => {
+  return newUser.value.role_id === 2 // Show branch assignment only for Branch Managers
+})
+
+const isEditingBranchManager = computed(() => {
+  return editingUser.value.role_id === 2 // Check if editing user is a Branch Manager
+})
+
+const availableBranchesForAdd = computed(() => {
+  const activeBranches = branches.value.filter(branch => branch.is_deleted === 0);
+  
+  return [
+    { label: 'Unassigned', value: null },
+    ...(activeBranches.map(branch => ({
+      label: branch.branch_name,
+      value: branch.branch_id
+    })) || [])
+  ]
+})
+
+const availableBranchesForEdit = computed(() => {
+  // Use all active branches (not deleted)
+  const activeBranches = branches.value.filter(branch => 
+    branch.is_deleted === 0 || branch.is_deleted === false
+  );
+  
+  const branchOptions = activeBranches.map(branch => ({
+    label: branch.branch_name,
+    value: branch.branch_id
+  }));
+  
+  return [
+    { label: 'Unassigned', value: null },
+    ...branchOptions
+  ];
+})
+
 const filteredUsers = computed(() => {
   let filtered = users.value
 
@@ -646,9 +681,9 @@ const filteredUsers = computed(() => {
   // Filter by user status
   if (selectedUserStatus.value.value !== 'all') {
     if (selectedUserStatus.value.value === 'active') {
-      filtered = filtered.filter(user => !user.is_deleted)
+      filtered = filtered.filter(user => user.is_deleted === 0)
     } else if (selectedUserStatus.value.value === 'inactive') {
-      filtered = filtered.filter(user => user.is_deleted)
+      filtered = filtered.filter(user => user.is_deleted === 1)
     }
   }
 
@@ -704,19 +739,6 @@ const editBranchDialogHeader = computed(() => {
   return `Edit Branch: ${editingBranch.value.branch_name}`
 })
 
-// Check if user can be edited (only Branch Managers)
-const canEditUser = (user) => {
-  return user.role === 'Branch Manager'
-}
-
-// Get tooltip for edit button
-const getEditButtonTooltip = (user) => {
-  if (!canEditUser(user)) {
-    return 'Only Branch Managers can be edited'
-  }
-  return 'Edit User'
-}
-
 // Validation methods
 const validateField = (fieldName, value) => {
   validateRequired(fieldName, value)
@@ -736,6 +758,12 @@ const validateAllFields = () => {
   validateEmail(newUser.value.email)
   validatePassword(newUser.value.pw_hash)
   
+  // Validate branch assignment for Branch Managers
+  if (newUser.value.role_id === 2 && !newUser.value.branch_id) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Branch assignment is required for Branch Managers', life: 3000 })
+    return false
+  }
+  
   return Object.keys(validationErrors.value).length === 0
 }
 
@@ -746,6 +774,13 @@ const getRoleSeverity = (role) => {
     case 'branch manager': return 'warning'
     case 'customer': return 'info'
     default: return 'secondary'
+  }
+}
+
+const onRoleChange = () => {
+  // Reset branch assignment when role changes
+  if (newUser.value.role_id !== 2) {
+    newUser.value.branch_id = null
   }
 }
 
@@ -797,7 +832,6 @@ const fetchCities = async () => {
     const response = await SAService.getCities()
     cityOptions.value = response.data.cities || []
   } catch (error) {
-    console.error('Error fetching cities:', error)
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load cities', life: 3000 })
     cityOptions.value = []
   } finally {
@@ -809,7 +843,6 @@ const fetchCities = async () => {
 const saveUser = async () => {
   // Validate all fields before proceeding
   if (!validateAllFields()) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Please fix all validation errors before saving', life: 3000 })
     return
   }
 
@@ -819,9 +852,10 @@ const saveUser = async () => {
       fname: newUser.value.fname,
       lname: newUser.value.lname,
       mname: newUser.value.mname || '',
-      email: newUser.value.email,
       pw_hash: newUser.value.pw_hash,
-      address_id: newUser.value.address_id || null
+      role_id: newUser.value.role_id,
+      address_id: newUser.value.address_id,
+      branch_id: newUser.value.branch_id
     }
 
     await SAService.addUser(userData)
@@ -833,8 +867,15 @@ const saveUser = async () => {
   } catch (error) {
     if (error.response?.data?.message?.includes('Email already in use')) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Email address is already in use', life: 3000 })
+    } else if (error.response?.data?.message?.includes('Branch already has a manager assigned')) {
+      toast.add({ 
+        severity: 'error', 
+        summary: 'Error', 
+        detail: 'Branch already has a manager assigned', 
+        life: 3000 
+      })
     } else {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add branch manager: ' + error.message, life: 3000 })
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add user: ' + error.message, life: 3000 })
     }
   } finally {
     loadingAddUser.value = false
@@ -854,52 +895,82 @@ const resetNewUser = () => {
     mname: '',
     email: '',
     pw_hash: '',
-    address_id: null
+    role_id: null,
+    address_id: null,
+    branch_id: null
   }
 }
 
 // EDIT USER METHODS
 const editUser = (user) => {
-  if (!canEditUser(user)) {
-    toast.add({ 
-      severity: 'warn', 
-      summary: 'Cannot Edit User', 
-      detail: 'Only Branch Managers can be edited', 
-      life: 3000 
-    })
-    return
-  }
-
+  
   editingUser.value = {
-    id: user.id,
+    user_id: user.id, // Use user.id
     fname: user.fname,
     mname: user.mname || '',
     lname: user.lname,
     email: user.email,
     role_id: user.role_id,
     address_id: user.address_id,
-    is_deleted: user.is_deleted || false
+    branch_id: user.branchId, // Use user.branchId
+    is_deleted: user.is_deleted || 0,
+    pw_hash: ''
   }
   
   showEditUserDialog.value = true
 }
 
 const saveUserChanges = async () => {
+  // For Branch Managers, allow unassigning (branch_id can be null)
+  if (isEditingBranchManager.value && editingUser.value.branch_id === undefined) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a branch assignment or unassign', life: 3000 })
+    return
+  }
+
+  // Validate that we have a user_id
+  if (!editingUser.value.user_id) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'User ID is missing', life: 3000 })
+    return
+  }
+
   loadingUpdateUser.value = true
   try {
+    // Prepare update data according to backend expectations
     const updateData = {
-      address_id: editingUser.value.address_id,
+      email: null,
+      pw_hash: editingUser.value.pw_hash || null,
+      fname: null,
+      lname: null,
+      mname: null,
+      address_id: null,
+      role_id: null,
+      branch_id: editingUser.value.branch_id,
       is_deleted: editingUser.value.is_deleted
     }
 
-    await SAService.updateUser(editingUser.value.id, updateData)
+    await SAService.updateUser(editingUser.value.user_id, updateData)
     
     toast.add({ severity: 'success', summary: 'Success', detail: 'User updated successfully', life: 3000 })
     showEditUserDialog.value = false
     await fetchUsers()
     
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update user: ' + error.message, life: 3000 })
+    // Handle specific error for duplicate branch manager
+    if (error.response?.data?.message?.includes('Branch already has a manager assigned')) {
+      toast.add({ 
+        severity: 'error', 
+        summary: 'Error', 
+        detail: 'Branch already has a manager assigned', 
+        life: 3000 
+      })
+    } else {
+      toast.add({ 
+        severity: 'error', 
+        summary: 'Error', 
+        detail: 'Failed to update user: ' + error.message, 
+        life: 3000 
+      })
+    }
   } finally {
     loadingUpdateUser.value = false
   }
@@ -912,14 +983,16 @@ const cancelEditUser = () => {
 
 const resetEditingUser = () => {
   editingUser.value = {
-    id: null,
+    user_id: null,
     fname: '',
     mname: '',
     lname: '',
     email: '',
     role_id: null,
     address_id: null,
-    is_deleted: false
+    branch_id: null,
+    is_deleted: 0,
+    pw_hash: ''
   }
 }
 
@@ -931,7 +1004,7 @@ const editBranch = (branch) => {
     addressline1: branch.addressline1 || '',
     addressline2: branch.addressline2 || '',
     city_id: branch.city_id,
-    is_deleted: branch.is_deleted || false
+    is_deleted: branch.is_deleted || 0
   }
   
   showEditBranchDialog.value = true
@@ -955,7 +1028,7 @@ const saveBranchChanges = async () => {
       addressline1: editingBranch.value.addressline1 || '',
       addressline2: editingBranch.value.addressline2 || '',
       city_id: editingBranch.value.city_id,
-      is_deleted: editingBranch.value.is_deleted || false
+      is_deleted: editingBranch.value.is_deleted || 0
     }
 
     await SAService.updateBranch(editingBranch.value.branch_id, updateData)
@@ -965,7 +1038,6 @@ const saveBranchChanges = async () => {
     await fetchBranches()
     
   } catch (error) {
-    console.error('Error updating branch:', error)
     toast.add({ 
       severity: 'error', 
       summary: 'Error', 
@@ -989,7 +1061,7 @@ const resetEditingBranch = () => {
     addressline1: '',
     addressline2: '',
     city_id: null,
-    is_deleted: false
+    is_deleted: 0
   }
 }
 

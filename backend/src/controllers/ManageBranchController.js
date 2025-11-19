@@ -116,7 +116,7 @@ export const addBranch = async (req, res) => {
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
             action: 'BRANCH_INSERT_FAILURE',
-            description: `Branch ${branch_name} was insertion failed: ${error.message}`,
+            description: `Branch ${branch_name} insertion failed: ${error.message}`,
             ip
         })
 
@@ -215,7 +215,6 @@ export const updateBranch = async (req, res) => {
 
         const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
-        // Maybe make this more detailed later?
         await logEvent({
           user_id: res.user?.user_id || null,
           role_id: res.user?.role_id || null,
@@ -233,7 +232,7 @@ export const updateBranch = async (req, res) => {
             user_id: res.user?.user_id || null,
             role_id: res.user?.role_id || null,
             action: 'BRANCH_UPDATE_FAILED',
-            description: `Branch ${branch_name} updating failed: ${error.message}`,
+            description: `Branch ${req.body.branch_name} updating failed: ${error.message}`,
             ip
         })
 
@@ -244,42 +243,47 @@ export const updateBranch = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { userId } = req.params;
+        
+        // Check if userId is properly extracted
+        if (!userId || userId === 'undefined') {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
+
         const { 
-            email, 
             pw_hash,
             fname,   
             lname,    
             mname, 
             address_id, 
             role_id, 
+            branch_id,
             is_deleted
         } = req.body;
 
         // Convert is_deleted to proper tinyInt for DB
         const isDeletedValue = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null;
-
         const knex = User.knex();
         
-        // Call the stored procedure
+    
         await knex.raw('CALL update_user(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             userId,
-            email || null,
-            pw_hash || null, 
+            pw_hash || null,
             fname || null, 
             lname || null, 
             mname || null,
             address_id || null,
             role_id || null,
+            branch_id || null,
             isDeletedValue
         ]);
-
+        
+        const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
-        // Maybe make this more detailed later?
         await logEvent({
-          user_id: res.user?.user_id || null,
-          role_id: res.user?.role_id || null,
+          user_id: req.user?.user_id || null,
+          role_id: req.user?.role_id || null,
           action: 'USER_UPDATE_SUCCESS',
-          description: `User ${fname, mname, lname} was successfully updated`,
+          description: `User ${userId} was successfully updated`,
           ip
         })
 
@@ -288,12 +292,17 @@ export const updateUser = async (req, res) => {
         const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         await logEvent({
-          user_id: res.user?.user_id || null,
-          role_id: res.user?.role_id || null,
+          user_id: req.user?.user_id || null,
+          role_id: req.user?.role_id || null,
           action: 'USER_UPDATE_FAILED',
-          description: `User ${fname, mname, lname} updating failed: ${error.message}`,
+          description: `User updating failed: ${error.message}`,
           ip
         })
+
+        // Handle specific error for duplicate branch manager
+        if (error.message.includes('Branch already has a manager assigned')) {
+            return res.status(400).json({ message: "Branch already has a manager assigned" });
+        }
 
         res.status(500).json({ message: "Server error", error: error.message });
     }

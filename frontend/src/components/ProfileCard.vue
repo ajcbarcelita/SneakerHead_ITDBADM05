@@ -381,10 +381,6 @@ const showChangePassword = () => {
   showPasswordDialog.value = true
 }
 
-const handlePasswordUpdated = () => {
-  console.log('Password updated successfully!')
-}
-
 onMounted(() => {
   fetchUserProfile()
 })
