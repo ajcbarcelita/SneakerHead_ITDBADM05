@@ -250,7 +250,6 @@ export const updateUser = async (req, res) => {
         }
 
         const { 
-            email, 
             pw_hash,
             fname,   
             lname,    
@@ -265,7 +264,7 @@ export const updateUser = async (req, res) => {
         const isDeletedValue = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null;
         const knex = User.knex();
         
-        // Call the stored procedure with ALL 10 parameters in correct order
+    
         await knex.raw('CALL update_user(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             userId,
             pw_hash || null,
