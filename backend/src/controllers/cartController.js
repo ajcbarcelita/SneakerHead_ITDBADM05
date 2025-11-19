@@ -77,12 +77,7 @@ export async function getCartHandler(req, res) {
   }
 }
 
-/**
- * Get the current user's items in the CHOSEN shopping cart: TO DO LATER
- */
-export const  getCartItems = async (req, res) => {
-  return res.status(501).json({ error: "Not implemented yet" });
-}
+
 
 /**
  * Create a new shopping cart for the user for a specific branch

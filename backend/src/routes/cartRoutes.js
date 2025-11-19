@@ -2,7 +2,6 @@ import express from "express";
 import {
   getCartHandler,
   createCartForUserHandler,
-  getCartItems,
   addToCart,
   updateCartItem,
   removeFromCart,
@@ -32,9 +31,6 @@ router.put("/items/:itemId", updateCartItem);
 
 // Remove item from cart
 router.delete("/items/:itemId", removeFromCart);
-
-// Get all items in cart - not implemented yet
-router.get("/cart", getCartItems);
 
 // Update cart currency, and/or conversion rate
 router.put("/:cart_id/currency", updateCartCurrencyHandler);
