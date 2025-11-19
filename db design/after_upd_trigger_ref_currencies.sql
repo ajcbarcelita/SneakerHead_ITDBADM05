@@ -137,7 +137,7 @@ FOR EACH ROW
 BEGIN
     IF NEW.stock <= 5 THEN    
         INSERT INTO user_logs(user_id, role_id, action, description, ip_address)
-        VALUES (1, 1, 'LOW_STOCK_WARNING', CONCAT('Low Stock Warning For ', OLD.shoe_id, 'in ', OLD.branch_id), NULL);
+        VALUES (1, 1, 'LOW_STOCK_WARNING', CONCAT('Low Stock Warning For Shoe ID: ', OLD.shoe_id, ' in Branch ID: ', OLD.branch_id), NULL);
     END IF;
 END$$
 
