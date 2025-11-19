@@ -112,8 +112,6 @@ async function main() {
       const name = item.name.replace(/'/g, "''"); // escape apostrophes
       inserts.push(`('${name}', ${province_id})`);
     }
-
-    console.log(`✅ Processed ${dbName} (${citiesMunis.length} entries)`);
   }
 
   const sql = `
@@ -123,7 +121,6 @@ ${inserts.join(",\n")};
 `;
 
   fs.writeFileSync("insert_cities.sql", sql);
-  console.log("💾 Saved SQL insert statements to insert_cities.sql");
 }
 
 main().catch(console.error);

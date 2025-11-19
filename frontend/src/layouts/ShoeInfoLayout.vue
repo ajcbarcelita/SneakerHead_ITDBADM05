@@ -142,7 +142,6 @@
 
     try {
       const result = await cartService.addToCart(itemData)
-      console.log('Added to cart:', result)
 
       toast.add({
         severity: 'success',
