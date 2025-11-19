@@ -244,12 +244,6 @@ export const updateUser = async (req, res) => {
     try {
         const { userId } = req.params;
         
-        console.log('=== REQUEST DETAILS ===');
-        console.log('req.params:', req.params);
-        console.log('req.params.userId:', req.params.userId);
-        console.log('Extracted userId:', userId);
-        console.log('req.body:', req.body);
-        
         // Check if userId is properly extracted
         if (!userId || userId === 'undefined') {
             return res.status(400).json({ message: "Invalid user ID" });
@@ -267,17 +261,13 @@ export const updateUser = async (req, res) => {
             is_deleted
         } = req.body;
 
-        console.log('Processing update for user:', userId);
-        console.log('Branch ID to update:', branch_id);
-
         // Convert is_deleted to proper tinyInt for DB
         const isDeletedValue = is_deleted !== undefined ? (is_deleted ? 1 : 0) : null;
         const knex = User.knex();
         
         // Call the stored procedure with ALL 10 parameters in correct order
-        await knex.raw('CALL update_user(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        await knex.raw('CALL update_user(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             userId,
-            email || null,
             pw_hash || null,
             fname || null, 
             lname || null, 
@@ -287,14 +277,12 @@ export const updateUser = async (req, res) => {
             branch_id || null,
             isDeletedValue
         ]);
-
-        console.log('User updated successfully');
         
         const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         await logEvent({
-          user_id: res.user?.user_id || null,
-          role_id: res.user?.role_id || null,
+          user_id: req.user?.user_id || null,
+          role_id: req.user?.role_id || null,
           action: 'USER_UPDATE_SUCCESS',
           description: `User ${userId} was successfully updated`,
           ip
@@ -302,13 +290,11 @@ export const updateUser = async (req, res) => {
 
         res.status(200).json({ message: "User updated successfully" });
     } catch (error) {
-        console.error('Update user error:', error);
-        
         const forwarded = req.get("x-forwarded-for");
         const ip = req.ip || (forwarded ? String(forwarded).split(",")[0].trim() : null);
         await logEvent({
-          user_id: res.user?.user_id || null,
-          role_id: res.user?.role_id || null,
+          user_id: req.user?.user_id || null,
+          role_id: req.user?.role_id || null,
           action: 'USER_UPDATE_FAILED',
           description: `User updating failed: ${error.message}`,
           ip

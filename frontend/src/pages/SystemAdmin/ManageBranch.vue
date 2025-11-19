@@ -646,22 +646,15 @@ const availableBranchesForAdd = computed(() => {
 })
 
 const availableBranchesForEdit = computed(() => {
-  // Debug: Check what branches we have
-  console.log('All branches for edit:', branches.value);
-  
   // Use all active branches (not deleted)
   const activeBranches = branches.value.filter(branch => 
     branch.is_deleted === 0 || branch.is_deleted === false
   );
   
-  console.log('Active branches for edit:', activeBranches);
-  
   const branchOptions = activeBranches.map(branch => ({
     label: branch.branch_name,
     value: branch.branch_id
   }));
-  
-  console.log('Branch options:', branchOptions);
   
   return [
     { label: 'Unassigned', value: null },
@@ -844,7 +837,6 @@ const fetchCities = async () => {
     const response = await SAService.getCities()
     cityOptions.value = response.data.cities || []
   } catch (error) {
-    console.error('Error fetching cities:', error)
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load cities', life: 3000 })
     cityOptions.value = []
   } finally {
@@ -865,7 +857,6 @@ const saveUser = async () => {
       fname: newUser.value.fname,
       lname: newUser.value.lname,
       mname: newUser.value.mname || '',
-      email: newUser.value.email,
       pw_hash: newUser.value.pw_hash,
       role_id: newUser.value.role_id,
       address_id: newUser.value.address_id,
@@ -917,9 +908,6 @@ const resetNewUser = () => {
 
 // EDIT USER METHODS
 const editUser = (user) => {
-  console.log('Raw user data:', user);
-  console.log('User ID from raw data:', user.id);
-  console.log('Branch ID from raw data:', user.branchId);
   
   editingUser.value = {
     user_id: user.id, // Use user.id
@@ -933,9 +921,6 @@ const editUser = (user) => {
     is_deleted: user.is_deleted || 0,
     pw_hash: ''
   }
-  
-  console.log('Editing user user_id:', editingUser.value.user_id);
-  console.log('Editing user branch_id:', editingUser.value.branch_id);
   
   showEditUserDialog.value = true
 }
@@ -968,10 +953,6 @@ const saveUserChanges = async () => {
       is_deleted: editingUser.value.is_deleted
     }
 
-    console.log('Sending update - user_id:', editingUser.value.user_id);
-    console.log('Sending update - branch_id:', editingUser.value.branch_id);
-    console.log('Sending update data:', updateData);
-
     await SAService.updateUser(editingUser.value.user_id, updateData)
     
     toast.add({ severity: 'success', summary: 'Success', detail: 'User updated successfully', life: 3000 })
@@ -979,7 +960,6 @@ const saveUserChanges = async () => {
     await fetchUsers()
     
   } catch (error) {
-    console.error('Update user error:', error);
     // Handle specific error for duplicate branch manager
     if (error.response?.data?.message?.includes('Branch already has a manager assigned')) {
       toast.add({ 
@@ -1063,7 +1043,6 @@ const saveBranchChanges = async () => {
     await fetchBranches()
     
   } catch (error) {
-    console.error('Error updating branch:', error)
     toast.add({ 
       severity: 'error', 
       summary: 'Error', 
