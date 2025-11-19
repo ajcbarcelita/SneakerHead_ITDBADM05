@@ -174,6 +174,14 @@ watch(
   { deep: true }
 )
 
+// Watch for delivery method changes to reset address confirmation
+watch(
+  () => checkoutData.value.deliveryMethod,
+  (newMethod) => {
+    console.log('Delivery method changed to:', newMethod)
+  }
+)
+
 // Lifecycle
 onMounted(async () => {
   await loadCartData()
@@ -334,11 +342,22 @@ const handleCheckout = async (orderSummary) => {
       life: 3000
     })
 
-    // Navigate to order confirmation page
-    router.push({
-      name: 'order-confirmation',
-      params: { orderId: result.order_id }
-    })
+    // Reset checkout data immediately
+    checkoutData.value = {
+      deliveryMethod: 'delivery',
+      addressData: null,
+      promoCode: null,
+      promoDiscount: 0
+    }
+
+    // Clear cart items
+    cartItems.value = []
+    cartData.value = null
+
+    // Navigate to home page after a brief delay
+    setTimeout(() => {
+      router.push('/')
+    }, 1000)
   } catch (error) {
     console.error('Checkout error:', error)
     toast.add({

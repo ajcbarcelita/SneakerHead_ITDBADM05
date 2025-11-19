@@ -704,7 +704,9 @@ SELECT
     oi.price_at_purchase,
     oi.subtotal,
     o.total_price,
-    o.promo_code, 
+    o.promo_code,
+    o.currency_code,
+    o.currency_rate_to_peso,
     si.main_image_path AS image_path,
     o.created_at AS order_created_at
 FROM order_items oi

@@ -5,6 +5,14 @@
         <div class="flex items-center gap-2">
           <i class="pi pi-map-marker text-oxford-blue"></i>
           <h2 class="text-2xl font-bold text-oxford-blue">Delivery Address</h2>
+          <div v-if="isAddressValid" class="ml-auto flex items-center gap-1 bg-green-100 px-2 py-1 rounded-full">
+            <i class="pi pi-check-circle text-green-600 text-xs"></i>
+            <span class="text-green-600 font-semibold text-xs">Confirmed</span>
+          </div>
+          <div v-else class="ml-auto flex items-center gap-1 bg-red-100 px-2 py-1 rounded-full">
+            <i class="pi pi-exclamation-circle text-red-600 text-xs"></i>
+            <span class="text-red-600 font-semibold text-xs">Incomplete</span>
+          </div>
         </div>
       </template>
 
@@ -53,10 +61,11 @@
           <!-- Edit Address Button -->
           <div class="flex gap-3 pt-4">
             <Button
-              label="Edit Address"
+              label="Edit"
               icon="pi pi-pencil"
               @click="goToEditAddress"
-              class="w-full bg-oxford-blue text-white border-oxford-blue hover:bg-charcoal"
+              text
+              class="text-oxford-blue hover:bg-oxford-blue hover:text-white"
             />
           </div>
         </div>
@@ -66,15 +75,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import userService from '@/services/userService'
 
 const router = useRouter()
+const emit = defineEmits(['addressConfirmed'])
 
 const addressData = ref({
+  address_id: null,
   addressline1: '',
   addressline2: '',
   province_name: '',
@@ -82,6 +93,16 @@ const addressData = ref({
 })
 
 const loading = ref(false)
+
+// Check if address has required fields
+const isAddressValid = computed(() => {
+  return (
+    addressData.value.address_id &&
+    addressData.value.addressline1 &&
+    addressData.value.city_name &&
+    addressData.value.province_name
+  )
+})
 
 onMounted(async () => {
   await loadUserAddress()
@@ -91,13 +112,18 @@ const loadUserAddress = async () => {
   try {
     loading.value = true
     const profile = await userService.getUserProfile()
-    
+
     addressData.value = {
       address_id: profile.address_id,
       addressline1: profile.addressline1,
       addressline2: profile.addressline2,
       province_name: profile.province_name,
       city_name: profile.city_name
+    }
+
+    // Auto-confirm if all required fields are present
+    if (isAddressValid.value) {
+      emit('addressConfirmed', addressData.value)
     }
   } catch (error) {
     console.error('Error loading user address:', error)
