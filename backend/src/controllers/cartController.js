@@ -25,8 +25,18 @@ export async function getCartHandler(req, res) {
       .findOne({ user_id: userId, branch_id })
       .withGraphFetched("branch");
 
+    // If cart doesn't exist, return empty cart instead of error
     if (!cart) {
-      return res.status(404).json({ error: "Shopping cart not found for the specified branch" });
+      return res.json({
+        cart_id: null,
+        branch_id: parseInt(branch_id),
+        branch_name: null,
+        currency_code: 'PHP',
+        currency_rate_to_peso: 1,
+        items: [],
+        subtotal: 0,
+        total_items: 0,
+      });
     }
 
     // Get cart items with shoe details and inventory
