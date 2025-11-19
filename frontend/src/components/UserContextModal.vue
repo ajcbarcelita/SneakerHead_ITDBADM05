@@ -7,7 +7,7 @@
     @hide="onHide"
     class="w-full max-w-md"
   >
-    <Toast />
+    <Toast position="bottom-right"/>
 
     <div class="space-y-4">
       <!-- Branch Dropdown -->
@@ -68,9 +68,11 @@ import Button from 'primevue/button';
 import Dropdown from 'primevue/dropdown';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import { useRouter } from 'vue-router';
 
 const toastRef = ref(null);
 const toast = useToast(toastRef);
+const router = useRouter();
 
 const userContextStore = useUserContextStore();
 const authStore = useAuthStore();
@@ -165,6 +167,7 @@ async function applyPreferences() {
 
     emit('update:visible', false);
     emit('close');
+    router.push({ name: 'ShoeCatalog'});
 }
 
 function cancel() {
