@@ -311,11 +311,6 @@
     <!-- EDIT USER DIALOG -->
     <Dialog v-model:visible="showEditUserDialog" :header="editUserDialogHeader" :modal="true" class="w-11/12 md:w-1/2 lg:w-1/3">
       <div class="space-y-6">
-        <!-- Debug info - remove after testing -->
-        <div class="bg-yellow-100 p-2 rounded">
-          <p class="text-sm">Debug: branch_id = {{ editingUser.branch_id }}</p>
-          <p class="text-sm">Debug: availableBranches = {{ availableBranchesForEdit }}</p>
-        </div>
         <!-- Read-only Personal Information Section -->
         <div class="border-b pb-4">
           <h3 class="text-lg font-semibold text-charcoal mb-4">Personal Information</h3>
