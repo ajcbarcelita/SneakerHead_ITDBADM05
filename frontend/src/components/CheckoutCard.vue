@@ -58,15 +58,15 @@
       <!-- Subtotal -->
       <div class="flex justify-between mb-3">
         <span class="text-charcoal">Subtotal:</span>
-        <span class="font-semibold text-charcoal">₱{{ formatPrice(subtotal) }}</span>
+        <span class="font-semibold text-charcoal">{{ formatPrice(subtotal) }}</span>
       </div>
 
-      <!-- Shipping -->
-      <div class="flex justify-between mb-3">
-        <span class="text-charcoal">Shipping:</span>
-        <span class="font-semibold" :class="deliveryMethod === 'pickup' ? 'text-green-600' : 'text-charcoal'">
-          {{ deliveryMethod === 'pickup' ? 'FREE' : '₱' + formatPrice(shipping) }}
-        </span>
+
+
+      <!-- Promo Code Applied Label -->
+      <div v-if="promoApplied" class="flex justify-between mb-3">
+        <span class="text-charcoal text-sm">Promo Code ({{ promoCode }}):</span>
+        <span class="font-semibold text-green-600 text-sm">-{{ formatPrice(promoDiscount) }}</span>
       </div>
 
       <!-- Divider -->
@@ -107,7 +107,7 @@
         <Message v-if="promoApplied && promoDiscount > 0" severity="success" class="mt-2" :closable="false">
           <div class="flex items-center gap-2">
             <i class="pi pi-tag"></i>
-            <span>{{ promoCode }} applied! You saved ₱{{ formatPrice(promoDiscount) }}</span>
+            <span>{{ promoCode }} applied! You saved {{ formatPrice(promoDiscount) }}</span>
           </div>
         </Message>
 
@@ -120,7 +120,7 @@
       <!-- Discount (if promo applied) -->
       <div v-if="promoApplied && promoDiscount > 0" class="flex justify-between mb-3">
         <span class="text-green-600">Discount:</span>
-        <span class="font-semibold text-green-600">-₱{{ formatPrice(promoDiscount) }}</span>
+        <span class="font-semibold text-green-600">-{{ formatPrice(promoDiscount) }}</span>
       </div>
 
       <!-- Divider -->
@@ -129,7 +129,7 @@
       <!-- Total -->
       <div class="flex justify-between mb-4">
         <span class="text-xl font-bold text-oxford-blue">Total:</span>
-        <span class="text-xl font-bold text-giants-orange">₱{{ formatPrice(total) }}</span>
+        <span class="text-xl font-bold text-giants-orange">{{ formatPrice(total) }}</span>
       </div>
 
       <!-- Checkout Button -->
@@ -138,7 +138,7 @@
         icon="pi pi-arrow-right"
         iconPos="right"
         @click="handleCheckout"
-        :loading="processingCheckout"
+        :loading="loading || processingCheckout"
         class="w-full bg-giants-orange text-white border-giants-orange hover:bg-oxford-blue py-3 text-lg font-semibold"
       />
     </template>
@@ -152,6 +152,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Divider from 'primevue/divider'
 import Message from 'primevue/message'
+import orderService from '@/services/orderService'
 
 // Props
 const props = defineProps({
@@ -160,9 +161,18 @@ const props = defineProps({
     required: true,
     default: 0
   },
-  shipping: {
+
+  currencyCode: {
+    type: String,
+    default: 'PHP'
+  },
+  currencyRate: {
     type: Number,
-    default: 0
+    default: 1
+  },
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -185,17 +195,25 @@ watch(deliveryMethod, (newMethod) => {
 
 // Computed
 const total = computed(() => {
-  const shippingCost = deliveryMethod.value === 'pickup' ? 0 : props.shipping
-  const subtotalWithShipping = props.subtotal + shippingCost
-  return Math.max(0, subtotalWithShipping - promoDiscount.value)
+  return Math.max(0, props.subtotal - promoDiscount.value)
 })
 
 // Methods
 const formatPrice = (price) => {
-  return parseFloat(price).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
+  const numericValue = parseFloat(price)
+  const convertedValue = props.currencyCode === 'PHP'
+    ? numericValue
+    : numericValue * props.currencyRate
+
+  if (props.currencyCode === 'PHP') {
+    return `₱${convertedValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+  } else {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: props.currencyCode,
+      minimumFractionDigits: 2
+    }).format(convertedValue)
+  }
 }
 
 const applyPromoCode = async () => {
@@ -208,44 +226,19 @@ const applyPromoCode = async () => {
   promoError.value = ''
 
   try {
-    // TODO: Replace with actual API call to validate promo code
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Call backend to validate promo code
+    const result = await orderService.validatePromoCode(promoCode.value, props.subtotal)
 
-    // Mock validation - replace with actual API response
-    const mockValidPromos = {
-      'WELCOME10': 0.10, // 10% discount
-      'SUMMER20': 0.20,  // 20% discount
-      'SAVE50': 50,      // Fixed 50 peso discount
-      'FREESHIP': 0      // Free shipping (handled separately)
-    }
-
-    const upperPromoCode = promoCode.value.toUpperCase()
-
-    if (Object.prototype.hasOwnProperty.call(mockValidPromos, upperPromoCode)) {
-      const discountValue = mockValidPromos[upperPromoCode]
-
-      if (upperPromoCode === 'FREESHIP') {
-        // Free shipping promo
-        promoDiscount.value = props.shipping
-      } else if (discountValue < 1) {
-        // Percentage discount
-        promoDiscount.value = props.subtotal * discountValue
-      } else {
-        // Fixed amount discount
-        promoDiscount.value = discountValue
-      }
-
+    if (result.is_valid) {
+      promoDiscount.value = result.discount_amount
       promoApplied.value = true
       emit('promoApplied', {
-        code: upperPromoCode,
-        discount: promoDiscount.value
+        code: result.promo_code,
+        discount: result.discount_amount
       })
-    } else {
-      promoError.value = 'Invalid promo code. Please try again.'
     }
   } catch (error) {
-    promoError.value = 'Failed to apply promo code. Please try again.'
+    promoError.value = error.response?.data?.error || 'Failed to validate promo code. Please try again.'
     console.error('Error applying promo code:', error)
   } finally {
     applyingPromo.value = false
@@ -266,7 +259,6 @@ const handleCheckout = () => {
   emit('checkout', {
     deliveryMethod: deliveryMethod.value,
     subtotal: props.subtotal,
-    shipping: deliveryMethod.value === 'pickup' ? 0 : props.shipping,
     discount: promoDiscount.value,
     total: total.value,
     promoCode: promoApplied.value ? promoCode.value : null

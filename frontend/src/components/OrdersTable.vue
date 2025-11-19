@@ -73,7 +73,7 @@
       <!-- Total Column -->
       <Column field="total_price" header="Total" sortable style="min-width: 10rem">
         <template #body="{ data }">
-          <span class="font-bold text-giants-orange">₱{{ formatPrice(data.total_price) }}</span>
+          <span class="font-bold text-giants-orange">{{ formatPrice(data.total_price, data.currency_code, data.currency_rate_to_peso) }}</span>
         </template>
       </Column>
 
@@ -111,13 +111,13 @@
 
             <Column field="price_at_purchase" header="Price" style="min-width: 8rem">
               <template #body="{ data: item }">
-                <span class="text-charcoal">₱{{ formatPrice(item.price_at_purchase) }}</span>
+                <span class="text-charcoal">{{ formatPrice(item.price_at_purchase, item.currency_code, item.currency_rate_to_peso) }}</span>
               </template>
             </Column>
 
             <Column header="Subtotal" style="min-width: 8rem">
               <template #body="{ data: item }">
-                <span class="font-bold text-giants-orange">₱{{ formatPrice(item.quantity * item.price_at_purchase) }}</span>
+                <span class="font-bold text-giants-orange">{{ formatPrice(item.quantity * item.price_at_purchase, item.currency_code, item.currency_rate_to_peso) }}</span>
               </template>
             </Column>
           </DataTable>
@@ -167,11 +167,21 @@ const loading = ref(false)
 const toast = useToast()
 
 // Methods
-const formatPrice = (price) => {
-  return parseFloat(price).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
+const formatPrice = (price, currencyCode = 'PHP', currencyRate = 1) => {
+  const numericValue = parseFloat(price)
+  const convertedValue = currencyCode === 'PHP'
+    ? numericValue
+    : numericValue * currencyRate
+
+  if (currencyCode === 'PHP') {
+    return `₱${convertedValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+  } else {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2
+    }).format(convertedValue)
+  }
 }
 
 const formatDate = (dateString) => {
@@ -194,6 +204,8 @@ const clusterOrders = (items) => {
         branch_name: item.branch_name,
         promo_code: item.promo_code || null,
         total_price: item.total_price,
+        currency_code: item.currency_code || 'PHP',
+        currency_rate_to_peso: item.currency_rate_to_peso || 1,
         items: [],
         items_count: 0
       })

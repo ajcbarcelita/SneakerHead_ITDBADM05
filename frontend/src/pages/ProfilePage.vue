@@ -21,7 +21,7 @@
               <i class="pi pi-user"></i>
               <span class="font-semibold">Profile Details</span>
             </Tab>
-            <Tab value="orders" class="flex items-center gap-2">
+            <Tab v-if="auth.user?.role_name === 'Customer'" value="orders" class="flex items-center gap-2">
               <i class="pi pi-shopping-cart"></i>
               <span class="font-semibold">Order History</span>
             </Tab>
@@ -35,8 +35,8 @@
               </div>
             </TabPanel>
 
-            <!-- Order History Panel -->
-            <TabPanel value="orders">
+            <!-- Order History Panel (Customer Only) -->
+            <TabPanel v-if="auth.user?.role_name === 'Customer'" value="orders">
               <div class="mt-6">
                 <OrdersTable />
               </div>

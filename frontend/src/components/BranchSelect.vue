@@ -3,65 +3,46 @@
     <template #title>
       <div class="flex items-center gap-2">
         <i class="pi pi-building text-oxford-blue"></i>
-        <span class="text-oxford-blue">Select Pickup Branch</span>
+        <span class="text-oxford-blue">Pickup Branch</span>
       </div>
     </template>
 
     <template #subtitle>
-      <p class="text-gray">Choose a branch to pick up your order</p>
+      <p class="text-gray">Your selected pickup branch</p>
     </template>
 
     <template #content>
-      <div class="space-y-3">
-        <div
-          v-for="branch in branches"
-          :key="branch.id"
-          @click="selectBranch(branch.id)"
-          :class="[
-            'p-4 border-2 rounded-lg cursor-pointer transition-all',
-            selectedBranchId === branch.id
-              ? 'border-oxford-blue bg-oxford-blue bg-opacity-10'
-              : 'border-gray-300 hover:border-oxford-blue'
-          ]"
-        >
+      <div v-if="loading" class="flex justify-center py-8">
+        <i class="pi pi-spin pi-spinner text-2xl text-oxford-blue"></i>
+      </div>
+      <div v-else-if="selectedBranch">
+        <div class="p-4 border-2 border-oxford-blue rounded-lg bg-oxford-blue bg-opacity-10">
           <div class="flex items-start justify-between">
             <div class="flex-1">
-              <h4 class="font-semibold text-charcoal mb-1">{{ branch.name }}</h4>
-              <p class="text-sm text-gray mb-2">{{ branch.address }}</p>
-              <div class="flex items-center gap-4 text-sm">
-                <span class="flex items-center gap-1 text-gray">
-                  <i class="pi pi-phone text-xs"></i>
-                  {{ branch.phone }}
-                </span>
-                <span class="flex items-center gap-1 text-gray">
-                  <i class="pi pi-clock text-xs"></i>
-                  {{ branch.hours }}
-                </span>
+              <h4 class="font-semibold text-white mb-3">{{ selectedBranch.branch_name }}</h4>
+              <div class="space-y-2 text-sm text-white">
+                <p>{{ selectedBranch.address }}</p>
+                <p>{{ selectedBranch.contact_number }}</p>
+                <p v-if="selectedBranch.business_hours">{{ selectedBranch.business_hours }}</p>
               </div>
             </div>
-            <div v-if="selectedBranchId === branch.id">
+            <div>
               <i class="pi pi-check-circle text-2xl text-oxford-blue"></i>
             </div>
           </div>
         </div>
+      </div>
+      <div v-else class="text-center py-6 text-gray">
+        <p>No branch selected yet</p>
       </div>
     </template>
 
     <template #footer>
       <div class="flex justify-end gap-3">
         <Button
-          label="Clear Selection"
-          icon="pi pi-times"
-          outlined
-          @click="clearSelection"
-          class="text-gray border-gray-300 hover:bg-gray-100"
-          :disabled="!selectedBranchId"
-        />
-        <Button
-          label="Confirm Branch"
-          icon="pi pi-check"
-          @click="confirmBranch"
-          :disabled="!selectedBranchId"
+          label="Change Branch"
+          icon="pi pi-pencil"
+          @click="openBranchModal"
           class="bg-oxford-blue text-white border-oxford-blue hover:bg-charcoal"
         />
       </div>
@@ -70,52 +51,40 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
+import { getAllBranches } from '@/services/branchService'
+import { useUserContextStore } from '@/stores/userContextStore'
 
-// Props
-const props = defineProps({
-  branches: {
-    type: Array,
-    required: true,
-    default: () => []
-  },
-  initialBranchId: {
-    type: Number,
-    default: null
-  }
-})
-
-// Emits
-const emit = defineEmits(['branchSelected'])
+const userContextStore = useUserContextStore()
 
 // State
-const selectedBranchId = ref(props.initialBranchId)
+const allBranches = ref([])
+const loading = ref(true)
+
+// Emits
+const emit = defineEmits(['openModal'])
+
+// Computed
+const selectedBranch = computed(() => {
+  return allBranches.value.find(b => b.branch_id === userContextStore.branchId) || null
+})
 
 // Methods
-const selectBranch = (branchId) => {
-  selectedBranchId.value = branchId
+const openBranchModal = () => {
+  emit('openModal')
 }
 
-const clearSelection = () => {
-  selectedBranchId.value = null
-}
-
-const confirmBranch = () => {
-  if (!selectedBranchId.value) {
-    return
+onMounted(async () => {
+  try {
+    allBranches.value = await getAllBranches()
+    loading.value = false
+  } catch (err) {
+    console.error('Error fetching branches:', err)
+    loading.value = false
   }
-
-  const selectedBranch = props.branches.find(b => b.id === selectedBranchId.value)
-
-  if (selectedBranch) {
-    emit('branchSelected', {
-      branchId: selectedBranchId.value,
-      branchData: selectedBranch
-    })
-  }
-}
+})
 </script>
 
 <style scoped>
