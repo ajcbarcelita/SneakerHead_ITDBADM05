@@ -140,7 +140,6 @@ async function fetchShoes() {
             shoes.value = response.data
             console.log('Loaded shoes:', shoes.value)
         } else {
-            console.error('Invalid or missing shoe data:', response.data)
             shoes.value = []
         }
     } catch (error) {
@@ -155,9 +154,7 @@ async function fetchShoes() {
 async function fetchCurrencies() {
     try {
         currencies.value = await getCurrenciesWithRates()
-        console.log('Fetched currencies with rates:', currencies.value)
     } catch (error) {
-        console.error('Error fetching currencies:', error)
         currencies.value = []
     }
 }

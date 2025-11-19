@@ -434,8 +434,6 @@
 
     if (Object.keys(errors.value).length === 0) {
       activeStep.value = 2
-    } else  {
-      console.log('Validation errors:', errors.value)
     }
   }
 

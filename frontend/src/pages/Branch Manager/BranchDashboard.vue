@@ -151,8 +151,6 @@ async function fetchMetrics() {
     const data = await response.data
 
     metrics.value = data
-
-    console.log('Fetched metrics:', data)
     updateChart();
   } catch (error) {
     console.error('Failed to fetch metrics:', error)

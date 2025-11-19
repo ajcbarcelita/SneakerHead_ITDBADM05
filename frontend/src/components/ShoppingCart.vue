@@ -181,9 +181,7 @@ const fetchCart = async () => {
         cartData.value = data
         cartItems.value = data.items || []
 
-        console.log('Fetched cart data:', data)
     } catch (error) {
-        console.error('Failed to fetch cart:', error)
         toast.add({
             severity: 'error',
             summary: 'Error',

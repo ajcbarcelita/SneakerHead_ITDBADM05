@@ -441,8 +441,6 @@ const savePromo = async () => {
       is_active: Boolean(newPromo.value.is_active)
     }
 
-    console.log('Sending promo data:', promoData); // Debug log
-
     await SAService.addPromoCode(promoData)
     
     toast.add({ 

@@ -241,14 +241,6 @@ const fetchOrderHistory = async () => {
   }
 }
 
-const onRowExpand = (event) => {
-  console.log('Row expanded:', event.data)
-}
-
-const onRowCollapse = (event) => {
-  console.log('Row collapsed:', event.data)
-}
-
 // Lifecycle
 onMounted(() => {
   fetchOrderHistory()

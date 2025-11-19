@@ -225,7 +225,6 @@ const loadShoes = async () => {
             totalStock: s.totalStock ?? (s.sizes ? s.sizes.reduce((sum, sz) => sum + Number(sz.quantity || 0), 0) : 0)
         }))
 
-        console.log('Loaded shoes:', shoes.value)
     } catch (err) {
         console.error('Failed to load shoes:', err)
     }
