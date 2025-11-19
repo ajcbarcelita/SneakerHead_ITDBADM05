@@ -644,6 +644,18 @@ CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_details` (`branch_id` INT, `bra
 SHOW WARNINGS;
 
 -- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`branch_orders_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`branch_orders_view` (`order_id` INT, `full_name` INT, `branch_id` INT, `total_price` INT, `promo_code` INT, `created_at` INT, `order_item_id` INT, `shoe_id` INT, `name` INT, `img_path` INT, `shoe_size` INT, `quantity` INT, `subtotal` INT, `brand_id` INT, `brand_name` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sneakerhead`.`shoe_list_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sneakerhead`.`shoe_list_view` (`shoe_id` INT, `name` INT, `price` INT, `brand_id` INT, `is_deleted` INT, `img_paths` INT, `category_names` INT);
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
 -- View `sneakerhead`.`user_details_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `sneakerhead`.`user_details_view`;
@@ -704,9 +716,7 @@ SELECT
     oi.price_at_purchase,
     oi.subtotal,
     o.total_price,
-    o.promo_code,
-    o.currency_code,
-    o.currency_rate_to_peso,
+    o.promo_code, 
     si.main_image_path AS image_path,
     o.created_at AS order_created_at
 FROM order_items oi
@@ -961,9 +971,101 @@ LEFT JOIN addresses ON branches.address_id = addresses.address_id
 LEFT JOIN ref_ph_cities_municipalities ON addresses.city_id = ref_ph_cities_municipalities.city_id
 ORDER BY branches.branch_id ASC;
 SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`branch_orders_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`branch_orders_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`branch_orders_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW branch_orders_view AS
+SELECT 
+    o.order_id,
+    CONCAT(u.fname,' ', u.lname) AS full_name,
+    o.branch_id,
+    o.total_price,
+    o.promo_code,
+    o.created_at,
+    oi.order_item_id,
+    oi.shoe_id,
+    s.name,
+    (SELECT img_path 
+     FROM shoe_images 
+     WHERE shoe_id = s.shoe_id 
+     LIMIT 1) AS img_path,  
+    oi.shoe_size,
+    oi.quantity,
+    oi.subtotal,
+    sb.brand_id,
+    sb.brand_name
+FROM orders o
+LEFT JOIN users u ON o.user_id = u.user_id
+LEFT JOIN branches b ON o.branch_id = b.branch_id
+LEFT JOIN promo_codes pc ON o.promo_code = pc.promo_code
+LEFT JOIN order_items oi ON o.order_id = oi.order_id
+LEFT JOIN shoes s ON oi.shoe_id = s.shoe_id
+LEFT JOIN ref_shoe_brands sb ON s.brand_id = sb.brand_id;
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- View `sneakerhead`.`shoe_list_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sneakerhead`.`shoe_list_view`;
+SHOW WARNINGS;
+DROP VIEW IF EXISTS `sneakerhead`.`shoe_list_view` ;
+SHOW WARNINGS;
+USE `sneakerhead`;
+CREATE  OR REPLACE VIEW shoe_list_view AS
+
+SELECT 
+    s.shoe_id,
+    s.name,
+    s.price,
+    s.brand_id,
+    s.is_deleted,
+    GROUP_CONCAT(DISTINCT si.img_path) as img_paths,
+    GROUP_CONCAT(DISTINCT rsc.category_name) as category_names
+FROM shoes s
+LEFT JOIN shoe_images si ON s.shoe_id = si.shoe_id
+LEFT JOIN shoe_categories sc ON s.shoe_id = sc.shoe_id
+LEFT JOIN ref_shoe_categories rsc ON sc.shoe_category_id = rsc.category_id
+GROUP BY s.shoe_id, s.name, s.price, s.brand_id;
+SHOW WARNINGS;
 USE `sneakerhead`;
 
 DELIMITER $$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`validate_branch_update` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`validate_branch_update` 
+BEFORE UPDATE ON `branches` 
+FOR EACH ROW
+BEGIN
+	IF NEW.branch_name IS NULL OR TRIM(NEW.branch_name) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Branch name cannot be empty';
+    END IF;
+END$$
+
+SHOW WARNINGS$$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`validate_branch_insert` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`validate_branch_insert` 
+BEFORE INSERT ON `branches` 
+FOR EACH ROW
+BEGIN
+	IF NEW.branch_name IS NULL OR TRIM(NEW.branch_name) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Branch name cannot be empty';
+    END IF;
+END$$
+
+SHOW WARNINGS$$
 
 USE `sneakerhead`$$
 DROP TRIGGER IF EXISTS `sneakerhead`.`log_after_user_insert` $$
@@ -975,6 +1077,145 @@ FOR EACH ROW
 BEGIN
 	INSERT INTO user_logs(user_id, role_id, action, description) VALUES
     (NEW.user_id, NEW.role_id, 'REGISTER_CUSTOMER', CONCAT('User ', NEW.fname, ' ', NEW.lname, ' registered.'));
+END$$
+
+SHOW WARNINGS$$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`validate_shoe_update` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`validate_shoe_update` 
+BEFORE UPDATE ON `shoes` 
+FOR EACH ROW
+BEGIN
+	IF NEW.price < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Price cannot be negative';
+    END IF;
+    IF NEW.name IS NULL OR TRIM(NEW.name) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shoe name cannot be empty';
+    END IF;
+END$$
+
+SHOW WARNINGS$$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`validate_shoe_insert` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`validate_shoe_insert` 
+BEFORE INSERT ON `shoes` 
+FOR EACH ROW
+BEGIN
+	IF NEW.price < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Price cannot be negative';
+    END IF;
+    IF NEW.name IS NULL OR TRIM(NEW.name) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shoe name cannot be empty';
+    END IF;
+END$$
+
+SHOW WARNINGS$$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`check_low_stock_insert` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`check_low_stock_insert` 
+AFTER UPDATE ON `shoe_size_inventory` 
+FOR EACH ROW
+BEGIN
+	IF NEW.stock <= 5 THEN    
+        INSERT INTO user_logs(user_id, role_id, action, description, ip_address)
+        VALUES (1, 1, 'LOW_STOCK_WARNING', CONCAT('Low Stock Warning For ', OLD.shoe_id, 'in ', OLD.branch_id), NULL);
+    END IF;
+END$$
+
+SHOW WARNINGS$$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`promo_usage_limit_check` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`promo_usage_limit_check` 
+BEFORE UPDATE ON `promo_codes` 
+FOR EACH ROW
+BEGIN
+	-- If usage limit is reached
+    IF NEW.used_count >= NEW.usage_limit THEN
+        SET NEW.is_active = 0; -- Set inactive
+    END IF;
+END$$
+
+SHOW WARNINGS$$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`validate_promo_update` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`validate_promo_update` 
+BEFORE UPDATE ON `promo_codes` 
+FOR EACH ROW
+BEGIN
+	IF NEW.discount_value < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Discount value cannot be negative';
+    END IF;
+    IF NEW.min_order_value < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Minimum order value cannot be negative';
+    END IF;
+    IF NEW.used_count < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Used count cannot be negative';
+    END IF;
+    IF NEW.usage_limit < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Usage limit cannot be negative';
+    END IF;
+    IF NEW.start_date > NEW.end_date THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Start date cannot be after end date';
+    END IF;
+END$$
+
+SHOW WARNINGS$$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`validate_promo_insert` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`validate_promo_insert` 
+BEFORE INSERT ON `promo_codes` 
+FOR EACH ROW
+BEGIN
+	IF NEW.discount_value < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Discount value cannot be negative';
+    END IF;
+    IF NEW.min_order_value < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Minimum order value cannot be negative';
+    END IF;
+    IF NEW.used_count < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Used count cannot be negative';
+    END IF;
+    IF NEW.usage_limit < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Usage limit cannot be negative';
+    END IF;
+    IF NEW.start_date > NEW.end_date THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Start date cannot be after end date';
+    END IF;
+END$$
+
+SHOW WARNINGS$$
+
+USE `sneakerhead`$$
+DROP TRIGGER IF EXISTS `sneakerhead`.`log_after_update_currency` $$
+SHOW WARNINGS$$
+USE `sneakerhead`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sneakerhead`.`log_after_update_currency` 
+AFTER INSERT ON `exchange_rates` 
+FOR EACH ROW
+BEGIN
+	IF OLD.rate_to_php <> NEW.rate_to_php THEN
+        INSERT INTO user_logs(user_id, role_id, action, description)
+        VALUES (1, 1, 'CURRENCY_RATE_UPDATE',
+            CONCAT('Currency rates have been updated. ', OLD.currency_code, ': ', OLD.rate_to_php, ' -> ', NEW.rate_to_php));
+    END IF;
 END$$
 
 SHOW WARNINGS$$
