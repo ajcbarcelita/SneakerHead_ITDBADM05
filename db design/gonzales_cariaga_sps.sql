@@ -159,7 +159,7 @@ BEGIN
     order_id,
     full_name,
     branch_id,
-    total_price_conversion,
+    total_price,
     promo_code,
     created_at,
     order_item_id,
@@ -279,7 +279,7 @@ SELECT
     o.order_id,
     CONCAT(u.fname,' ', u.lname) AS full_name,
     o.branch_id,
-    o.total_price_conversion,
+    o.total_price,
     o.promo_code,
     o.created_at,
     oi.order_item_id,
@@ -419,7 +419,7 @@ BEGIN
         SELECT 
             u.user_id,
             CONCAT(u.fname, ' ', u.lname) AS full_name,
-            SUM(o.total_price_conversion) AS total_spent
+            SUM(o.total_price) AS total_spent
         FROM orders o
         JOIN users u ON o.user_id = u.user_id
         JOIN branches b ON o.branch_id = b.branch_id
@@ -434,7 +434,7 @@ BEGIN
         SELECT 
             u.user_id,
             CONCAT(u.fname, ' ', u.lname) AS full_name,
-            SUM(o.total_price_conversion) AS total_spent
+            SUM(o.total_price) AS total_spent
         FROM orders o
         JOIN users u ON o.user_id = u.user_id
         JOIN branches b ON o.branch_id = b.branch_id
@@ -450,7 +450,7 @@ BEGIN
         SELECT 
             u.user_id,
             CONCAT(u.fname, ' ', u.lname) AS full_name,
-            SUM(o.total_price_conversion) AS total_spent
+            SUM(o.total_price) AS total_spent
         FROM orders o
         JOIN users u ON o.user_id = u.user_id
         JOIN branches b ON o.branch_id = b.branch_id
