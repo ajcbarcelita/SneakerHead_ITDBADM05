@@ -1,5 +1,5 @@
 import express from "express";
-import { createOrder, getOrderHistory, getOrderDetails } from "../controllers/orderController.js";
+import { createOrder, getOrderHistory, getOrderDetails, validatePromoCode } from "../controllers/orderController.js";
 import { authenticate } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -17,6 +17,16 @@ const router = express.Router();
  * }
  */
 router.post("/orders", authenticate, createOrder);
+
+/**
+ * POST /orders/validate-promo
+ * Validate a promo code
+ * Body: {
+ *   promo_code: string,
+ *   subtotal: number (optional, for minimum order validation)
+ * }
+ */
+router.post("/validate-promo", validatePromoCode);
 
 /**
  * GET /orders

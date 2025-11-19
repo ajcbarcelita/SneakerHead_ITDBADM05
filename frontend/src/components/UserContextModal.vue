@@ -100,7 +100,8 @@ onMounted(async () => {
         currencies.value = await getCurrenciesWithRates();
     } catch (err) {
         console.error('Error fetching branches or currencies', err);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load branches or currencies', life: 4000 });
+        const errorDetail = err?.response?.data?.message || err?.message || 'Unknown error';
+        toast.add({ severity: 'error', summary: 'Error', detail: `Failed to load: ${errorDetail}`, life: 5000 });
     }
 });
 
@@ -108,7 +109,7 @@ function onHide() {
   emit('update:visible', false);
   emit('close');
 }
- 
+
 async function applyPreferences() {
     if (!selectedBranch.value) {
         toast.add({ severity: 'warn', summary: 'Validation', detail: 'Please select a valid branch', life: 3000 });

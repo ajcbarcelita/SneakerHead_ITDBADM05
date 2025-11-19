@@ -11,7 +11,7 @@ import Address from '../models/Address.js'
  */
 export const createOrder = async (req, res) => {
   const trx = await Order.startTransaction()
-  
+
   try {
     const userId = req.user.user_id
     const { cart_id, delivery_method, address_id, branch_id, promo_code } = req.body
@@ -58,15 +58,22 @@ export const createOrder = async (req, res) => {
 
     // Validate and apply promo code if provided
     let promoDiscount = 0
+    let promoCodeObj = null
     if (promo_code) {
-      const promoCodeObj = await PromoCode.query(trx).findOne('promo_code', promo_code)
-      
+      promoCodeObj = await PromoCode.query(trx).findOne('promo_code', promo_code.toUpperCase())
+
       if (!promoCodeObj || !promoCodeObj.is_active) {
         await trx.rollback()
         return res.status(400).json({ error: 'Invalid or inactive promo code' })
       }
 
-      promoDiscount = promoCodeObj.discount_percent || 0
+      // Calculate discount based on discount_type
+      if (promoCodeObj.discount_type === 'PERCENT' || promoCodeObj.discount_type === 'percentage') {
+        promoDiscount = promoCodeObj.discount_value // Already a percentage value (e.g., 10 for 10%)
+      } else if (promoCodeObj.discount_type === 'FIXED' || promoCodeObj.discount_type === 'fixed') {
+        // For fixed discounts, we need to calculate percentage of subtotal
+        promoDiscount = (promoCodeObj.discount_value / cart.subtotal) * 100
+      }
     }
 
     // Validate stock for all items
@@ -79,8 +86,8 @@ export const createOrder = async (req, res) => {
 
       if (!inventory || inventory.quantity < cartItem.quantity) {
         await trx.rollback()
-        return res.status(400).json({ 
-          error: `Insufficient stock for ${cartItem.shoe.shoe_name} size ${cartItem.shoe_us_size}` 
+        return res.status(400).json({
+          error: `Insufficient stock for ${cartItem.shoe.shoe_name} size ${cartItem.shoe_us_size}`
         })
       }
     }
@@ -137,6 +144,13 @@ export const createOrder = async (req, res) => {
     // Clear shopping cart
     await ShoppingCartItem.query(trx).where('cart_id', cart_id).delete()
     await ShoppingCart.query(trx).findById(cart_id).delete()
+
+    // Increment promo code usage count if used
+    if (promoCodeObj) {
+      await PromoCode.query(trx)
+        .findById(promo_code.toUpperCase())
+        .increment('used_count', 1)
+    }
 
     await trx.commit()
 
@@ -242,3 +256,72 @@ export const getOrderDetails = async (req, res) => {
     return res.status(500).json({ error: "Failed to fetch order details" });
   }
 };
+
+/**
+ * Validate a promo code
+ */
+export const validatePromoCode = async (req, res) => {
+  try {
+    const { promo_code, subtotal } = req.body
+
+    if (!promo_code) {
+      return res.status(400).json({ error: 'promo_code is required' })
+    }
+
+    // Find promo code in database
+    const promoCodeObj = await PromoCode.query().findOne('promo_code', promo_code.toUpperCase())
+
+    if (!promoCodeObj) {
+      return res.status(400).json({ error: 'Invalid promo code' })
+    }
+
+    if (!promoCodeObj.is_active) {
+      return res.status(400).json({ error: 'This promo code is no longer active' })
+    }
+
+    // Check date validity
+    const now = new Date()
+    const startDate = promoCodeObj.start_date ? new Date(promoCodeObj.start_date) : null
+    const endDate = promoCodeObj.end_date ? new Date(promoCodeObj.end_date) : null
+
+    if (startDate && now < startDate) {
+      return res.status(400).json({ error: 'This promo code is not yet valid' })
+    }
+
+    if (endDate && now > endDate) {
+      return res.status(400).json({ error: 'This promo code has expired' })
+    }
+
+    // Check usage limit
+    if (promoCodeObj.usage_limit && promoCodeObj.used_count >= promoCodeObj.usage_limit) {
+      return res.status(400).json({ error: 'This promo code has reached its usage limit' })
+    }
+
+    // Check minimum order value
+    if (promoCodeObj.min_order_value && subtotal < promoCodeObj.min_order_value) {
+      return res.status(400).json({ 
+        error: `Minimum order value of ${promoCodeObj.min_order_value} required for this promo code` 
+      })
+    }
+
+    // Calculate discount
+    let discountAmount = 0
+    if (promoCodeObj.discount_type === 'PERCENT' || promoCodeObj.discount_type === 'percentage') {
+      discountAmount = subtotal * (promoCodeObj.discount_value / 100)
+    } else if (promoCodeObj.discount_type === 'FIXED' || promoCodeObj.discount_type === 'fixed') {
+      discountAmount = promoCodeObj.discount_value
+    }
+
+    // Return promo code details
+    res.json({
+      promo_code: promoCodeObj.promo_code,
+      discount_type: promoCodeObj.discount_type,
+      discount_value: promoCodeObj.discount_value,
+      discount_amount: discountAmount,
+      is_valid: true
+    })
+  } catch (error) {
+    console.error('Validate promo code error:', error)
+    res.status(500).json({ error: 'Failed to validate promo code' })
+  }
+}

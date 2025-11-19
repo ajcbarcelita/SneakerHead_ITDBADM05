@@ -48,6 +48,25 @@ const orderService = {
       console.error('Error fetching order details:', error)
       throw error
     }
+  },
+
+  /**
+   * Validate a promo code
+   * @param {string} promoCode - The promo code to validate
+   * @param {number} subtotal - Order subtotal for validation
+   * @returns {Promise} Promo code details if valid
+   */
+  async validatePromoCode(promoCode, subtotal) {
+    try {
+      const response = await apiClient.post('/validate-promo', {
+        promo_code: promoCode,
+        subtotal: subtotal
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error validating promo code:', error)
+      throw error
+    }
   }
 }
 

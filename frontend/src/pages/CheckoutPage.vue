@@ -80,9 +80,7 @@
         <!-- Branch Selection for Pickup -->
         <BranchSelectionForm
           v-else
-          :branches="branches"
-          :initialBranchId="selectedBranch"
-          @branchSelected="handleBranchSelected"
+          @openModal="showBranchModal = true"
         />
       </div>
 
@@ -114,13 +112,22 @@
         class="text-oxford-blue hover:text-charcoal"
       />
     </div>
-  </main>    <!-- Footer -->
+  </main>
+
+  <!-- Branch Selection Modal -->
+  <UserContextModal
+    :visible="showBranchModal"
+    @update:visible="showBranchModal = $event"
+    @close="showBranchModal = false"
+  />
+
+  <!-- Footer -->
     <Footer />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import NavBar from '@/components/NavBar.vue'
@@ -128,6 +135,7 @@ import Footer from '@/components/Footer.vue'
 import CheckoutCard from '@/components/CheckoutCard.vue'
 import DeliveryAddressForm from '@/components/DeliveryAddressForm.vue'
 import BranchSelectionForm from '@/components/BranchSelect.vue'
+import UserContextModal from '@/components/UserContextModal.vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import cartService from '@/services/cartService'
@@ -143,6 +151,7 @@ const cartItems = ref([])
 const cartData = ref(null)
 const loading = ref(false)
 const submitting = ref(false)
+const showBranchModal = ref(false)
 
 const checkoutData = ref({
   deliveryMethod: 'delivery',
@@ -151,31 +160,20 @@ const checkoutData = ref({
   promoDiscount: 0
 })
 
-const selectedBranch = ref(null)
-
-const branches = ref([
-  {
-    id: 1,
-    name: 'Sneakerhead Manila',
-    address: 'SM Mall of Asia, Pasay City, Metro Manila',
-    phone: '(02) 8123-4567',
-    hours: '10:00 AM - 9:00 PM'
+// Watchers for real-time currency updates
+watch(
+  () => [userContextStore.chosenCurrency, userContextStore.currencyRate],
+  ([newCurrency, newRate], [oldCurrency, oldRate]) => {
+    if (newCurrency !== oldCurrency || newRate !== oldRate) {
+      // Update cart data with new currency info
+      if (cartData.value) {
+        cartData.value.currency_code = newCurrency
+        cartData.value.currency_rate_to_peso = newRate
+      }
+    }
   },
-  {
-    id: 2,
-    name: 'Sneakerhead Makati',
-    address: 'Glorietta 4, Makati City, Metro Manila',
-    phone: '(02) 8234-5678',
-    hours: '10:00 AM - 9:00 PM'
-  },
-  {
-    id: 3,
-    name: 'Sneakerhead Quezon City',
-    address: 'SM North EDSA, Quezon City, Metro Manila',
-    phone: '(02) 8345-6789',
-    hours: '10:00 AM - 9:00 PM'
-  }
-])
+  { deep: true }
+)
 
 // Lifecycle
 onMounted(async () => {
@@ -238,14 +236,13 @@ const loadCartData = async () => {
 
 // Computed
 const subtotal = computed(() => {
-  const phpSubtotal = cartData.value?.subtotal || 0
-  const currencyCode = cartData.value?.currency_code || 'PHP'
-  const currencyRate = parseFloat(cartData.value?.currency_rate_to_peso) || 1
-
-  return currencyCode === 'PHP' ? phpSubtotal : phpSubtotal * currencyRate
+  // Return the PHP subtotal without conversion
+  // CheckoutCard will handle the currency conversion
+  return cartData.value?.subtotal || 0
 })
 
 const shippingCost = computed(() => {
+  // Return PHP shipping cost, CheckoutCard will convert it
   return 100
 })
 
@@ -276,11 +273,6 @@ const goBackToCart = () => {
 const handleAddressConfirmed = (addressData) => {
   checkoutData.value.addressData = addressData
   console.log('Address confirmed:', addressData)
-}
-
-const handleBranchSelected = (branchData) => {
-  selectedBranch.value = branchData.branchId
-  console.log('Branch selected:', branchData)
 }
 
 const handlePromoApplied = (promoData) => {
@@ -314,7 +306,7 @@ const handleCheckout = async (orderSummary) => {
     return
   }
 
-  if (orderSummary.deliveryMethod === 'pickup' && !selectedBranch.value) {
+  if (orderSummary.deliveryMethod === 'pickup' && !userContextStore.branchId) {
     toast.add({
       severity: 'warn',
       summary: 'Missing Branch',
@@ -332,7 +324,7 @@ const handleCheckout = async (orderSummary) => {
       cart_id: cartData.value.cart_id,
       delivery_method: orderSummary.deliveryMethod,
       address_id: orderSummary.deliveryMethod === 'delivery' ? checkoutData.value.addressData.address_id : null,
-      branch_id: orderSummary.deliveryMethod === 'pickup' ? selectedBranch.value : cartData.value.branch_id,
+      branch_id: orderSummary.deliveryMethod === 'pickup' ? userContextStore.branchId : cartData.value.branch_id,
       promo_code: checkoutData.value.promoCode || null
     }
 

@@ -69,6 +69,12 @@
         </span>
       </div>
 
+      <!-- Promo Code Applied Label -->
+      <div v-if="promoApplied" class="flex justify-between mb-3">
+        <span class="text-charcoal text-sm">Promo Code ({{ promoCode }}):</span>
+        <span class="font-semibold text-green-600 text-sm">-{{ formatPrice(promoDiscount) }}</span>
+      </div>
+
       <!-- Divider -->
       <Divider />
 
@@ -152,6 +158,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Divider from 'primevue/divider'
 import Message from 'primevue/message'
+import orderService from '@/services/orderService'
 
 // Props
 const props = defineProps({
@@ -205,8 +212,8 @@ const total = computed(() => {
 // Methods
 const formatPrice = (price) => {
   const numericValue = parseFloat(price)
-  const convertedValue = props.currencyCode === 'PHP' 
-    ? numericValue 
+  const convertedValue = props.currencyCode === 'PHP'
+    ? numericValue
     : numericValue * props.currencyRate
 
   if (props.currencyCode === 'PHP') {
@@ -230,44 +237,19 @@ const applyPromoCode = async () => {
   promoError.value = ''
 
   try {
-    // TODO: Replace with actual API call to validate promo code
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Call backend to validate promo code
+    const result = await orderService.validatePromoCode(promoCode.value, props.subtotal)
 
-    // Mock validation - replace with actual API response
-    const mockValidPromos = {
-      'WELCOME10': 0.10, // 10% discount
-      'SUMMER20': 0.20,  // 20% discount
-      'SAVE50': 50,      // Fixed 50 peso discount
-      'FREESHIP': 0      // Free shipping (handled separately)
-    }
-
-    const upperPromoCode = promoCode.value.toUpperCase()
-
-    if (Object.prototype.hasOwnProperty.call(mockValidPromos, upperPromoCode)) {
-      const discountValue = mockValidPromos[upperPromoCode]
-
-      if (upperPromoCode === 'FREESHIP') {
-        // Free shipping promo
-        promoDiscount.value = props.shipping
-      } else if (discountValue < 1) {
-        // Percentage discount
-        promoDiscount.value = props.subtotal * discountValue
-      } else {
-        // Fixed amount discount
-        promoDiscount.value = discountValue
-      }
-
+    if (result.is_valid) {
+      promoDiscount.value = result.discount_amount
       promoApplied.value = true
       emit('promoApplied', {
-        code: upperPromoCode,
-        discount: promoDiscount.value
+        code: result.promo_code,
+        discount: result.discount_amount
       })
-    } else {
-      promoError.value = 'Invalid promo code. Please try again.'
     }
   } catch (error) {
-    promoError.value = 'Failed to apply promo code. Please try again.'
+    promoError.value = error.response?.data?.error || 'Failed to validate promo code. Please try again.'
     console.error('Error applying promo code:', error)
   } finally {
     applyingPromo.value = false
