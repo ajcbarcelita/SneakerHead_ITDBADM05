@@ -22,7 +22,7 @@
           <!-- RIGHT: SHOE DETAILS -->
           <div class="md:w-3/5 w-full flex flex-col gap-5">
 
-            <Toast />
+            <Toast position="bottom-right"/>
 
             <!-- Name, Brand & Branch -->
             <div>

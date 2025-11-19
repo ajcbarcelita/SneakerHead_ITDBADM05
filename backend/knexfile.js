@@ -16,10 +16,15 @@ const knexConfig = {
       port: process.env.DB_PORT,
       multipleStatements: true,
     },
-    pool: { min: 2, max: 10 },
+    pool: { 
+      min: 2, 
+      max: 20,
+      idleTimeoutMillis: 600000, // 10 minutes before idle connections are closed
+    },
     seeds: {
       directory: "./seeds",
     },
+    acquireConnectionTimeout: 20000, // if all connections are in use, wait 20 seconds before throwing an error
   },
 
   production: {
