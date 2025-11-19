@@ -21,36 +21,82 @@ DELIMITER ;
 
 -- SP to update user info
 DELIMITER $$
-CREATE PROCEDURE update_user (
+
+CREATE PROCEDURE update_user(
   IN p_user_id INT,
-  IN p_email VARCHAR(255),
   IN p_pw_hash VARCHAR(255),
   IN p_fname VARCHAR(100),
   IN p_lname VARCHAR(100),
   IN p_mname VARCHAR(50),
   IN p_address_id INT,
   IN p_role_id INT,
+  IN p_branch_id INT,
   IN p_is_deleted TINYINT(1)
-) 
+)
 BEGIN
   DECLARE user_exists INT DEFAULT 0;
-  
-  SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-
+  DECLARE user_is_assigned INT DEFAULT 0;
+  DECLARE branch_has_manager INT DEFAULT 0;
+  DECLARE current_role INT DEFAULT 0;
   START TRANSACTION;
   
   -- Check if user exists
-  SELECT COUNT(*) INTO user_exists FROM users WHERE user_id = p_user_id;
+  SELECT COUNT(*) INTO user_exists 
+  FROM users 
+  WHERE user_id = p_user_id;
+  
+  -- Get current role of user
+  SELECT role_id into current_role
+  FROM users
+  WHERE user_id = p_user_id;
   
   IF user_exists = 0 THEN
     ROLLBACK;
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User not found';
   END IF;
   
+  -- Handle branch manager assignments
+  IF current_role = 2 THEN
+    -- Check if branch already has a different manager (only if assigning to a branch)
+    IF p_branch_id IS NOT NULL THEN
+      SELECT COUNT(*) INTO branch_has_manager
+      FROM branch_admin_assignments
+      WHERE branch_id = p_branch_id AND staff_id != p_user_id;
+      
+      IF branch_has_manager > 0 THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Branch already has a manager assigned';
+      END IF;
+    END IF;
+    
+    -- Check if user is already assigned
+    SELECT COUNT(*) INTO user_is_assigned
+    FROM branch_admin_assignments
+    WHERE staff_id = p_user_id;
+    
+    IF user_is_assigned > 0 THEN
+      -- Update or remove assignment
+      IF p_branch_id IS NOT NULL THEN
+        UPDATE branch_admin_assignments
+        SET branch_id = p_branch_id, role_at_branch = p_role_id, assigned_at = NOW() 
+        WHERE staff_id = p_user_id;
+      ELSE
+        -- Remove assignment if branch_id is NULL (unassign)
+        DELETE FROM branch_admin_assignments 
+        WHERE staff_id = p_user_id;
+      END IF;
+    ELSE
+      -- Create new assignment only if branch_id is provided
+      IF p_branch_id IS NOT NULL THEN
+        INSERT INTO branch_admin_assignments(staff_id, branch_id, role_at_branch, assigned_at)
+        VALUES(p_user_id, p_branch_id, 2, NOW());
+      END IF;
+    END IF;
+  END IF;
+  
   -- Update only the provided fields
   UPDATE users
   SET 
-    email = COALESCE(p_email, email),
     pw_hash = COALESCE(p_pw_hash, pw_hash),
     fname = COALESCE(p_fname, fname),
     lname = COALESCE(p_lname, lname),
@@ -62,9 +108,8 @@ BEGIN
   WHERE user_id = p_user_id;
   
   COMMIT;
-END;
-$$ 
-DELIMITER ;
+END
+$$ DELIMITER ;
 
 
 -- SP to add a branch
